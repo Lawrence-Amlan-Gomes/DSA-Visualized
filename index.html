@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DSA Visualized</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #1e1e1e;
+      --sidebar: #252526;
+      --border:  #3c3c3c;
+      --text:    #cccccc;
+      --dim:     #858585;
+      --accent:  #007acc;
+      --hover:   #2a2d2e;
+      --active:  #094771;
+      --green:   #4ec9b0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar-header {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    #sidebar-header h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #e0e0e0;
+    }
+    #sidebar-header p {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 3px;
+    }
+
+    #search-wrap { padding: 10px 10px 4px; }
+    #search {
+      width: 100%;
+      padding: 6px 10px;
+      background: #3c3c3c;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+    #search:focus { border-color: var(--accent); }
+    #search::placeholder { color: var(--dim); }
+
+    #file-count {
+      padding: 4px 12px 6px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    #file-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      font-size: 13px;
+      color: var(--text);
+      transition: background 0.07s;
+      user-select: none;
+    }
+    .file-item:hover { background: var(--hover); }
+    .file-item.active {
+      background: var(--active);
+      border-left-color: var(--accent);
+    }
+    .file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Main hint area ── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      padding: 40px;
+      color: var(--dim);
+    }
+    #main svg { opacity: 0.2; }
+    #main-file {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--green);
+      display: none;
+    }
+    #main-hint { font-size: 14px; }
+    #main-sub  { font-size: 12px; }
+
+    #btn-rerun {
+      display: none;
+      margin-top: 4px;
+      padding: 8px 22px;
+      background: #2d5a2d;
+      color: #8bc98b;
+      border: 1px solid #3d7a3d;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    #btn-rerun:hover { background: #3a733a; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 7px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #424242; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>DSA Visualized</h1>
+    <p>Select a file → logs go to DevTools (F12)</p>
+  </div>
+  <div id="search-wrap">
+    <input id="search" type="text" placeholder="Search files…">
+  </div>
+  <div id="file-count"></div>
+  <div id="file-list"></div>
+</div>
+
+<div id="main">
+  <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+    <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+  </svg>
+  <div id="main-file"></div>
+  <div id="main-hint">Click a file to run it</div>
+  <div id="main-sub">Open Chrome DevTools → Console (F12) to see logs</div>
+  <button id="btn-rerun" onclick="rerun()">&#8635; Re-run</button>
+</div>
+
+<script type="module">
+  let allFiles = [];
+  let currentFile = null;
+
+  // Load file list from manifest.json
+  try {
+    const data = await fetch('./manifest.json').then(r => r.json());
+    allFiles = data.files || [];
+  } catch {
+    document.getElementById('main-hint').textContent =
+      'manifest.json not found — run: node generate-manifest.js';
+  }
+
+  renderList(allFiles);
+
+  // Auto-rerun last file on Live Server reload
+  const last = localStorage.getItem('dsa-last');
+  if (last && allFiles.includes(last)) runFile(last);
+
+  // Search
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    renderList(q ? allFiles.filter(f => f.toLowerCase().includes(q)) : allFiles);
+  });
+
+  function renderList(files) {
+    const list  = document.getElementById('file-list');
+    const count = document.getElementById('file-count');
+    count.textContent = `${files.length} file${files.length !== 1 ? 's' : ''}`;
+    list.innerHTML = '';
+    files.forEach(name => {
+      const el = document.createElement('div');
+      el.className = 'file-item' + (name === currentFile ? ' active' : '');
+      el.dataset.name = name;
+      el.title = name;
+      el.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 16 16" style="flex-shrink:0">
+          <path d="M9.5 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5L9.5 1Z" fill="#cb8f3f"/>
+          <path d="M9.5 1v3.5H13" fill="none" stroke="#9a6e2e" stroke-width="1"/>
+          <text x="4.5" y="11" font-size="4.5" fill="#fff" font-family="monospace" font-weight="bold">JS</text>
+        </svg>
+        <span class="file-name">${name}</span>`;
+      el.onclick = () => runFile(name);
+      list.appendChild(el);
+    });
+  }
+
+  async function runFile(name) {
+    currentFile = name;
+    localStorage.setItem('dsa-last', name);
+
+    document.querySelectorAll('.file-item').forEach(el =>
+      el.classList.toggle('active', el.dataset.name === name));
+
+    document.getElementById('main-file').style.display = 'block';
+    document.getElementById('main-file').textContent = name;
+    document.getElementById('main-hint').textContent = 'Running…';
+    document.getElementById('btn-rerun').style.display = 'inline-block';
+
+    // Clear console and run — logs go straight to Chrome DevTools
+    console.clear();
+    console.log(`%c▶ ${name}`, 'color:#4ec9b0;font-weight:bold;font-size:13px');
+
+    try {
+      // Cache-bust so Live Server always loads the latest saved version
+      const mod = await import(`./${name}?t=${Date.now()}`);
+      if (typeof mod.default === 'function') mod.default();
+      document.getElementById('main-hint').textContent = 'Done — check DevTools console (F12)';
+    } catch (e) {
+      console.error(e);
+      document.getElementById('main-hint').textContent = `Error: ${e.message}`;
+    }
+  }
+
+  window.rerun = () => { if (currentFile) runFile(currentFile); };
+</script>
+</body>
+</html>

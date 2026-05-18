@@ -1,0 +1,8 @@
+{
+  "files": [
+    "array-hashMap-longestConsecutiveSequence.js",
+    "practice.js",
+    "slidingWindow-minimumWindowSubstring.js",
+    "twoPointers-threeSum.js"
+  ]
+}
