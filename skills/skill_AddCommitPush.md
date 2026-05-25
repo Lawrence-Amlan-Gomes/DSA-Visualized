@@ -2,7 +2,7 @@
 
 ## Trigger
 
-User prompts `skill_AddCommitPush` — meaning they want to stage, commit, and push all current changes to the repo.
+User prompts `skill_AddCommitPush.md  ` or `@skills/skill_AddCommitPush.md  ` — meaning they want to stage, commit, and push all current changes to the repo.
 
 ## What it means
 

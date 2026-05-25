@@ -1,6 +1,7 @@
 {
   "files": [
     "array-hashMap-longestConsecutiveSequence.js",
+    "mergeKSortedLinkedLists.js",
     "practice.js",
     "slidingWindow-minimumWindowSubstring.js",
     "twoPointers-threeSum.js"
