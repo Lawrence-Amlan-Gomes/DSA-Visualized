@@ -3,6 +3,7 @@
     "array-hashMap-longestConsecutiveSequence.js",
     "mergeKSortedLinkedLists.js",
     "practice.js",
+    "searchInRotatedSortedArray.js",
     "slidingWindow-minimumWindowSubstring.js",
     "twoPointers-threeSum.js"
   ]
