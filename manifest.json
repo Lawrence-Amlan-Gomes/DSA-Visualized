@@ -1,6 +1,7 @@
 {
   "files": [
     "array-hashMap-longestConsecutiveSequence.js",
+    "binaryTreeMaximumPathSum.js",
     "mergeKSortedLinkedLists.js",
     "practice.js",
     "searchInRotatedSortedArray.js",
