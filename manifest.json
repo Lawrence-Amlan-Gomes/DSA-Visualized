@@ -2,7 +2,9 @@
   "files": [
     "array-hashMap-longestConsecutiveSequence.js",
     "binaryTreeMaximumPathSum.js",
+    "courseSchedule.js",
     "mergeKSortedLinkedLists.js",
+    "nonOverlappingIntervals.js",
     "practice.js",
     "searchInRotatedSortedArray.js",
     "slidingWindow-minimumWindowSubstring.js",

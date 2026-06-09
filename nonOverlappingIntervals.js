@@ -39,14 +39,26 @@ Space Complexity: O(1)         [sorting is done in-place]
      */
 
     eraseOverlapIntervals(intervals) {
-      let result = 0;
-      console.log("result")
-      console.log("Hi")
-      return result;
+      if (intervals.length === 0) return 0; // edge case: no intervals → no removals needed
+      intervals.sort((a, b) => a[0] - b[0]); // Sort intervals by start time
+      let res = 0; // number of intervals to remove
+      let prevEnd = intervals[0][1]; // end time of the last kept interval
+      for (let i = 1; i < intervals.length; i++) {
+        //Greedy traversal
+        const start = intervals[i][0]; // start time of current interval
+        const end = intervals[i][1]; // end time of current interval
+        if (start >= prevEnd) {
+          // if current interval starts after or at the end of previous → no overlap
+          prevEnd = end; // No overlap → keep this interval
+        } else {
+          res++; // Overlap found → remove one interval
+          prevEnd = Math.min(end, prevEnd); // Keep the one that ends earlier (greedy choice)
+        }
+      }
+      return res;
     }
   }
 
-  // Test Cases
   const solution = new Solution();
 
   console.log(
@@ -57,10 +69,63 @@ Space Complexity: O(1)         [sorting is done in-place]
       [1, 3],
     ]),
   ); // 1
-  console.log(" ");
+  console.log("");
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 2],
+      [1, 2],
+      [1, 2],
+    ]),
+  ); // 2
+  console.log("");
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 2],
+      [2, 3],
+    ]),
+  ); // 0
+  console.log("");
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 100],
+      [11, 22],
+      [1, 11],
+      [2, 12],
+    ]),
+  ); // 2
+  console.log("");
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ]),
+  ); // 0
+  console.log("");
 
-  console.log("100 test cases ------------------------");
-  console.log(" ")
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 5],
+      [2, 3],
+      [3, 4],
+      [4, 6],
+    ]),
+  ); // 2
+
+  console.log("");
+  console.log(solution.eraseOverlapIntervals([])); // 0
+  console.log("");
+  console.log(solution.eraseOverlapIntervals([[1, 2]])); // 0
+  console.log("");
+  console.log(
+    solution.eraseOverlapIntervals([
+      [1, 10],
+      [2, 4],
+      [5, 7],
+      [6, 8],
+    ]),
+  ); // 2 explanation: Remove [1,10] and [6,8] to make the rest non-overlapping.
+
   // --- 100 Test Cases Batch (Silent on Success) ---
   let failures = 0;
   const test = (num, input, expected) => {
@@ -75,10 +140,10 @@ Space Complexity: O(1)         [sorting is done in-place]
     }
   };
 
+  console.log(" ");
+
   // 1
-  // solution.eraseOverlapIntervals([])
-  // Expected: 0
-  test(1, [], 0);
+  test(1, [[0,5],[0,3],[3,5],[4,7],[6,8],[6,11],[8,11]], 3);
 
   // 2
   // solution.eraseOverlapIntervals([[1,2]])
