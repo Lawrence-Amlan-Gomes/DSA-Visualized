@@ -7,31 +7,77 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #1e1e1e;
-      --sidebar: #252526;
-      --border:  #3c3c3c;
-      --text:    #cccccc;
-      --dim:     #858585;
-      --accent:  #007acc;
-      --hover:   #2a2d2e;
-      --active:  #094771;
-      --green:   #4ec9b0;
+      /* Background */
+      --bg:          #0a0a0a;
+
+      /* Semantic colors */
+      --blue:        #3b82f6;
+      --purple:      #a855f7;
+      --orange:      #f97316;
+      --yellow:      #eab308;
+      --green:       #22c55e;
+      --red:         #ef4444;
+      --cyan:        #06b6d4;
+
+      /* Text hierarchy */
+      --title:       #ffffff;
+      --body-text:   #d4d4d4;
+      --sublabel:    #a3a3a3;
+      --muted:       #444444;
+
+      /* Derived surfaces (kept neutral — built from bg/muted, no new hues) */
+      --border:      rgba(255, 255, 255, 0.08);
+      --hover:       rgba(255, 255, 255, 0.05);
+      --active-bg:   rgba(59, 130, 246, 0.12);
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
-      color: var(--text);
+      color: var(--body-text);
       height: 100vh;
       display: flex;
       overflow: hidden;
     }
 
-    /* ── Sidebar ── */
+    /* ── Activity bar (top-level nav: Dashboard / LiveCoding) ── */
+    #activity-bar {
+      width: 52px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding-top: 10px;
+    }
+    .nav-btn {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--sublabel);
+      cursor: pointer;
+    }
+    .nav-btn svg { width: 19px; height: 19px; }
+    .nav-btn:hover { background: var(--hover); color: var(--body-text); }
+    .nav-btn.active { background: var(--active-bg); color: var(--blue); }
+
+    /* ── Views (only one visible at a time) ── */
+    .view { flex: 1; display: none; overflow: hidden; }
+    .view.active { display: flex; }
+    #view-dashboard.active { flex-direction: column; overflow-y: auto; }
+
+    /* ── Sidebar (LiveCoding view: file list) ── */
     #sidebar {
       width: 280px;
       flex-shrink: 0;
-      background: var(--sidebar);
+      background: var(--bg);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -45,11 +91,11 @@
       font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.3px;
-      color: #e0e0e0;
+      color: var(--title);
     }
     #sidebar-header p {
       font-size: 11px;
-      color: var(--dim);
+      color: var(--sublabel);
       margin-top: 3px;
     }
 
@@ -57,20 +103,20 @@
     #search {
       width: 100%;
       padding: 6px 10px;
-      background: #3c3c3c;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: 4px;
-      color: var(--text);
+      color: var(--body-text);
       font-size: 13px;
       outline: none;
     }
-    #search:focus { border-color: var(--accent); }
-    #search::placeholder { color: var(--dim); }
+    #search:focus { border-color: var(--blue); }
+    #search::placeholder { color: var(--muted); }
 
     #file-count {
       padding: 4px 12px 6px;
       font-size: 11px;
-      color: var(--dim);
+      color: var(--sublabel);
     }
 
     #file-list {
@@ -86,14 +132,15 @@
       cursor: pointer;
       border-left: 2px solid transparent;
       font-size: 13px;
-      color: var(--text);
+      color: var(--body-text);
       transition: background 0.07s;
       user-select: none;
     }
     .file-item:hover { background: var(--hover); }
     .file-item.active {
-      background: var(--active);
-      border-left-color: var(--accent);
+      background: var(--active-bg);
+      border-left-color: var(--blue);
+      color: var(--title);
     }
     .file-name {
       overflow: hidden;
@@ -111,60 +158,315 @@
       gap: 12px;
       text-align: center;
       padding: 40px;
-      color: var(--dim);
+      color: var(--sublabel);
     }
-    #main svg { opacity: 0.2; }
+    #main svg { opacity: 0.2; color: var(--muted); }
     #main-file {
       font-size: 20px;
       font-weight: 600;
-      color: var(--green);
+      color: var(--title);
       display: none;
     }
-    #main-hint { font-size: 14px; }
-    #main-sub  { font-size: 12px; }
+    #main-hint { font-size: 14px; color: var(--sublabel); }
+    #main-hint.success { color: var(--green); }
+    #main-hint.error   { color: var(--red); }
+    #main-sub  { font-size: 12px; color: var(--muted); }
 
     #btn-rerun {
       display: none;
       margin-top: 4px;
       padding: 8px 22px;
-      background: #2d5a2d;
-      color: #8bc98b;
-      border: 1px solid #3d7a3d;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.4);
       border-radius: 4px;
       font-size: 13px;
       cursor: pointer;
       transition: background 0.1s;
     }
-    #btn-rerun:hover { background: #3a733a; }
+    #btn-rerun:hover { background: rgba(34, 197, 94, 0.22); }
+
+    /* ── Dashboard view ── */
+    #dashboard { flex: 1; padding: 28px 34px 40px; }
+    #dashboard-header h1 { font-size: 20px; color: var(--title); }
+    #dashboard-header p  { font-size: 12px; color: var(--sublabel); margin-top: 4px; }
+
+    #dashboard-stats {
+      display: flex;
+      gap: 12px;
+      margin: 22px 0;
+    }
+    .stat-tile {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .stat-tile .num   { font-size: 24px; font-weight: 700; color: var(--title); }
+    .stat-tile .label { font-size: 11px; color: var(--sublabel); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .stat-tile.green  .num { color: var(--green); }
+    .stat-tile.yellow .num { color: var(--yellow); }
+    .stat-tile.muted  .num { color: var(--muted); }
+
+    .dash-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+    .dash-card h2 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--title);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 12px;
+    }
+    .dash-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .dash-card li { font-size: 13px; color: var(--body-text); line-height: 1.5; }
+    .dash-card li strong { color: var(--sublabel); font-weight: 600; }
+    .dash-card p { font-size: 13px; color: var(--body-text); line-height: 1.6; }
+    .dash-card .empty { color: var(--muted); font-size: 13px; }
+
+    #dash-next-move { border-color: rgba(59, 130, 246, 0.35); }
+    #dash-next-move h2 { color: var(--blue); }
+
+    .roadmap-item { display: flex; align-items: center; gap: 9px; padding: 5px 0; font-size: 13px; }
+    .roadmap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .roadmap-item.done .roadmap-dot    { background: var(--green); }
+    .roadmap-item.partial .roadmap-dot { background: var(--yellow); }
+    .roadmap-item.todo .roadmap-dot    { background: transparent; border: 1.5px solid var(--muted); }
+    .roadmap-item.done .text, .roadmap-item.partial .text { color: var(--body-text); }
+    .roadmap-item.todo .text { color: var(--muted); }
+
+    /* ── Roadmap view (curriculum: phase sub-nav + phase page) ── */
+    #phase-nav {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    #phase-nav-header {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    #phase-nav-header h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.3px; color: var(--title); }
+    #phase-nav-header p  { font-size: 11px; color: var(--sublabel); margin-top: 3px; }
+
+    .phase-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      user-select: none;
+    }
+    .phase-item:hover { background: var(--hover); }
+    .phase-item.active {
+      background: var(--active-bg);
+      border-left-color: var(--blue);
+    }
+    .phase-item .phase-num { font-size: 10px; color: var(--sublabel); text-transform: uppercase; letter-spacing: 0.5px; }
+    .phase-item .phase-title { font-size: 13px; color: var(--body-text); }
+    .phase-item.active .phase-title { color: var(--title); font-weight: 600; }
+
+    #roadmap-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px 40px 60px;
+      max-width: 760px;
+    }
+    #roadmap-content h2.phase-title-main { font-size: 20px; color: var(--title); margin-bottom: 18px; }
+    #roadmap-content h3 { font-size: 14px; color: var(--blue); margin: 22px 0 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+    #roadmap-content p { font-size: 13.5px; color: var(--body-text); line-height: 1.7; margin-bottom: 10px; }
+    #roadmap-content ul, #roadmap-content ol { margin: 0 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
+    #roadmap-content li { font-size: 13.5px; color: var(--body-text); line-height: 1.6; }
+    #roadmap-content strong { color: var(--title); font-weight: 600; }
+    #roadmap-content code {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--cyan);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12.5px;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+    #roadmap-content .live-checklist { margin-top: 18px; padding: 14px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 8px; }
+    #roadmap-content .live-checklist h4 { font-size: 11px; color: var(--sublabel); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+
+    /* ── Phase 0: interactive complexity module ── */
+    .p0-nav { display:flex; gap:8px; flex-wrap:wrap; margin: 4px 0 18px; }
+    .p0-nav-item { padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.04); border:1px solid var(--border); font-size:12px; color:var(--sublabel); cursor:pointer; white-space:nowrap; user-select:none; }
+    .p0-nav-item:hover { color:var(--body-text); }
+    .p0-nav-item.active { background:var(--active-bg); border-color:rgba(59,130,246,0.4); color:var(--blue); font-weight:600; }
+    .p0-container { display:flex; flex-direction:column; }
+    .p0-section-title { font-size:16px; font-weight:700; color:var(--title); margin-bottom:4px; }
+    .p0-section-sub { font-size:12px; color:var(--sublabel); margin-bottom:16px; }
+    .p0-card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:16px 18px; margin-bottom:16px; }
+    .p0-card h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--blue); margin-bottom:12px; }
+    .p0-bound-row { display:flex; align-items:flex-start; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
+    .p0-bound-row:last-child { border-bottom:none; }
+    .p0-bound-sym { width:26px; flex-shrink:0; font-size:19px; font-weight:700; text-align:center; }
+    .p0-bound-sym.o { color:var(--red); }
+    .p0-bound-sym.omega { color:var(--green); }
+    .p0-bound-sym.theta { color:var(--blue); }
+    .p0-bound-text { font-size:13px; color:var(--body-text); line-height:1.6; }
+    .p0-bound-text strong { color:var(--title); }
+    .p0-bound-text .tag { display:block; font-size:11.5px; color:var(--sublabel); margin-top:2px; }
+    .p0-code { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:6px; padding:12px 14px; font-family:'SF Mono', Consolas, monospace; font-size:12.5px; color:var(--cyan); overflow-x:auto; white-space:pre; margin:10px 0 14px; }
+    .p0-diagram-col { margin-top:12px; }
+    .p0-diagram-label { font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--sublabel); margin-bottom:8px; }
+    .p0-range-track { position:relative; height:30px; background:rgba(255,255,255,0.04); border-radius:6px; border:1px solid var(--border); }
+    .p0-range-fill { position:absolute; top:2px; bottom:2px; background:linear-gradient(90deg, rgba(34,197,94,0.4), rgba(239,68,68,0.4)); border-radius:4px; }
+    .p0-range-tags { display:flex; justify-content:space-between; font-size:10.5px; color:var(--sublabel); margin-top:6px; }
+    .p0-reveal { margin:10px 0 2px; font-size:13px; }
+    .p0-reveal summary { cursor:pointer; color:var(--blue); font-weight:600; }
+    .p0-reveal[open] summary { margin-bottom:8px; }
+    .p0-reveal p { color:var(--body-text); font-size:13px; line-height:1.6; }
+    .p0-chart-wrap { margin-top:6px; }
+    .p0-chart-controls { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .p0-chart-controls input[type=range] { flex:1; accent-color:var(--blue); }
+    .p0-chart-controls .n-label { font-size:13px; color:var(--title); font-weight:700; min-width:24px; text-align:right; }
+    .p0-legend { display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; }
+    .p0-legend-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--sublabel); }
+    .p0-legend-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+    .p0-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:12.5px; }
+    .p0-table th, .p0-table td { padding:6px 8px; text-align:left; border-bottom:1px solid var(--border); }
+    .p0-table th { color:var(--sublabel); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:0.3px; }
+    .p0-table td.num { text-align:right; font-family:'SF Mono', Consolas, monospace; color:var(--title); }
+    .p0-callout { border-left:3px solid var(--blue); padding:10px 14px; background:rgba(59,130,246,0.06); border-radius:0 6px 6px 0; font-size:13px; color:var(--body-text); line-height:1.6; margin-top:2px; }
+    .p0-callout strong { color:var(--title); }
+    .p0-footer-next { margin-top:14px; font-size:12px; color:var(--muted); font-style:italic; }
+    .p0-next-btn { font-style:normal; margin-top:0; padding:10px 18px; background:var(--blue); color:#ffffff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; transition:background .12s; }
+    .p0-next-btn:hover { background:#2563eb; }
+    .p0-split { display:flex; gap:20px; flex-wrap:wrap; margin-top:12px; }
+    .p0-split > div { flex:1; min-width:220px; }
+    .p0-grid { display:grid; gap:3px; margin-top:10px; max-width:200px; }
+    .p0-dot { aspect-ratio:1; background:var(--blue); border-radius:2px; }
+    .p0-bars-row { display:flex; flex-direction:column; gap:14px; margin-top:22px; }
+    .p0-bar-label { font-size:11px; color:var(--sublabel); margin-bottom:4px; }
+    .p0-bar { height:14px; border-radius:3px; background:var(--blue); transition:width .15s; }
+    .p0-bar.b2 { background:var(--cyan); }
+    .p0-count-badge { font-size:12.5px; color:var(--body-text); margin-top:10px; }
+    .p0-count-badge strong { color:var(--title); }
+    .p0-toggle-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .p0-toggle-btn { padding:6px 12px; border-radius:6px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--sublabel); font-size:12px; cursor:pointer; user-select:none; }
+    .p0-toggle-btn.active { background:var(--active-bg); border-color:rgba(59,130,246,0.4); color:var(--blue); font-weight:600; }
+    .p0-trace-wrap { display:flex; align-items:flex-end; gap:3px; height:120px; margin-top:12px; }
+    .p0-trace-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+    .p0-trace-cost { font-size:9px; color:var(--sublabel); margin-bottom:2px; }
+    .p0-trace-bar { width:100%; border-radius:2px 2px 0 0; }
+    .p0-trace-idx { font-size:8px; color:var(--muted); margin-top:3px; }
+    .p0-arr-row { display:flex; gap:4px; margin-top:10px; }
+    .p0-arr-cell { flex:1; aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:4px; font-size:12px; color:var(--body-text); font-family:'SF Mono', Consolas, monospace; }
+    .p0-arr-cell.active { background:var(--active-bg); border-color:var(--blue); color:var(--title); font-weight:700; }
+    .p0-arr-cell.shift { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.5); color:#ef4444; }
+    .p0-bucket-row { display:flex; gap:8px; margin-top:14px; align-items:flex-end; min-height:120px; }
+    .p0-bucket { flex:1; display:flex; flex-direction:column-reverse; align-items:stretch; gap:3px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:4px 4px 0 0; padding:4px; min-height:24px; }
+    .p0-bucket-labels { display:flex; gap:8px; margin-top:4px; }
+    .p0-key-chip { background:var(--blue); color:#fff; font-size:9px; text-align:center; border-radius:2px; padding:3px 0; font-family:monospace; }
+    .p0-key-chip.collide { background:#ef4444; }
+    .p0-sim-btn { background:var(--cyan); margin-top:12px; }
+    .p0-sim-btn:hover { background:#0891b2; }
+    .p0-sim-btn:disabled { opacity:0.5; cursor:default; }
+    .p0-sim-log { margin-top:10px; font-size:12px; color:var(--body-text); line-height:1.6; font-family:'SF Mono', Consolas, monospace; min-height:18px; }
+    .p0-stack-frames { display:flex; flex-direction:column-reverse; gap:3px; margin-top:10px; max-height:260px; overflow-y:auto; }
+    .p0-stack-frame { background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.3); border-radius:4px; padding:6px 10px; font-size:11px; font-family:'SF Mono', Consolas, monospace; color:var(--body-text); }
+    .p0-quiz-item { border-top:1px solid var(--border); padding-top:14px; margin-top:14px; }
+    .p0-quiz-item:first-of-type { border-top:none; padding-top:0; margin-top:0; }
+    .p0-quiz-q { font-size:13.5px; color:var(--body-text); line-height:1.6; }
+    .p0-quiz-q strong { color:var(--title); }
+    .p0-quiz-answer { margin-top:10px; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; font-size:12.5px; line-height:1.7; color:var(--body-text); }
+    .p0-quiz-answer strong { color:var(--title); }
+
+    /* ── Phase 1: interactive per-problem module (reuses .p0-* card/code/reveal styles) ── */
+    .p1-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:600; margin-left:10px; vertical-align:middle; text-transform:uppercase; letter-spacing:0.3px; }
+    .p1-badge.easy   { background:rgba(34,197,94,0.15);  color:var(--green); }
+    .p1-badge.medium { background:rgba(234,179,8,0.15);  color:var(--yellow); }
+    .p1-badge.hard   { background:rgba(239,68,68,0.15);  color:var(--red); }
+    .p1-file-tag { font-family:'SF Mono', Consolas, monospace; color:var(--cyan); }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 7px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #424242; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
   </style>
 </head>
 <body>
 
-<div id="sidebar">
-  <div id="sidebar-header">
-    <h1>DSA Visualized</h1>
-    <p>Select a file → logs go to DevTools (F12)</p>
-  </div>
-  <div id="search-wrap">
-    <input id="search" type="text" placeholder="Search files…">
-  </div>
-  <div id="file-count"></div>
-  <div id="file-list"></div>
+<div id="activity-bar">
+  <button class="nav-btn" data-view="dashboard" title="Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <rect x="3" y="3" width="7" height="9" rx="1.2"/>
+      <rect x="14" y="3" width="7" height="5" rx="1.2"/>
+      <rect x="14" y="12" width="7" height="9" rx="1.2"/>
+      <rect x="3" y="16" width="7" height="5" rx="1.2"/>
+    </svg>
+  </button>
+  <button class="nav-btn active" data-view="livecoding" title="Live Coding">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+  </button>
+  <button class="nav-btn" data-view="roadmap" title="Roadmap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <line x1="4" y1="21" x2="4" y2="3"/>
+      <path d="M4 4h13l-3 4 3 4H4"/>
+    </svg>
+  </button>
 </div>
 
-<div id="main">
-  <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-    <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-  </svg>
-  <div id="main-file"></div>
-  <div id="main-hint">Click a file to run it</div>
-  <div id="main-sub">Open Chrome DevTools → Console (F12) to see logs</div>
-  <button id="btn-rerun" onclick="rerun()">&#8635; Re-run</button>
+<div id="view-livecoding" class="view active">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h1>DSA Visualized</h1>
+      <p>Select a file → logs go to DevTools (F12)</p>
+    </div>
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Search files…">
+    </div>
+    <div id="file-count"></div>
+    <div id="file-list"></div>
+  </div>
+
+  <div id="main">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+      <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+    </svg>
+    <div id="main-file"></div>
+    <div id="main-hint">Click a file to run it</div>
+    <div id="main-sub">Open Chrome DevTools → Console (F12) to see logs</div>
+    <button id="btn-rerun" onclick="rerun()">&#8635; Re-run</button>
+  </div>
+</div>
+
+<div id="view-dashboard" class="view">
+  <div id="dashboard">
+    <div id="dashboard-header">
+      <h1>Dashboard</h1>
+      <p>Your co-founder & mentor's live status — from skills/skillCoFounderMentor.md</p>
+    </div>
+    <div id="dashboard-stats"></div>
+    <div id="dash-last-session" class="dash-card"></div>
+    <div id="dash-next-move" class="dash-card"></div>
+    <div id="dash-roadmap" class="dash-card"></div>
+  </div>
+</div>
+
+<div id="view-roadmap" class="view">
+  <div id="phase-nav">
+    <div id="phase-nav-header">
+      <h1>Roadmap</h1>
+      <p>Zero → interview-ready, in 5 phases</p>
+    </div>
+    <div id="phase-list"></div>
+  </div>
+  <div id="roadmap-content"></div>
 </div>
 
 <script type="module">
@@ -204,9 +506,9 @@
       el.title = name;
       el.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 16 16" style="flex-shrink:0">
-          <path d="M9.5 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5L9.5 1Z" fill="#cb8f3f"/>
-          <path d="M9.5 1v3.5H13" fill="none" stroke="#9a6e2e" stroke-width="1"/>
-          <text x="4.5" y="11" font-size="4.5" fill="#fff" font-family="monospace" font-weight="bold">JS</text>
+          <path d="M9.5 1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5L9.5 1Z" fill="#eab308"/>
+          <path d="M9.5 1v3.5H13" fill="none" stroke="#f97316" stroke-width="1"/>
+          <text x="4.5" y="11" font-size="4.5" fill="#0a0a0a" font-family="monospace" font-weight="bold">JS</text>
         </svg>
         <span class="file-name">${name}</span>`;
       el.onclick = () => runFile(name);
@@ -221,27 +523,1922 @@
     document.querySelectorAll('.file-item').forEach(el =>
       el.classList.toggle('active', el.dataset.name === name));
 
+    const hint = document.getElementById('main-hint');
     document.getElementById('main-file').style.display = 'block';
     document.getElementById('main-file').textContent = name;
-    document.getElementById('main-hint').textContent = 'Running…';
+    hint.className = '';
+    hint.textContent = 'Running…';
     document.getElementById('btn-rerun').style.display = 'inline-block';
 
     // Clear console and run — logs go straight to Chrome DevTools
     console.clear();
-    console.log(`%c▶ ${name}`, 'color:#4ec9b0;font-weight:bold;font-size:13px');
+    console.log(`%c▶ ${name}`, 'color:#3b82f6;font-weight:bold;font-size:13px');
 
     try {
       // Cache-bust so Live Server always loads the latest saved version
       const mod = await import(`./${name}?t=${Date.now()}`);
       if (typeof mod.default === 'function') mod.default();
-      document.getElementById('main-hint').textContent = 'Done — check DevTools console (F12)';
+      hint.className = 'success';
+      hint.textContent = 'Done — check DevTools console (F12)';
     } catch (e) {
       console.error(e);
-      document.getElementById('main-hint').textContent = `Error: ${e.message}`;
+      hint.className = 'error';
+      hint.textContent = `Error: ${e.message}`;
     }
   }
 
   window.rerun = () => { if (currentFile) runFile(currentFile); };
+
+  // ── Nav switching (Dashboard / LiveCoding) ──
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  function switchView(view) {
+    document.querySelectorAll('.nav-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.view === view));
+    document.getElementById('view-livecoding').classList.toggle('active', view === 'livecoding');
+    document.getElementById('view-dashboard').classList.toggle('active', view === 'dashboard');
+    document.getElementById('view-roadmap').classList.toggle('active', view === 'roadmap');
+    if (view === 'dashboard') loadDashboard();
+    if (view === 'roadmap') loadRoadmapView();
+  }
+
+  // ── Dashboard: reads co-founder/state.md + co-founder/roadmap.md ──
+  async function loadDashboard() {
+    const lastEl     = document.getElementById('dash-last-session');
+    const nextEl     = document.getElementById('dash-next-move');
+    const roadmapEl  = document.getElementById('dash-roadmap');
+
+    let state;
+    try {
+      const fetchText = url => fetch(`${url}?t=${Date.now()}`).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} on ${url}`);
+        return r.text();
+      });
+      const [stateMd, roadmapMd] = await Promise.all([
+        fetchText('./co-founder/state.md'),
+        fetchText('./co-founder/roadmap.md'),
+      ]);
+      state = parseMentorFiles(stateMd, roadmapMd);
+    } catch (e) {
+      renderStats([]);
+      lastEl.innerHTML    = `<h2>Last Session</h2><p class="empty">Couldn't load co-founder/ files (${e.message}). If you're on \`node server.js\`, it only serves a few API routes — use Live Server for the dashboard to work.</p>`;
+      nextEl.innerHTML    = '';
+      roadmapEl.innerHTML = '';
+      return;
+    }
+
+    renderStats(state.roadmap);
+
+    lastEl.innerHTML = `<h2>Last Session</h2>` + (
+      state.lastSession.length
+        ? `<ul>${state.lastSession.map(li => `<li>${mdInline(li)}</li>`).join('')}</ul>`
+        : `<p class="empty">No session logged yet.</p>`
+    );
+
+    nextEl.innerHTML = `<h2>Next Move</h2><p>${state.nextMove ? mdInline(state.nextMove) : '<span class="empty">Not set.</span>'}</p>`;
+
+    roadmapEl.innerHTML = `<h2>Roadmap</h2>` + renderChecklistItems(state.roadmap);
+  }
+
+  // Shared by the Dashboard's roadmap card and the Roadmap view's Phase 1 embed
+  function parseRoadmapChecklist(roadmapMd) {
+    return roadmapMd.split('\n')
+      .filter(l => /^- \[[ x~]\]/.test(l.trim()))
+      .map(l => {
+        const t = l.trim();
+        return { status: t[3], text: t.slice(6).trim() };
+      });
+  }
+
+  function renderChecklistItems(items) {
+    return items.map(r => {
+      const cls = r.status === 'x' ? 'done' : r.status === '~' ? 'partial' : 'todo';
+      return `<div class="roadmap-item ${cls}"><span class="roadmap-dot"></span><span class="text">${escapeHtml(r.text)}</span></div>`;
+    }).join('');
+  }
+
+  // ── Roadmap view: reads co-founder/curriculum.md, one page per phase ──
+  let curriculumPhases = [];
+  let currentPhaseIndex = 0;
+
+  async function loadRoadmapView() {
+    const listEl    = document.getElementById('phase-list');
+    const contentEl = document.getElementById('roadmap-content');
+
+    try {
+      const md = await fetch(`./co-founder/curriculum.md?t=${Date.now()}`).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      });
+      curriculumPhases = parseCurriculum(md);
+    } catch (e) {
+      listEl.innerHTML = '';
+      contentEl.innerHTML = `<p style="color:var(--red)">Couldn't load co-founder/curriculum.md (${e.message}). If you're on \`node server.js\`, use Live Server instead — it only serves a few API routes.</p>`;
+      return;
+    }
+
+    listEl.innerHTML = '';
+    curriculumPhases.forEach((phase, i) => {
+      const el = document.createElement('div');
+      el.className = 'phase-item' + (i === currentPhaseIndex ? ' active' : '');
+      el.innerHTML = `<span class="phase-num">${escapeHtml(phase.num)}</span><span class="phase-title">${escapeHtml(phase.title)}</span>`;
+      el.onclick = () => { currentPhaseIndex = i; showPhase(i); };
+      listEl.appendChild(el);
+    });
+
+    showPhase(currentPhaseIndex);
+  }
+
+  // Splits curriculum.md into phases on "## Phase N — Title" headings
+  function parseCurriculum(md) {
+    return md.split(/\n(?=## Phase )/)
+      .filter(block => block.trim().startsWith('## Phase'))
+      .map(block => {
+        const lines   = block.split('\n');
+        const heading = lines[0].replace(/^##\s*/, '').trim();
+        const body    = lines.slice(1).join('\n').trim();
+        const m = heading.match(/^(Phase \d+)\s*—\s*(.+)$/);
+        return { num: m ? m[1] : heading, title: m ? m[2] : '', body };
+      });
+  }
+
+  async function showPhase(index) {
+    const phase = curriculumPhases[index];
+    if (!phase) return;
+    document.querySelectorAll('.phase-item').forEach((el, i) => el.classList.toggle('active', i === index));
+
+    const isPhase0 = phase.num === 'Phase 0';
+    const isPhase1 = phase.num === 'Phase 1';
+    let html;
+    if (isPhase0) {
+      const introBody = phase.body.split(/\n### /)[0].trim();
+      html = `<h2 class="phase-title-main">${escapeHtml(phase.num)} — ${escapeHtml(phase.title)}</h2>`
+        + renderPhase0Extra(renderMarkdown(introBody));
+    } else if (isPhase1) {
+      html = `<h2 class="phase-title-main">${escapeHtml(phase.num)} — ${escapeHtml(phase.title)}</h2>`
+        + renderMarkdown(phase.body) + renderPhase1Extra();
+    } else {
+      html = `<h2 class="phase-title-main">${escapeHtml(phase.num)} — ${escapeHtml(phase.title)}</h2>` + renderMarkdown(phase.body);
+    }
+
+    if (html.includes('<!-- LIVE_ROADMAP_CHECKLIST -->')) {
+      let checklistHtml = `<p class="empty" style="color:var(--muted)">Couldn't load live checklist.</p>`;
+      try {
+        const roadmapMd = await fetch(`./co-founder/roadmap.md?t=${Date.now()}`).then(r => r.text());
+        checklistHtml = `<div class="live-checklist"><h4>Live Progress</h4>${renderChecklistItems(parseRoadmapChecklist(roadmapMd))}</div>`;
+      } catch {}
+      html = html.replace('<!-- LIVE_ROADMAP_CHECKLIST -->', checklistHtml);
+    }
+
+    document.getElementById('roadmap-content').innerHTML = html;
+    if (isPhase0) bindPhase0Handlers();
+    if (isPhase1) bindPhase1Handlers();
+  }
+
+  // ── Phase 0: interactive learning module (built section by section, not chat) ──
+  const PHASE0_SECTIONS = [
+    { id: 'notation',   label: '1 · Big O, Θ, Ω',         render: renderP0Notation },
+    { id: 'reading',    label: '2 · Reading Code',        render: renderP0Reading },
+    { id: 'amortized',  label: '3 · Amortized Analysis',  render: renderP0Amortized },
+    { id: 'cheatsheet', label: '4 · Cheat Sheet',         render: renderP0CheatSheet },
+    { id: 'space',      label: '5 · Space Complexity',    render: renderP0Space },
+    { id: 'checkpoint', label: '6 · Check Yourself',      render: renderP0Checkpoint, final: true },
+  ];
+  let currentP0Section = localStorage.getItem('dsa-p0-section') || PHASE0_SECTIONS[0].id;
+
+  function renderPhase0Extra(introHtml) {
+    const navHtml = PHASE0_SECTIONS.map(s =>
+      `<div class="p0-nav-item${s.id === currentP0Section ? ' active' : ''}" data-p0="${s.id}">${escapeHtml(s.label)}</div>`
+    ).join('');
+    const active = PHASE0_SECTIONS.find(s => s.id === currentP0Section) || PHASE0_SECTIONS[0];
+
+    return `${introHtml}<div class="p0-nav">${navHtml}</div><div class="p0-container" id="p0-body">${active.render()}</div>`;
+  }
+
+  function bindPhase0Handlers() {
+    document.querySelectorAll('.p0-nav-item').forEach(el => {
+      el.onclick = () => goToP0Section(el.dataset.p0);
+    });
+    initP0Chart();
+    initP0LoopViz();
+    initP0RecursionViz();
+    initP0TraceChart();
+    initP0AmortChart();
+    initP0ArrayViz();
+    initP0HashViz();
+    initP0BstViz();
+    initP0HeapViz();
+    initP0StackTower();
+    initP0SpaceViz();
+    updateP0NextFooter();
+  }
+
+  async function goToP0Section(id) {
+    currentP0Section = id;
+    localStorage.setItem('dsa-p0-section', id);
+    await showPhase(currentPhaseIndex);
+    const contentEl = document.getElementById('roadmap-content');
+    if (contentEl) contentEl.scrollTop = 0;
+  }
+
+  // Renders a "Continue →" button when a next section already exists, a "Go to Phase 1" button on the final
+  // section, otherwise an honest "not built yet" note
+  function updateP0NextFooter() {
+    const footer = document.getElementById('p0-next-footer');
+    if (!footer) return;
+    const idx = PHASE0_SECTIONS.findIndex(s => s.id === currentP0Section);
+    const current = PHASE0_SECTIONS[idx];
+    const next = PHASE0_SECTIONS[idx + 1];
+    if (next) {
+      footer.innerHTML = `<button class="p0-next-btn" id="p0-next-btn">Continue to Section ${escapeHtml(next.label)} →</button>`;
+      document.getElementById('p0-next-btn').onclick = () => goToP0Section(next.id);
+    } else if (current && current.final) {
+      footer.innerHTML = `<button class="p0-next-btn" id="p0-next-btn">Go to Phase 1 — Arrays & Hashing →</button>`;
+      document.getElementById('p0-next-btn').onclick = () => { currentPhaseIndex = 1; showPhase(1); };
+    } else {
+      footer.textContent = "You've reached the end of what's built so far in Phase 0 — more sections coming soon.";
+    }
+  }
+
+  function renderP0Notation() {
+    return `
+    <div class="p0-section-title">Big O, Big Θ, Big Ω — what "complexity notation" actually means</div>
+    <div class="p0-section-sub">Section 1 of Phase 0 — read once, use the chart, come back if it doesn't stick.</div>
+
+    <p>Every algorithm's runtime depends on the size of its input, almost always called <code>n</code>. Big-O notation isn't a stopwatch measurement — it describes how the number of operations <em>grows</em> as <code>n</code> grows. Three symbols show up, and each is a different kind of bound on that growth, not an exact count.</p>
+
+    <div class="p0-card">
+      <h4>The three bounds, plain English</h4>
+      <div class="p0-bound-row">
+        <div class="p0-bound-sym o">O</div>
+        <div class="p0-bound-text"><strong>Big O — the ceiling.</strong> "At most this slow." An upper bound on how bad it can get.<span class="tag">This is 95% of what interviews test — when someone says "what's the complexity," they mean Big O.</span></div>
+      </div>
+      <div class="p0-bound-row">
+        <div class="p0-bound-sym omega">Ω</div>
+        <div class="p0-bound-text"><strong>Big Omega — the floor.</strong> "At least this fast." A lower bound on how good it can get, even in the best possible case.</div>
+      </div>
+      <div class="p0-bound-row">
+        <div class="p0-bound-sym theta">Θ</div>
+        <div class="p0-bound-text"><strong>Big Theta — the tight bound.</strong> "Exactly this." Only applies when the floor and the ceiling meet — best case and worst case are the same order of growth.</div>
+      </div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Worked example A — floor and ceiling meet (Θ applies)</h4>
+      <p>Summing every element in an array of size <code>n</code>:</p>
+      <pre class="p0-code">let total = 0;
+for (const x of arr) total += x;</pre>
+      <p>No matter what's inside the array — all zeros, huge numbers, sorted or shuffled — this loop runs exactly <code>n</code> times. Best case = worst case = <code>n</code>. Floor and ceiling are the same curve, so this is <strong>Θ(n)</strong>: simultaneously O(n) <em>and</em> Ω(n).</p>
+      <div class="p0-diagram-col">
+        <div class="p0-diagram-label">Ω(n) and O(n) collapse onto one line</div>
+        <div class="p0-range-track"><div class="p0-range-fill" style="left:47%;width:6%"></div></div>
+        <div class="p0-range-tags"><span>Ω(n) — floor</span><span>Θ(n) — tight</span><span>O(n) — ceiling</span></div>
+      </div>
+      <details class="p0-reveal"><summary>Why can't this ever be faster or slower than n?</summary>
+        <p>Every element has to be visited at least once to end up in the total — skip one and the answer is wrong. That's the Ω(n) floor. It also never needs a second pass — that's the O(n) ceiling. Floor = ceiling = Θ(n).</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>Worked example B — floor and ceiling diverge (no single Θ)</h4>
+      <p>Linear search for a target value:</p>
+      <pre class="p0-code">for (let i = 0; i &lt; arr.length; i++) {
+  if (arr[i] === target) return i;
+}
+return -1;</pre>
+      <p>Best case: the target is at index 0 → 1 comparison → <strong>Ω(1)</strong>. Worst case: the target is missing (or last) → n comparisons → <strong>O(n)</strong>. Constant and linear are different orders of growth, so there is no single Θ that describes linear search in general.</p>
+      <div class="p0-diagram-col">
+        <div class="p0-diagram-label">Ω(1) and O(n) stay far apart</div>
+        <div class="p0-range-track"><div class="p0-range-fill" style="left:2%;width:96%"></div></div>
+        <div class="p0-range-tags"><span>Ω(1) — floor</span><span>no Θ</span><span>O(n) — ceiling</span></div>
+      </div>
+      <details class="p0-reveal"><summary>So what do interviewers actually mean by "the complexity" of linear search?</summary>
+        <p>They mean the worst case, O(n) — that's the default reading of Big O unless someone specifies otherwise. Knowing Ω and Θ exist is what separates "I memorized O(n)" from "I understand what the bound actually claims."</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>See the growth rates, don't just read them</h4>
+      <p>Drag <code>n</code> and watch how far apart these classes really get. Notice the chart's <strong>y-axis is logarithmic</strong> — each gridline is 10× the last. On a normal scale, O(2ⁿ) would swallow every other curve and make them all look flat.</p>
+      <div class="p0-chart-wrap">
+        <div class="p0-chart-controls">
+          <span style="font-size:12px;color:var(--sublabel)">n =</span>
+          <input type="range" id="p0-n-slider" min="1" max="20" value="10">
+          <span class="n-label" id="p0-n-label">10</span>
+        </div>
+        <div id="p0-chart-svg"></div>
+        <div class="p0-legend" id="p0-legend"></div>
+        <table class="p0-table">
+          <thead><tr><th>Complexity</th><th style="text-align:right">Real-world analogue</th><th style="text-align:right">Ops at this n</th></tr></thead>
+          <tbody id="p0-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="p0-callout"><strong>Takeaway:</strong> saying a solution is "O(n²)" is a specific claim — no matter the input, this algorithm won't do meaningfully more than ~n² work as n grows. You should be able to point at the exact line of code responsible for that claim. That's section 2.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  function renderP0Reading() {
+    return `
+    <div class="p0-section-title">Reading complexity straight off code</div>
+    <div class="p0-section-sub">Section 2 of Phase 0 — three rules cover almost everything you'll see: nested loops multiply, sequential loops add, recursion is branching factor × depth.</div>
+
+    <div class="p0-card">
+      <h4>Nested multiplies, sequential adds</h4>
+      <p>Same input size <code>n</code>, two very different totals — depending only on whether the loops sit <em>inside</em> each other or <em>next to</em> each other. Drag <code>n</code> and watch both grow.</p>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">n =</span>
+        <input type="range" id="p0-loop-n" min="2" max="12" value="6">
+        <span class="n-label" id="p0-loop-n-label">6</span>
+      </div>
+      <div class="p0-split">
+        <div>
+          <div class="p0-diagram-label">Nested — multiply</div>
+          <pre class="p0-code">for (let i = 0; i &lt; n; i++) {
+  for (let j = 0; j &lt; n; j++) {
+    // O(1) work
+  }
+}</pre>
+          <div id="p0-nested-grid" class="p0-grid"></div>
+          <div class="p0-count-badge">Total = n × n = <strong id="p0-nested-count"></strong> → <strong>O(n²)</strong></div>
+        </div>
+        <div>
+          <div class="p0-diagram-label">Sequential — add</div>
+          <pre class="p0-code">for (let i = 0; i &lt; n; i++) { /* O(1) */ }
+for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
+          <div class="p0-bars-row" id="p0-seq-bars"></div>
+          <div class="p0-count-badge">Total = n + n = <strong id="p0-seq-count"></strong> → drop the constant → <strong>O(n)</strong></div>
+        </div>
+      </div>
+      <details class="p0-reveal"><summary>Why does Big O let you drop the 2 in "2n"?</summary>
+        <p>Big O describes growth as n → ∞. Whether it's n, 2n, or 100n, the shape of the curve — a straight line — is identical; only the steepness changes. n² vs. n, on the other hand, are genuinely different shapes — no constant closes that gap.</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>Watch for: nested loops over different-sized inputs</h4>
+      <pre class="p0-code">for (let i = 0; i &lt; n; i++) {       // n = arr1.length
+  for (let j = 0; j &lt; m; j++) {     // m = arr2.length
+    // O(1) work
+  }
+}</pre>
+      <p>Nesting still multiplies — but the result is <strong>O(n·m)</strong>, not O(n²). They only collapse to O(n²) if <code>n</code> and <code>m</code> happen to be the same size. Writing "O(n²)" for two different-length inputs is one of the most common complexity mistakes — nested loop <em>structure</em> doesn't automatically mean "n squared."</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Recursion: branching factor × depth</h4>
+      <p>A recursive function's calls form a tree. Its size depends on two things: how many recursive calls each invocation makes (<strong>branching factor</strong>, b) and how many levels deep it goes before the base case (<strong>depth</strong>, d). If each call does O(1) extra work besides recursing, total work ≈ <strong>O(b<sup>d</sup>)</strong>.</p>
+
+      <div class="p0-toggle-row">
+        <div class="p0-toggle-btn active" data-b="1">Branching factor 1 — linear recursion</div>
+        <div class="p0-toggle-btn" data-b="2">Branching factor 2 — binary recursion</div>
+      </div>
+
+      <pre class="p0-code" id="p0-recursion-code"></pre>
+
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">depth =</span>
+        <input type="range" id="p0-depth-slider" min="1" max="5" value="3">
+        <span class="n-label" id="p0-depth-label">3</span>
+      </div>
+
+      <div id="p0-tree-svg"></div>
+      <div class="p0-count-badge" id="p0-tree-count"></div>
+
+      <details class="p0-reveal"><summary>Why does naive Fibonacci recompute so much work?</summary>
+        <p><code>fib(n) = fib(n-1) + fib(n-2)</code> branches into 2 calls at every level, down to depth n — that's the b=2 tree above. The same subproblems (like <code>fib(3)</code>) get recomputed inside many different branches, which is exactly why the call count explodes to O(2ⁿ) instead of O(n). Memoization fixes this by caching results so each subproblem is computed once — that comes back when we hit Dynamic Programming.</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>Only the fastest-growing term survives</h4>
+      <p>If one part of your code is O(n²) and another is O(n), the total is O(n² + n) — but we write that as <strong>O(n²)</strong>. As n grows, the smaller term becomes irrelevant next to the bigger one.</p>
+      <table class="p0-table">
+        <thead><tr><th>n</th><th style="text-align:right">n² term</th><th style="text-align:right">n term</th><th style="text-align:right">n² is bigger by</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td class="num">100</td><td class="num">10</td><td class="num">10×</td></tr>
+          <tr><td>100</td><td class="num">10,000</td><td class="num">100</td><td class="num">100×</td></tr>
+          <tr><td>10,000</td><td class="num">100,000,000</td><td class="num">10,000</td><td class="num">10,000×</td></tr>
+        </tbody>
+      </table>
+      <p>The gap only widens as n grows — it never closes. That's why the smaller term is dropped entirely, not approximated.</p>
+    </div>
+
+    <div class="p0-callout"><strong>Takeaway:</strong> before writing a line of code, look at the shape of the control flow — loops nested or side by side, recursion's branching and depth — and the complexity falls out directly. You shouldn't need to run anything to know it.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  function initP0LoopViz() {
+    const slider = document.getElementById('p0-loop-n');
+    if (!slider) return;
+    const label      = document.getElementById('p0-loop-n-label');
+    const gridHost   = document.getElementById('p0-nested-grid');
+    const nestedCount = document.getElementById('p0-nested-count');
+    const barsHost   = document.getElementById('p0-seq-bars');
+    const seqCount   = document.getElementById('p0-seq-count');
+    const SLIDER_MAX = Number(slider.max);
+
+    function render(n) {
+      gridHost.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      gridHost.innerHTML = Array.from({ length: n * n }).map(() => '<div class="p0-dot"></div>').join('');
+      nestedCount.textContent = n * n;
+
+      const pct = Math.round((n / SLIDER_MAX) * 100);
+      barsHost.innerHTML = `
+        <div><div class="p0-bar-label">Pass 1 — n steps</div><div class="p0-bar" style="width:${pct}%"></div></div>
+        <div><div class="p0-bar-label">Pass 2 — n steps</div><div class="p0-bar b2" style="width:${pct}%"></div></div>`;
+      seqCount.textContent = n + n;
+    }
+
+    slider.oninput = () => { label.textContent = slider.value; render(Number(slider.value)); };
+    render(Number(slider.value));
+  }
+
+  function initP0RecursionViz() {
+    const depthSlider = document.getElementById('p0-depth-slider');
+    if (!depthSlider) return;
+    const depthLabel = document.getElementById('p0-depth-label');
+    const svgHost    = document.getElementById('p0-tree-svg');
+    const countEl    = document.getElementById('p0-tree-count');
+    const codeEl     = document.getElementById('p0-recursion-code');
+    const toggleBtns = document.querySelectorAll('.p0-toggle-btn');
+
+    let branching = 1;
+    const CODE = {
+      1: 'function f(n) {\n  if (n === 0) return 1;\n  return f(n - 1);\n}',
+      2: 'function fib(n) {\n  if (n &lt;= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}',
+    };
+
+    function buildTree(depth, b) {
+      const nodes = [], edges = [];
+      (function gen(level, xMin, xMax, parentIdx) {
+        const x = (xMin + xMax) / 2;
+        const idx = nodes.length;
+        nodes.push({ x, y: level });
+        if (parentIdx !== null) edges.push([parentIdx, idx]);
+        if (level < depth) {
+          if (b === 1) {
+            gen(level + 1, xMin, xMax, idx);
+          } else {
+            const mid = (xMin + xMax) / 2;
+            gen(level + 1, xMin, mid, idx);
+            gen(level + 1, mid, xMax, idx);
+          }
+        }
+      })(0, 0, 1, null);
+      return { nodes, edges };
+    }
+
+    function render() {
+      const depth = Number(depthSlider.value);
+      codeEl.innerHTML = CODE[branching];
+
+      const { nodes, edges } = buildTree(depth, branching);
+      const W = 600, H = 40 + depth * 44, PAD = 20;
+      const xFor = x => PAD + x * (W - PAD * 2);
+      const yFor = y => 20 + y * ((H - 40) / Math.max(1, depth));
+
+      const edgeLines = edges.map(([a, c]) =>
+        `<line x1="${xFor(nodes[a].x).toFixed(1)}" y1="${yFor(nodes[a].y).toFixed(1)}" x2="${xFor(nodes[c].x).toFixed(1)}" y2="${yFor(nodes[c].y).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1.4"/>`
+      ).join('');
+      const circles = nodes.map(nd =>
+        `<circle cx="${xFor(nd.x).toFixed(1)}" cy="${yFor(nd.y).toFixed(1)}" r="5" fill="${branching === 2 ? '#06b6d4' : '#3b82f6'}"/>`
+      ).join('');
+
+      svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg>`;
+
+      const total = branching === 1 ? depth + 1 : Math.pow(2, depth + 1) - 1;
+      countEl.innerHTML = branching === 1
+        ? `Total calls at depth ${depth} = <strong>${total}</strong> → <strong>O(depth)</strong> — a straight line, no branching.`
+        : `Total calls at depth ${depth} = <strong>${total}</strong> → <strong>O(2<sup>depth</sup>)</strong> — the same explosive curve as O(2ⁿ) from Section 1.`;
+    }
+
+    toggleBtns.forEach(btn => {
+      btn.onclick = () => {
+        branching = Number(btn.dataset.b);
+        toggleBtns.forEach(b => b.classList.toggle('active', b === btn));
+        render();
+      };
+    });
+
+    depthSlider.oninput = () => { depthLabel.textContent = depthSlider.value; render(); };
+    render();
+  }
+
+  function renderP0Amortized() {
+    return `
+    <div class="p0-section-title">Amortized analysis — why array push is O(1) even though resizing is O(n)</div>
+    <div class="p0-section-sub">Section 3 of Phase 0 — the cost of one operation can be expensive; the average over a sequence rarely is.</div>
+
+    <p>A dynamic array (JS array, Python list, C++ vector) doesn't ask for more memory on every push. It keeps spare capacity, and only <strong>resizes</strong> — allocates a bigger buffer and copies every existing element into it — once that spare capacity runs out. Copying n elements is O(n). So is push O(n)? Only on the rare push that triggers a resize. <strong>Amortized analysis</strong> asks: what's the average cost per push, over a long sequence, not just the worst single call?</p>
+
+    <div class="p0-card">
+      <h4>The idea in one sentence</h4>
+      <p>"Amortized cost" = total cost of a sequence of operations, divided by the number of operations. A handful of expensive O(n) resizes, spread across many cheap O(1) pushes, can still average out to O(1) per push — <em>if the expensive ones get rare fast enough.</em></p>
+      <p>Think of it like a savings account: every cheap push deposits a little extra work into a piggy bank. When a resize finally hits, it withdraws from the piggy bank instead of billing you fresh — as long as enough has been saved by then, no single push actually feels the full cost.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Trace it — 16 pushes into a doubling array</h4>
+      <p>Capacity starts at 1 and <strong>doubles</strong> every time it fills up. Most pushes just drop an element in place (green, O(1)). The rare push that finds the array full pays for a full copy of everything currently in it (red).</p>
+      <div id="p0-trace-chart"></div>
+      <div class="p0-count-badge" id="p0-trace-total"></div>
+      <details class="p0-reveal"><summary>Why doesn't this total keep growing per push as n grows?</summary>
+        <p>A resize at size k costs k — and there were k pushes since capacity was last k/2, all quietly "prepaying" for it. The resizes form a geometric series (1 + 2 + 4 + 8 + ...) that sums to less than 2n. Add the n pushes themselves and total work for n pushes stays under 3n — always linear in n, no matter how many pushes you do.</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>Doubling vs. a fixed +4 increment — same idea, wildly different result</h4>
+      <p>Resizing when full isn't automatically cheap — it matters <em>how much bigger</em> you grow each time. Drag n and compare the amortized cost per push (total cost so far ÷ n) for two growth strategies.</p>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">n pushes =</span>
+        <input type="range" id="p0-amort-n" min="8" max="200" value="80">
+        <span class="n-label" id="p0-amort-n-label">80</span>
+      </div>
+      <div id="p0-amort-svg"></div>
+      <div class="p0-legend">
+        <div class="p0-legend-item"><span class="p0-legend-dot" style="background:#3b82f6"></span>Double capacity when full</div>
+        <div class="p0-legend-item"><span class="p0-legend-dot" style="background:#f97316"></span>Fixed +4 capacity when full</div>
+      </div>
+      <table class="p0-table">
+        <thead><tr><th>Strategy</th><th style="text-align:right">Total cost for n pushes</th><th style="text-align:right">Amortized cost / push</th></tr></thead>
+        <tbody id="p0-amort-table"></tbody>
+      </table>
+      <details class="p0-reveal"><summary>Why does +4 fail to give amortized O(1)?</summary>
+        <p>With a fixed increment, resizes happen at a constant <em>rate</em> (every 4 pushes), but the cost of each resize keeps growing — you're copying more elements every time. Frequent-and-growing beats rare-and-growing: total copy cost becomes O(n²), so amortized cost per push is O(n) — it never settles, it keeps climbing as n grows. Doubling keeps resizes rare enough, fast enough, that the total never outpaces O(n).</p>
+      </details>
+    </div>
+
+    <div class="p0-callout"><strong>Takeaway:</strong> "amortized O(1)" is a claim about a sequence of operations, not any single call — you can't read it off one line of code the way you read O(n) off a loop (Section 2). It shows up whenever a data structure occasionally pays for expensive cleanup, and the trigger for that cleanup gets exponentially rarer relative to its cost. Dynamic arrays and hash-table resizing are the two you'll meet constantly.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  function p0SimulatePush(n, strategy) {
+    const FIXED_INC = 4;
+    let capacity = strategy === 'double' ? 1 : FIXED_INC;
+    let size = 0;
+    const costs = [];
+    for (let i = 1; i <= n; i++) {
+      let cost = 1;
+      if (size === capacity) {
+        cost += capacity;
+        capacity = strategy === 'double' ? capacity * 2 : capacity + FIXED_INC;
+      }
+      size++;
+      costs.push(cost);
+    }
+    return costs;
+  }
+
+  function initP0TraceChart() {
+    const host = document.getElementById('p0-trace-chart');
+    if (!host) return;
+    const N = 16;
+    const costs = p0SimulatePush(N, 'double');
+    const maxCost = Math.max(...costs);
+
+    host.innerHTML = `<div class="p0-trace-wrap">` + costs.map((c, i) => {
+      const h = Math.round((c / maxCost) * 100);
+      const color = c === 1 ? '#22c55e' : '#ef4444';
+      return `<div class="p0-trace-col">
+        <div class="p0-trace-cost">${c}</div>
+        <div class="p0-trace-bar" style="height:${h}%;background:${color}"></div>
+        <div class="p0-trace-idx">${i + 1}</div>
+      </div>`;
+    }).join('') + `</div>`;
+
+    const total = costs.reduce((a, b) => a + b, 0);
+    document.getElementById('p0-trace-total').innerHTML =
+      `Total cost for ${N} pushes = <strong>${total}</strong> → amortized = ${total}/${N} ≈ <strong>${(total / N).toFixed(2)}</strong> per push — a small constant, not "16."`;
+  }
+
+  function initP0AmortChart() {
+    const svgHost = document.getElementById('p0-amort-svg');
+    if (!svgHost) return;
+    const slider    = document.getElementById('p0-amort-n');
+    const label     = document.getElementById('p0-amort-n-label');
+    const tableBody = document.getElementById('p0-amort-table');
+
+    const NMAX = Number(slider.max);
+    const W = 640, H = 220, PAD = { l: 40, r: 14, t: 10, b: 22 };
+
+    function amortizedCurve(strategy) {
+      const costs = p0SimulatePush(NMAX, strategy);
+      let total = 0;
+      return costs.map((c, idx) => { total += c; return total / (idx + 1); });
+    }
+
+    const doubleCurve = amortizedCurve('double');
+    const fixedCurve  = amortizedCurve('fixed');
+    const maxY = Math.max(...fixedCurve, ...doubleCurve);
+
+    const xFor = n => PAD.l + ((n - 1) / (NMAX - 1)) * (W - PAD.l - PAD.r);
+    const yFor = v => H - PAD.b - (v / maxY) * (H - PAD.t - PAD.b);
+
+    function pathFor(arr) {
+      let d = '';
+      arr.forEach((v, idx) => {
+        const n = idx + 1;
+        d += (n === 1 ? 'M' : 'L') + xFor(n).toFixed(1) + ',' + yFor(v).toFixed(1) + ' ';
+      });
+      return d.trim();
+    }
+
+    const STEPS = 5;
+    const gridLines = [];
+    for (let s = 0; s <= STEPS; s++) {
+      const val = (maxY / STEPS) * s;
+      const y = yFor(val);
+      gridLines.push(`<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W - PAD.r}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.08)"/>`);
+      gridLines.push(`<text x="${PAD.l - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#a3a3a3">${val.toFixed(0)}</text>`);
+    }
+
+    const doublePath = pathFor(doubleCurve);
+    const fixedPath  = pathFor(fixedCurve);
+
+    function render(n) {
+      const markerX = xFor(n).toFixed(1);
+      svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+        ${gridLines.join('')}
+        <line x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l}" y2="${H - PAD.b}" stroke="rgba(255,255,255,0.08)"/>
+        <line x1="${markerX}" y1="${PAD.t}" x2="${markerX}" y2="${H - PAD.b}" stroke="#444444" stroke-dasharray="3,3"/>
+        <path d="${doublePath}" fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <path d="${fixedPath}" fill="none" stroke="#f97316" stroke-width="2"/>
+        <circle cx="${markerX}" cy="${yFor(doubleCurve[n - 1]).toFixed(1)}" r="3.2" fill="#3b82f6"/>
+        <circle cx="${markerX}" cy="${yFor(fixedCurve[n - 1]).toFixed(1)}" r="3.2" fill="#f97316"/>
+      </svg>`;
+
+      tableBody.innerHTML = `
+        <tr><td>Double capacity</td><td class="num">${Math.round(doubleCurve[n - 1] * n)}</td><td class="num">${doubleCurve[n - 1].toFixed(2)}</td></tr>
+        <tr><td>Fixed +4 capacity</td><td class="num">${Math.round(fixedCurve[n - 1] * n)}</td><td class="num">${fixedCurve[n - 1].toFixed(2)}</td></tr>`;
+    }
+
+    slider.oninput = () => { label.textContent = slider.value; render(Number(slider.value)); };
+    render(Number(slider.value));
+  }
+
+  function renderP0CheatSheet() {
+    return `
+    <div class="p0-section-title">The complexity cheat sheet — and why each number is what it is</div>
+    <div class="p0-section-sub">Section 4 of Phase 0 — don't memorize this table. Understand the shape behind each row so you can re-derive it under pressure.</div>
+
+    <p>Four data structures cover most of what comes up in interviews. Each one's complexity falls out of the same three shapes you've already seen: a <strong>direct address</strong> is O(1), <strong>eliminating half the candidates</strong> each step is O(log n), and <strong>touching every element</strong> is O(n).</p>
+
+    <div class="p0-card">
+      <h4>Array — direct address vs. shifting neighbors</h4>
+      <p><strong>Access by index is O(1).</strong> An array lives in one contiguous block of memory, so <code>arr[i]</code> jumps straight to address <code>base + i × elementSize</code> — one calculation, no searching, no matter how big the array is or which index you pick.</p>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">index =</span>
+        <input type="range" id="p0-arr-access" min="0" max="9" value="4">
+        <span class="n-label" id="p0-arr-access-label">4</span>
+      </div>
+      <div class="p0-arr-row" id="p0-arr-access-row"></div>
+
+      <p style="margin-top:20px"><strong>Insert or delete in the middle is O(n).</strong> Staying contiguous means every element after the gap has to shift over by one slot. Drag the insert position and watch how many cells move.</p>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">insert at =</span>
+        <input type="range" id="p0-arr-insert" min="0" max="10" value="3">
+        <span class="n-label" id="p0-arr-insert-label">3</span>
+      </div>
+      <div class="p0-arr-row" id="p0-arr-insert-row"></div>
+      <div class="p0-count-badge" id="p0-arr-insert-note"></div>
+      <details class="p0-reveal"><summary>So why is push() to the end O(1) then?</summary>
+        <p>Inserting at the very last position shifts zero elements — there's nothing after it to move. That's the O(1) (amortized, see Section 3) case. The O(n) cost only shows up when you insert or delete somewhere before the end.</p>
+      </details>
+    </div>
+
+    <div class="p0-card">
+      <h4>Hash map — O(1) average, O(n) worst case</h4>
+      <p>A hash function turns a key into a bucket index directly — like array access, it's a jump, not a search, which is where the O(1) average comes from. But if many keys hash into the <em>same</em> bucket, that bucket degrades into a plain list you have to scan — that's the O(n) worst case.</p>
+      <div class="p0-toggle-row">
+        <div class="p0-toggle-btn p0-hash-toggle active" data-mode="good">Well-distributed hash</div>
+        <div class="p0-toggle-btn p0-hash-toggle" data-mode="bad">Adversarial collisions</div>
+      </div>
+      <div class="p0-bucket-row" id="p0-hash-buckets"></div>
+      <div class="p0-bucket-labels" id="p0-hash-labels"></div>
+      <div class="p0-count-badge" id="p0-hash-note"></div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Binary Search Tree — O(log n) balanced, O(n) degenerate</h4>
+      <p>Each comparison in a BST throws away half the remaining candidates — <em>if</em> the tree is roughly balanced. Insert the same 7 values in sorted order with no rebalancing, and the "tree" collapses into a straight line — a linked list wearing a tree's name.</p>
+      <div class="p0-toggle-row">
+        <div class="p0-toggle-btn p0-bst-toggle active" data-mode="balanced">Balanced</div>
+        <div class="p0-toggle-btn p0-bst-toggle" data-mode="degenerate">Degenerate (inserted 1..7 in order)</div>
+      </div>
+      <div id="p0-bst-svg"></div>
+      <div class="p0-count-badge" id="p0-bst-note"></div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Heap — O(1) peek, O(log n) insert / extract</h4>
+      <p>A binary (min-)heap keeps one promise: every parent is smaller than its children. That guarantees the smallest element always sits at the root — <strong>peek is O(1)</strong>, just look there. Inserting means dropping the new value in the next open slot and "bubbling" it upward until the promise holds again, one swap per level — <strong>O(log n)</strong>, the height of the tree.</p>
+      <div id="p0-heap-svg"></div>
+      <button class="p0-next-btn p0-sim-btn" id="p0-heap-sim-btn">▶ Simulate inserting 1</button>
+      <div class="p0-sim-log" id="p0-heap-log"></div>
+    </div>
+
+    <div class="p0-card">
+      <h4>The cheat sheet, all in one place</h4>
+      <table class="p0-table">
+        <thead><tr><th>Structure</th><th style="text-align:right">Typical</th><th style="text-align:right">Worst case</th></tr></thead>
+        <tbody>
+          <tr><td>Array — access</td><td class="num">O(1)</td><td class="num">O(1)</td></tr>
+          <tr><td>Array — insert/delete (middle)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Array — insert/delete (end)</td><td class="num">O(1)*</td><td class="num">O(n)*</td></tr>
+          <tr><td>Hash map — get/set/delete</td><td class="num">O(1)</td><td class="num">O(n)</td></tr>
+          <tr><td>BST — search/insert/delete</td><td class="num">O(log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Heap — peek</td><td class="num">O(1)</td><td class="num">O(1)</td></tr>
+          <tr><td>Heap — insert/extract</td><td class="num">O(log n)</td><td class="num">O(log n)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:11.5px;color:var(--muted)">*End-of-array insert/delete is amortized O(1) (Section 3) — the O(n) only shows up on the rare resize.</p>
+    </div>
+
+    <div class="p0-callout"><strong>Takeaway:</strong> three shapes explain almost every row on this sheet — <strong>direct address</strong> (array index, hash bucket) is O(1); <strong>eliminate half each step</strong> (balanced BST, heap height) is O(log n); <strong>touch every element</strong> (shifting an array, a collided bucket, a degenerate tree) is O(n). When you blank on a specific complexity, ask which of these three shapes the operation actually is.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  function initP0ArrayViz() {
+    const accessSlider = document.getElementById('p0-arr-access');
+    if (!accessSlider) return;
+    const accessLabel = document.getElementById('p0-arr-access-label');
+    const accessRow   = document.getElementById('p0-arr-access-row');
+    const insertSlider = document.getElementById('p0-arr-insert');
+    const insertLabel  = document.getElementById('p0-arr-insert-label');
+    const insertRow    = document.getElementById('p0-arr-insert-row');
+    const insertNote   = document.getElementById('p0-arr-insert-note');
+    const VALUES = [8, 3, 7, 1, 9, 4, 2, 6, 5, 0];
+    const N = VALUES.length;
+
+    function renderAccess(idx) {
+      accessRow.innerHTML = VALUES.map((v, i) => `<div class="p0-arr-cell${i === idx ? ' active' : ''}">${v}</div>`).join('');
+    }
+    function renderInsert(pos) {
+      insertRow.innerHTML = VALUES.map((v, i) => `<div class="p0-arr-cell${i >= pos ? ' shift' : ''}">${v}</div>`).join('');
+      const shifted = N - pos;
+      insertNote.innerHTML = `Insert at index ${pos} → <strong>${shifted}</strong> element${shifted === 1 ? '' : 's'} shift right → O(n − i).`;
+    }
+
+    accessSlider.oninput = () => { accessLabel.textContent = accessSlider.value; renderAccess(Number(accessSlider.value)); };
+    insertSlider.oninput = () => { insertLabel.textContent = insertSlider.value; renderInsert(Number(insertSlider.value)); };
+
+    renderAccess(Number(accessSlider.value));
+    renderInsert(Number(insertSlider.value));
+  }
+
+  const P0_HASH_KEYS = ['ann', 'bob', 'cid', 'dan', 'eve', 'fay', 'gus', 'hank'];
+
+  function initP0HashViz() {
+    const host = document.getElementById('p0-hash-buckets');
+    if (!host) return;
+    const labelsHost = document.getElementById('p0-hash-labels');
+    const noteEl     = document.getElementById('p0-hash-note');
+    const toggleBtns = document.querySelectorAll('.p0-hash-toggle');
+
+    function render(mode) {
+      const buckets = Array.from({ length: 8 }, () => []);
+      if (mode === 'good') {
+        P0_HASH_KEYS.forEach((k, i) => buckets[i].push(k));
+      } else {
+        P0_HASH_KEYS.forEach(k => buckets[3].push(k));
+      }
+      host.innerHTML = buckets.map(chips =>
+        `<div class="p0-bucket">${chips.map(k => `<div class="p0-key-chip${mode === 'bad' ? ' collide' : ''}">${k}</div>`).join('')}</div>`
+      ).join('');
+      labelsHost.innerHTML = buckets.map((_, i) => `<div style="flex:1;text-align:center;font-size:9px;color:var(--muted)">bucket ${i}</div>`).join('');
+      noteEl.innerHTML = mode === 'good'
+        ? `Every key lands in its own bucket → each lookup checks <strong>1 item</strong> → <strong>O(1)</strong>.`
+        : `All 8 keys collide into bucket 3 → looking one up may scan all <strong>8 items</strong> in that bucket → <strong>O(n)</strong> worst case.`;
+    }
+
+    toggleBtns.forEach(btn => {
+      btn.onclick = () => {
+        toggleBtns.forEach(b => b.classList.toggle('active', b === btn));
+        render(btn.dataset.mode);
+      };
+    });
+    render('good');
+  }
+
+  const P0_BST = {
+    balanced: {
+      nodes: [
+        { v: 4, x: 0.5,   y: 0 },
+        { v: 2, x: 0.25,  y: 1 }, { v: 6, x: 0.75,  y: 1 },
+        { v: 1, x: 0.125, y: 2 }, { v: 3, x: 0.375, y: 2 }, { v: 5, x: 0.625, y: 2 }, { v: 7, x: 0.875, y: 2 },
+      ],
+      edges: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]],
+      path: [0, 2, 6],
+      depth: 3,
+    },
+    degenerate: {
+      nodes: [0, 1, 2, 3, 4, 5, 6].map(i => ({ v: i + 1, x: 0.5, y: i })),
+      edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]],
+      path: [0, 1, 2, 3, 4, 5, 6],
+      depth: 7,
+    },
+  };
+
+  function drawP0Tree(svgHost, data, opts = {}) {
+    const maxY = Math.max(...data.nodes.map(n => n.y));
+    const W = 500, H = 70 + maxY * 55, PAD = 30;
+    const xFor = x => PAD + x * (W - PAD * 2);
+    const yFor = y => 30 + y * ((H - 60) / Math.max(1, maxY));
+
+    const edgeLines = data.edges.map(([a, c]) =>
+      `<line x1="${xFor(data.nodes[a].x).toFixed(1)}" y1="${yFor(data.nodes[a].y).toFixed(1)}" x2="${xFor(data.nodes[c].x).toFixed(1)}" y2="${yFor(data.nodes[c].y).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1.4"/>`
+    ).join('');
+
+    const pathSet = new Set(opts.path || []);
+    const circles = data.nodes.map((n, i) => {
+      const onPath = pathSet.has(i);
+      return `<circle cx="${xFor(n.x).toFixed(1)}" cy="${yFor(n.y).toFixed(1)}" r="14" fill="${onPath ? '#f97316' : '#3b82f6'}"/>
+        <text x="${xFor(n.x).toFixed(1)}" y="${(yFor(n.y) + 4).toFixed(1)}" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700">${n.v}</text>`;
+    }).join('');
+
+    svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg>`;
+  }
+
+  function initP0BstViz() {
+    const svgHost = document.getElementById('p0-bst-svg');
+    if (!svgHost) return;
+    const noteEl = document.getElementById('p0-bst-note');
+    const toggleBtns = document.querySelectorAll('.p0-bst-toggle');
+
+    function render(mode) {
+      const data = P0_BST[mode];
+      drawP0Tree(svgHost, data, { path: data.path });
+      noteEl.innerHTML = `Depth = <strong>${data.depth}</strong>. Finding the value <strong>7</strong> (orange path) takes <strong>${data.path.length}</strong> comparisons → ${mode === 'balanced' ? '<strong>O(log n)</strong>' : '<strong>O(n)</strong>'}.`;
+    }
+
+    toggleBtns.forEach(btn => {
+      btn.onclick = () => { toggleBtns.forEach(b => b.classList.toggle('active', b === btn)); render(btn.dataset.mode); };
+    });
+    render('balanced');
+  }
+
+  const P0_HEAP_POS = [
+    { x: 0.5,   y: 0 },
+    { x: 0.25,  y: 1 }, { x: 0.75,  y: 1 },
+    { x: 0.125, y: 2 }, { x: 0.375, y: 2 }, { x: 0.625, y: 2 }, { x: 0.875, y: 2 },
+    { x: 0.125, y: 3 },
+  ];
+  const P0_HEAP_EDGES_BASE = [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]];
+  const P0_HEAP_INITIAL = [2, 4, 3, 8, 5, 9, 7];
+
+  function drawP0Heap(svgHost, values, highlightIdx) {
+    const n = values.length;
+    const edges = P0_HEAP_EDGES_BASE.concat(n > 7 ? [[3, 7]] : []);
+    const maxY = Math.max(...P0_HEAP_POS.slice(0, n).map(p => p.y));
+    const W = 500, H = 70 + maxY * 55, PAD = 30;
+    const xFor = x => PAD + x * (W - PAD * 2);
+    const yFor = y => 30 + y * ((H - 60) / Math.max(1, maxY));
+
+    const edgeLines = edges.map(([a, c]) =>
+      `<line x1="${xFor(P0_HEAP_POS[a].x).toFixed(1)}" y1="${yFor(P0_HEAP_POS[a].y).toFixed(1)}" x2="${xFor(P0_HEAP_POS[c].x).toFixed(1)}" y2="${yFor(P0_HEAP_POS[c].y).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1.4"/>`
+    ).join('');
+
+    const circles = values.map((v, i) => {
+      let fill = i === 0 ? '#22c55e' : '#3b82f6';
+      if (i === highlightIdx) fill = '#f97316';
+      return `<circle cx="${xFor(P0_HEAP_POS[i].x).toFixed(1)}" cy="${yFor(P0_HEAP_POS[i].y).toFixed(1)}" r="14" fill="${fill}"/>
+        <text x="${xFor(P0_HEAP_POS[i].x).toFixed(1)}" y="${(yFor(P0_HEAP_POS[i].y) + 4).toFixed(1)}" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">${v}</text>`;
+    }).join('');
+
+    svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg>`;
+  }
+
+  function p0Wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function initP0HeapViz() {
+    const svgHost = document.getElementById('p0-heap-svg');
+    if (!svgHost) return;
+    const btn   = document.getElementById('p0-heap-sim-btn');
+    const logEl = document.getElementById('p0-heap-log');
+
+    function showInitial() {
+      drawP0Heap(svgHost, P0_HEAP_INITIAL.slice());
+      logEl.textContent = '';
+      btn.textContent = '▶ Simulate inserting 1';
+      btn.disabled = false;
+      btn.onclick = runSimulation;
+    }
+
+    async function runSimulation() {
+      btn.disabled = true;
+      const values = P0_HEAP_INITIAL.slice();
+      values.push(1);
+      drawP0Heap(svgHost, values, 7);
+      logEl.textContent = 'Dropped 1 into the next open slot (index 7)…';
+      await p0Wait(650);
+
+      const path = [7, 3, 1, 0];
+      let swaps = 0;
+      for (let k = 0; k < path.length - 1; k++) {
+        const child = path[k], parent = path[k + 1];
+        drawP0Heap(svgHost, values, child);
+        logEl.textContent = `Compare index ${child} (${values[child]}) with parent index ${parent} (${values[parent]})…`;
+        await p0Wait(650);
+        [values[child], values[parent]] = [values[parent], values[child]];
+        swaps++;
+        drawP0Heap(svgHost, values, parent);
+        logEl.textContent = `${values[parent]} < parent → swap (${swaps} so far).`;
+        await p0Wait(650);
+      }
+
+      drawP0Heap(svgHost, values);
+      logEl.textContent = `Done — ${swaps} swaps to insert into a heap of 8 elements ≈ ⌈log₂8⌉ = 3. That's O(log n).`;
+      btn.disabled = false;
+      btn.textContent = '↺ Reset';
+      btn.onclick = showInitial;
+    }
+
+    showInitial();
+  }
+
+  function renderP0Space() {
+    return `
+    <div class="p0-section-title">Space Complexity — Recursion Uses Memory Too</div>
+    <div class="p0-section-sub">Section 5 of Phase 0 — even code with zero arrays can still use a lot of memory, because of the call stack.</div>
+
+    <p>Space complexity just means: <strong>how much extra memory does your code need as n gets bigger?</strong> (We don't count the input itself — just the extra stuff.) There are two things that use extra memory:</p>
+    <p>1) <strong>Data structures you build yourself</strong> — arrays, hash maps, sets.<br>2) <strong>The call stack</strong> — every function call that hasn't finished yet is still sitting in memory, holding onto its own variables.</p>
+    <p>Most people remember #1. Almost everyone forgets #2 — this section is about #2.</p>
+
+    <div class="p0-card">
+      <h4>Loop vs. recursion — same answer, different amount of memory</h4>
+      <div class="p0-split">
+        <div>
+          <div class="p0-diagram-label">Loop — O(1) memory</div>
+          <pre class="p0-code">function sum(arr) {
+  let total = 0;
+  for (const x of arr) total += x;
+  return total;
+}</pre>
+          <p style="font-size:12.5px">There's only one variable, <code>total</code>. It gets reused every single time through the loop. The memory used never grows, no matter how big <code>n</code> gets.</p>
+        </div>
+        <div>
+          <div class="p0-diagram-label">Recursion — O(n) memory</div>
+          <pre class="p0-code">function sum(arr) {
+  if (arr.length === 0) return 0;
+  return arr[0] + sum(arr.slice(1));
+}</pre>
+          <p style="font-size:12.5px">Every call has to wait for the next call to finish before it can add anything. So all <code>n</code> calls stay stuck in memory <em>at the same time</em>, each one taking up its own little slot.</p>
+        </div>
+      </div>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">n =</span>
+        <input type="range" id="p0-stack-n" min="1" max="12" value="6">
+        <span class="n-label" id="p0-stack-n-label">6</span>
+      </div>
+      <div id="p0-stack-tower"></div>
+      <div class="p0-count-badge" id="p0-stack-note"></div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Fibonacci: a lot of time, but not much memory</h4>
+      <p>The tree below (same one from Section 2) has a lot of nodes in total — that's the <strong>time</strong> cost. But at any given moment, memory only holds <strong>one path</strong> — from the top node down to whichever node is running right now. Why? Because the code fully finishes one branch (and clears it from memory) before it even starts the next branch. Click the button and watch two numbers: how many nodes have run in total, vs. how many are sitting in memory right now.</p>
+      <div class="p0-chart-controls">
+        <span style="font-size:12px;color:var(--sublabel)">depth =</span>
+        <input type="range" id="p0-space-depth" min="1" max="4" value="3">
+        <span class="n-label" id="p0-space-depth-label">3</span>
+      </div>
+      <div id="p0-space-svg"></div>
+      <div class="p0-split">
+        <div class="p0-count-badge">Calls finished so far (time): <strong id="p0-space-visited">0</strong> / <span id="p0-space-total">0</span></div>
+        <div class="p0-count-badge">In memory right now (space): <strong id="p0-space-stack">0</strong> — highest it ever got: <strong id="p0-space-maxstack">0</strong></div>
+      </div>
+      <button class="p0-next-btn p0-sim-btn" id="p0-space-sim-btn">▶ Run the simulation</button>
+      <div class="p0-sim-log" id="p0-space-log"></div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Two real examples: merge sort vs. quicksort</h4>
+      <p>Real algorithms often use <em>both</em> things at once — an extra data structure <em>and</em> a recursive call stack. To get the space complexity, take whichever one is bigger. Don't just add them together.</p>
+      <table class="p0-table">
+        <thead><tr><th>Algorithm</th><th style="text-align:right">Extra memory used</th><th style="text-align:right">How deep the recursion goes</th><th style="text-align:right">Total space</th></tr></thead>
+        <tbody>
+          <tr><td>Merge sort</td><td class="num">O(n) — builds temporary arrays</td><td class="num">O(log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Quicksort (in-place)</td><td class="num">O(1) — no extra arrays</td><td class="num">O(log n) usually / O(n) worst case</td><td class="num">O(log n) usually / O(n) worst case</td></tr>
+        </tbody>
+      </table>
+      <p>Quicksort's worst case happens for the same reason a BST turns into a straight line (Section 4). If you keep picking a bad pivot — like always the first element, on data that's already sorted — the array gets split unevenly every time (1 element on one side, everything else on the other). So the recursion goes n levels deep instead of log n levels deep.</p>
+    </div>
+
+    <div class="p0-callout"><strong>Takeaway:</strong> to find space complexity, check two things — 1) any new data structure whose size depends on n, and 2) how deep the recursion goes before anything finishes. Whichever number is bigger, that's your answer. Don't assume "no arrays = O(1)" — recursion counts too.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  function initP0StackTower() {
+    const slider = document.getElementById('p0-stack-n');
+    if (!slider) return;
+    const label = document.getElementById('p0-stack-n-label');
+    const host  = document.getElementById('p0-stack-tower');
+    const note  = document.getElementById('p0-stack-note');
+
+    function render(n) {
+      let frames = '';
+      for (let d = 0; d < n; d++) {
+        frames += `<div class="p0-stack-frame">sum(arr[${d}:]) — waiting on sum(arr[${d + 1}:]) to return</div>`;
+      }
+      host.innerHTML = `<div class="p0-stack-frames">${frames}</div>`;
+      note.innerHTML = `${n} calls are stuck in memory at the same time → that's <strong>O(${n})</strong> right now, or <strong>O(n)</strong> in general. The loop version always stays at <strong>O(1)</strong>, no matter how big n gets.`;
+    }
+
+    slider.oninput = () => { label.textContent = slider.value; render(Number(slider.value)); };
+    render(Number(slider.value));
+  }
+
+  function p0BuildFibTree(depth) {
+    const nodes = [], edges = [], children = [];
+    (function gen(level, xMin, xMax, parentIdx) {
+      const x = (xMin + xMax) / 2;
+      const idx = nodes.length;
+      nodes.push({ x, y: level });
+      children.push([]);
+      if (parentIdx !== null) { edges.push([parentIdx, idx]); children[parentIdx].push(idx); }
+      if (level < depth) {
+        const mid = (xMin + xMax) / 2;
+        gen(level + 1, xMin, mid, idx);
+        gen(level + 1, mid, xMax, idx);
+      }
+    })(0, 0, 1, null);
+    return { nodes, edges, children };
+  }
+
+  function p0DfsEvents(children) {
+    const events = [];
+    (function walk(idx) {
+      events.push({ type: 'enter', idx });
+      for (const c of children[idx]) walk(c);
+      events.push({ type: 'exit', idx });
+    })(0);
+    return events;
+  }
+
+  function drawP0SpaceTree(svgHost, data, state) {
+    const maxY = Math.max(...data.nodes.map(n => n.y));
+    const W = 600, H = 60 + maxY * 55, PAD = 20;
+    const xFor = x => PAD + x * (W - PAD * 2);
+    const yFor = y => 25 + y * ((H - 50) / Math.max(1, maxY));
+
+    const edgeLines = data.edges.map(([a, c]) =>
+      `<line x1="${xFor(data.nodes[a].x).toFixed(1)}" y1="${yFor(data.nodes[a].y).toFixed(1)}" x2="${xFor(data.nodes[c].x).toFixed(1)}" y2="${yFor(data.nodes[c].y).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1.4"/>`
+    ).join('');
+
+    const circles = data.nodes.map((n, i) => {
+      let fill = '#2a2a2a';
+      if (state.visited.has(i)) fill = '#3b82f6';
+      if (state.stack.has(i)) fill = '#f97316';
+      const r = state.stack.has(i) ? 6.5 : 5;
+      return `<circle cx="${xFor(n.x).toFixed(1)}" cy="${yFor(n.y).toFixed(1)}" r="${r}" fill="${fill}"/>`;
+    }).join('');
+
+    svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg>`;
+  }
+
+  function initP0SpaceViz() {
+    const svgHost = document.getElementById('p0-space-svg');
+    if (!svgHost) return;
+    const depthSlider = document.getElementById('p0-space-depth');
+    const depthLabel  = document.getElementById('p0-space-depth-label');
+    const visitedEl   = document.getElementById('p0-space-visited');
+    const totalEl     = document.getElementById('p0-space-total');
+    const stackEl     = document.getElementById('p0-space-stack');
+    const maxstackEl  = document.getElementById('p0-space-maxstack');
+    const btn         = document.getElementById('p0-space-sim-btn');
+    const logEl       = document.getElementById('p0-space-log');
+
+    let data, events;
+
+    function setup() {
+      const depth = Number(depthSlider.value);
+      data = p0BuildFibTree(depth);
+      events = p0DfsEvents(data.children);
+      drawP0SpaceTree(svgHost, data, { visited: new Set(), stack: new Set() });
+      visitedEl.textContent = '0';
+      totalEl.textContent = data.nodes.length;
+      stackEl.textContent = '0';
+      maxstackEl.textContent = '0';
+      logEl.textContent = '';
+      btn.disabled = false;
+      btn.textContent = '▶ Run the simulation';
+      btn.onclick = run;
+    }
+
+    async function run() {
+      btn.disabled = true;
+      depthSlider.disabled = true;
+      const visited = new Set();
+      const stack = new Set();
+      let visitedCount = 0, maxStack = 0;
+
+      for (const ev of events) {
+        if (ev.type === 'enter') {
+          stack.add(ev.idx);
+          maxStack = Math.max(maxStack, stack.size);
+          logEl.textContent = `→ Call #${ev.idx} starts (depth ${data.nodes[ev.idx].y}) — added to memory.`;
+        } else {
+          stack.delete(ev.idx);
+          visited.add(ev.idx);
+          visitedCount++;
+          logEl.textContent = `← Call #${ev.idx} finishes — removed from memory.`;
+        }
+        drawP0SpaceTree(svgHost, data, { visited, stack });
+        visitedEl.textContent = visitedCount;
+        stackEl.textContent = stack.size;
+        maxstackEl.textContent = maxStack;
+        await p0Wait(120);
+      }
+
+      logEl.textContent = `Done! ${data.nodes.length} calls ran in total (that's the time cost). But memory never held more than ${maxStack} calls at once (that's the space cost).`;
+      btn.disabled = false;
+      depthSlider.disabled = false;
+      btn.textContent = '↺ Reset';
+      btn.onclick = setup;
+    }
+
+    depthSlider.oninput = () => { depthLabel.textContent = depthSlider.value; setup(); };
+    setup();
+  }
+
+  function renderP0Checkpoint() {
+    return `
+    <div class="p0-section-title">Check Yourself — Are You Ready for Phase 1?</div>
+    <div class="p0-section-sub">Section 6 of Phase 0 — the last step. No new ideas here, just practice using what you already learned.</div>
+
+    <p>Phase 0 is done when you can look at a new problem and say its time and space complexity right away — before writing any code. Try it here. For each problem below:</p>
+    <p>1) Think of the slow way first (brute force). Say its time and space.<br>2) Think of a faster way (optimal). Say its time and space.<br>3) Click "Show Answer" and check yourself.</p>
+
+    <div class="p0-card">
+      <h4>5 quick checks (these are the first problems in Phase 1)</h4>
+
+      <div class="p0-quiz-item">
+        <div class="p0-quiz-q"><strong>1. Contains Duplicate</strong> — given a list of numbers, return true if any number shows up more than once.</div>
+        <details class="p0-reveal"><summary>Show Answer</summary>
+          <div class="p0-quiz-answer">
+            <strong>Brute force:</strong> compare every pair of numbers → O(n²) time, O(1) extra space.<br>
+            <strong>Optimal:</strong> put each number in a hash set as you go. If you see one that's already in the set, return true → O(n) time, O(n) space.
+          </div>
+        </details>
+      </div>
+
+      <div class="p0-quiz-item">
+        <div class="p0-quiz-q"><strong>2. Two Sum</strong> — given a list of numbers and a target, find two numbers that add up to the target.</div>
+        <details class="p0-reveal"><summary>Show Answer</summary>
+          <div class="p0-quiz-answer">
+            <strong>Brute force:</strong> check every pair → O(n²) time, O(1) extra space.<br>
+            <strong>Optimal:</strong> use a hash map of {number: index} as you go. For each number, check if (target − number) is already in the map → O(n) time, O(n) space.
+          </div>
+        </details>
+      </div>
+
+      <div class="p0-quiz-item">
+        <div class="p0-quiz-q"><strong>3. Valid Anagram</strong> — given two words, check if one is just the letters of the other, rearranged.</div>
+        <details class="p0-reveal"><summary>Show Answer</summary>
+          <div class="p0-quiz-answer">
+            <strong>Brute force:</strong> sort both words and compare → O(n log n) time, O(n) space (for the sorted copies).<br>
+            <strong>Optimal:</strong> count each letter of word one in a hash map, then subtract counts while scanning word two → O(n) time, O(1) space (only 26 possible letters).
+          </div>
+        </details>
+      </div>
+
+      <div class="p0-quiz-item">
+        <div class="p0-quiz-q"><strong>4. Group Anagrams</strong> — given a list of words, group the ones that are anagrams of each other.</div>
+        <details class="p0-reveal"><summary>Show Answer</summary>
+          <div class="p0-quiz-answer">
+            <strong>Brute force:</strong> compare every word to every other word → O(n² · k) time (k = word length), O(n) space.<br>
+            <strong>Optimal:</strong> use a hash map. For each word, sort its letters to make a "key" — anagrams share the same key — and group words under that key → O(n · k log k) time, O(n · k) space.
+          </div>
+        </details>
+      </div>
+
+      <div class="p0-quiz-item">
+        <div class="p0-quiz-q"><strong>5. Top K Frequent Elements</strong> — given a list of numbers and a number k, return the k numbers that show up most often.</div>
+        <details class="p0-reveal"><summary>Show Answer</summary>
+          <div class="p0-quiz-answer">
+            <strong>Brute force:</strong> count how often each number appears, then sort everything by count → O(n log n) time, O(n) space.<br>
+            <strong>Optimal:</strong> count with a hash map, then use a heap (or bucket sort) to grab just the top k without sorting everything → about O(n log k) time, O(n) space.
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="p0-card">
+      <h4>You're ready for Phase 1 when...</h4>
+      <p>✓ You can read a loop and say its time complexity without thinking hard.<br>
+      ✓ You know the difference between "how many times does this run" (time) and "what does this hold onto" (space).<br>
+      ✓ You know why array push, hash maps, and doubling are usually O(1) — and when they're not.<br>
+      ✓ You didn't need to peek at the answers above more than once or twice.</p>
+    </div>
+
+    <div class="p0-callout"><strong>That's it — Phase 0 is done.</strong> You don't need to memorize every number on this page. You need to be able to work them out, fast, just from the shape of the code. That's exactly what Phase 1 will keep testing, one problem at a time.</div>
+    <div class="p0-footer-next" id="p0-next-footer"></div>`;
+  }
+
+  const P0_CLASSES = [
+    { label: 'O(1)',        color: '#22c55e', analogue: 'Grab shelf by known slot',          fn: n => 1 },
+    { label: 'O(log n)',    color: '#06b6d4', analogue: 'Binary search a phone book',        fn: n => Math.max(1, Math.log2(n)) },
+    { label: 'O(n)',        color: '#3b82f6', analogue: 'Scan every item once',              fn: n => n },
+    { label: 'O(n log n)',  color: '#eab308', analogue: 'Efficient sort (merge/quicksort)',  fn: n => Math.max(1, n * Math.log2(n)) },
+    { label: 'O(n²)',       color: '#f97316', analogue: 'Compare every pair',                fn: n => n * n },
+    { label: 'O(2ⁿ)',       color: '#ef4444', analogue: 'Try every subset',                  fn: n => Math.pow(2, n) },
+  ];
+
+  function initP0Chart() {
+    const svgHost = document.getElementById('p0-chart-svg');
+    if (!svgHost) return;
+
+    const slider = document.getElementById('p0-n-slider');
+    const nLabel = document.getElementById('p0-n-label');
+    const legend = document.getElementById('p0-legend');
+
+    legend.innerHTML = P0_CLASSES.map(c =>
+      `<div class="p0-legend-item"><span class="p0-legend-dot" style="background:${c.color}"></span>${c.label}</div>`
+    ).join('');
+
+    const NMAX = 20;
+    const W = 640, H = 240, PAD = { l: 40, r: 14, t: 10, b: 22 };
+    const maxLog = Math.log10(Math.pow(2, NMAX));
+
+    const xFor = n => PAD.l + ((n - 1) / (NMAX - 1)) * (W - PAD.l - PAD.r);
+    const yFor = v => H - PAD.b - (Math.log10(Math.max(1, v)) / maxLog) * (H - PAD.t - PAD.b);
+
+    function pathFor(fn) {
+      let d = '';
+      for (let n = 1; n <= NMAX; n++) {
+        d += (n === 1 ? 'M' : 'L') + xFor(n).toFixed(1) + ',' + yFor(fn(n)).toFixed(1) + ' ';
+      }
+      return d.trim();
+    }
+
+    const gridLines = [];
+    for (let p = 0; p <= Math.ceil(maxLog); p++) {
+      const y = H - PAD.b - (p / maxLog) * (H - PAD.t - PAD.b);
+      gridLines.push(`<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W - PAD.r}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`);
+      gridLines.push(`<text x="${PAD.l - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#a3a3a3">10^${p}</text>`);
+    }
+
+    const curves = P0_CLASSES.map(c => `<path d="${pathFor(c.fn)}" fill="none" stroke="${c.color}" stroke-width="2"/>`).join('');
+
+    function render(n) {
+      const markerX = xFor(n).toFixed(1);
+      const dots = P0_CLASSES.map(c => `<circle cx="${markerX}" cy="${yFor(c.fn(n)).toFixed(1)}" r="3.2" fill="${c.color}"/>`).join('');
+
+      svgHost.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+        ${gridLines.join('')}
+        <line x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l}" y2="${H - PAD.b}" stroke="rgba(255,255,255,0.08)"/>
+        <line x1="${markerX}" y1="${PAD.t}" x2="${markerX}" y2="${H - PAD.b}" stroke="#444444" stroke-dasharray="3,3"/>
+        ${curves}
+        ${dots}
+      </svg>`;
+
+      document.getElementById('p0-table-body').innerHTML = P0_CLASSES.map(c => {
+        const v = c.fn(n);
+        const display = v >= 1000 ? Math.round(v).toLocaleString() : (Number.isInteger(v) ? v : v.toFixed(1));
+        return `<tr><td>${c.label}</td><td style="text-align:right;color:var(--sublabel)">${c.analogue}</td><td class="num">${display}</td></tr>`;
+      }).join('');
+    }
+
+    slider.oninput = () => { nLabel.textContent = slider.value; render(Number(slider.value)); };
+    render(Number(slider.value));
+  }
+
+  // ── Phase 1: interactive per-problem module. Each problem gets: easy-English statement,
+  // a non-spoiler visual of the concept, a pointer to which .js file to code in, and the
+  // brute-force/optimal walkthrough hidden behind a <details class="p0-reveal"> until Lawrence
+  // has attempted it himself. New problems are added to PHASE1_PROBLEMS one at a time, as they
+  // come up in a mentor session — same build-as-you-go pattern as PHASE0_SECTIONS.
+  const PHASE1_PROBLEMS = [
+    {
+      id: 'containsDuplicate',
+      pattern: 'Arrays & Hashing',
+      title: 'Contains Duplicate',
+      difficulty: 'easy',
+      file: 'array-hashMap-containsDuplicate.js',
+      render: renderP1ContainsDuplicate,
+      init: initP1ContainsDuplicateStepper,
+    },
+    {
+      id: 'twoSum',
+      pattern: 'Arrays & Hashing',
+      title: 'Two Sum',
+      difficulty: 'easy',
+      file: 'array-hashMap-twoSum.js',
+      render: renderP1TwoSum,
+      init: initP1TwoSumStepper,
+    },
+    {
+      id: 'validAnagram',
+      pattern: 'Arrays & Hashing',
+      title: 'Valid Anagram',
+      difficulty: 'easy',
+      file: 'array-hashMap-validAnagram.js',
+      render: renderP1ValidAnagram,
+      init: initP1ValidAnagramStepper,
+    },
+  ];
+  let currentP1Problem = localStorage.getItem('dsa-p1-problem') || PHASE1_PROBLEMS[0].id;
+
+  function renderPhase1Extra() {
+    const navHtml = PHASE1_PROBLEMS.map(p =>
+      `<div class="p0-nav-item${p.id === currentP1Problem ? ' active' : ''}" data-p1="${p.id}">${escapeHtml(p.title)}</div>`
+    ).join('');
+    const active = PHASE1_PROBLEMS.find(p => p.id === currentP1Problem) || PHASE1_PROBLEMS[0];
+    return `<div class="p0-nav">${navHtml}</div><div class="p0-container" id="p1-body">${active.render()}</div>`;
+  }
+
+  function bindPhase1Handlers() {
+    document.querySelectorAll('[data-p1]').forEach(el => {
+      el.onclick = () => goToP1Problem(el.dataset.p1);
+    });
+    PHASE1_PROBLEMS.forEach(p => p.init && p.init());
+    updateP1NextFooter();
+  }
+
+  async function goToP1Problem(id) {
+    currentP1Problem = id;
+    localStorage.setItem('dsa-p1-problem', id);
+    await showPhase(currentPhaseIndex);
+    const contentEl = document.getElementById('roadmap-content');
+    if (contentEl) contentEl.scrollTop = 0;
+  }
+
+  // Renders a "Continue to next problem" button when one exists, otherwise an honest
+  // "not built yet" note — same pattern as Phase 0's updateP0NextFooter.
+  function updateP1NextFooter() {
+    const footer = document.getElementById('p1-next-footer');
+    if (!footer) return;
+    const idx = PHASE1_PROBLEMS.findIndex(p => p.id === currentP1Problem);
+    const next = PHASE1_PROBLEMS[idx + 1];
+    if (next) {
+      footer.innerHTML = `<button class="p0-next-btn" id="p1-next-btn">Continue to ${escapeHtml(next.title)} →</button>`;
+      document.getElementById('p1-next-btn').onclick = () => goToP1Problem(next.id);
+    } else {
+      footer.textContent = "You've reached the end of what's built so far in Phase 1 — more problems added as we go.";
+    }
+  }
+
+  // Small non-spoiler visual: color-codes cells by value so "duplicate" is something Lawrence
+  // can see, without hinting at hash sets / sorting / any specific approach.
+  function renderP1ArrayRow(arr) {
+    const PALETTE = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#ef4444'];
+    const colorFor = {};
+    let ci = 0;
+    arr.forEach(v => { if (!(v in colorFor)) colorFor[v] = PALETTE[ci++ % PALETTE.length]; });
+    return arr.length
+      ? arr.map(v => `<div class="p0-arr-cell" style="border-color:${colorFor[v]}">${v}</div>`).join('')
+      : `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty array)</div>`;
+  }
+
+  function renderP1Workflow(file) {
+    return `
+    <div class="p0-callout">
+      <strong>Where to code:</strong> open <span class="p1-file-tag">${escapeHtml(file)}</span> in VS Code. Don't open the "Brute force &amp; optimal" reveal below until you've tried it.
+      <br><br>
+      1. Write the brute force first — comment its time and space complexity above it.<br>
+      2. Optimize it — say what the brute force wastes.<br>
+      3. Re-derive the complexity for your optimized version.<br>
+      4. List edge cases before you run anything.<br>
+      5. Click the file in LiveCoding, check the output in DevTools (F12).
+    </div>`;
+  }
+
+  function renderP1ContainsDuplicate() {
+    return `
+    <div class="p0-section-title">Contains Duplicate<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers. Some numbers might show up more than once. You need to answer one yes/no question: <strong>does any number appear at least twice?</strong></p>
+      <p>If yes, return <code>true</code>. If every number is different from every other number, return <code>false</code>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "duplicate" looks like</h4>
+      <p>Same border color = same value. This one has a duplicate:</p>
+      <div class="p0-arr-row">${renderP1ArrayRow([1, 2, 3, 1])}</div>
+      <p style="margin-top:16px">This one doesn't — four different colors, four different values:</p>
+      <div class="p0-arr-row">${renderP1ArrayRow([1, 2, 3, 4])}</div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. What's the simplest, slowest way you could check every number against every other number?<br>
+      2. What is that slow way's time complexity? Its space complexity?<br>
+      3. What is it wasting? Is there a data structure from the Phase 0 cheat sheet that answers "have I seen this before?" fast?<br>
+      4. What should happen for an empty array? A one-element array? An array where every value is the same?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-containsDuplicate.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force</h4>
+        <p>Compare every number against every other number that comes after it. Two nested loops.</p>
+        <pre class="p0-code">function hasDuplicate(nums) {
+  for (let i = 0; i &lt; nums.length; i++) {
+    for (let j = i + 1; j &lt; nums.length; j++) {
+      if (nums[i] === nums[j]) return true;
+    }
+  }
+  return false;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — nested loops over the same array (Phase 0, Section 2). Space: <strong>O(1)</strong> — no extra structure, just a couple of counters.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — a hash set, one pass</h4>
+        <p>A hash set answers "have I seen this value before?" in O(1) average time (Phase 0, Section 4). Walk the array once. Before adding a number, check if it's already in the set.</p>
+        <pre class="p0-code">function hasDuplicate(nums) {
+  const seen = new Set();
+  for (const n of nums) {
+    if (seen.has(n)) return true;
+    seen.add(n);
+  }
+  return false;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass, O(1) work per element. Space: <strong>O(n)</strong> — worst case, the set ends up holding every element (no duplicates found until the last check).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [1, 2, 3, 1]</div>
+        <div id="p1-cd-array" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Seen so far</div>
+        <div id="p1-cd-seen" class="p0-bucket" style="min-height:34px"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cd-step-btn">▶ Step</button>
+        <div class="p0-sim-log" id="p1-cd-log"></div>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty array:</strong> loop never runs → returns false.<br>
+        <strong>Single element:</strong> nothing to compare against → returns false.<br>
+        <strong>All identical values:</strong> the second element is already a duplicate → returns true almost immediately.<br>
+        <strong>All unique, large array:</strong> the set grows to size n and you get the full O(n) space cost.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+          <tr><td>Hash set</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ContainsDuplicateStepper() {
+    const btn = document.getElementById('p1-cd-step-btn');
+    if (!btn) return;
+    const arrHost  = document.getElementById('p1-cd-array');
+    const seenHost = document.getElementById('p1-cd-seen');
+    const logEl    = document.getElementById('p1-cd-log');
+    const ARR = [1, 2, 3, 1];
+    let i = 0;
+    let seen = new Set();
+
+    function render(activeIdx, dupIdx) {
+      arrHost.innerHTML = ARR.map((v, idx) => {
+        let cls = 'p0-arr-cell';
+        if (idx === activeIdx) cls += ' active';
+        if (idx === dupIdx) cls += ' shift';
+        return `<div class="${cls}">${v}</div>`;
+      }).join('');
+      seenHost.innerHTML = seen.size
+        ? [...seen].map(v => `<div class="p0-key-chip">${v}</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      i = 0;
+      seen = new Set();
+      render(-1, -1);
+      logEl.textContent = '';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (i >= ARR.length) return;
+      const v = ARR[i];
+      if (seen.has(v)) {
+        render(i, i);
+        logEl.textContent = `Index ${i}: ${v} is already in "seen" → duplicate found, return true.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+        return;
+      }
+      seen.add(v);
+      render(i, -1);
+      logEl.textContent = `Index ${i}: ${v} not seen before → add it to the set.`;
+      i++;
+      if (i >= ARR.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1TwoSum() {
+    return `
+    <div class="p0-section-title">Two Sum<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers and one target number. Find two <strong>different positions</strong> in the list whose values add up to the target. Return those two positions (indices), not the values.</p>
+      <p>There's always exactly one valid pair, and you can't use the same position twice.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a valid pair looks like</h4>
+      <p>nums = [2, 7, 11, 15], target = 9:</p>
+      <div class="p0-arr-row">${[2, 7, 11, 15].map((v, i) => `<div class="p0-arr-cell${i < 2 ? ' active' : ''}">${v}</div>`).join('')}</div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">nums[0] + nums[1] = 2 + 7 = 9 = target → answer [0, 1].</p>
+      <p style="margin-top:16px">nums = [3, 2, 4], target = 6:</p>
+      <div class="p0-arr-row">${[3, 2, 4].map((v, i) => `<div class="p0-arr-cell${i > 0 ? ' active' : ''}">${v}</div>`).join('')}</div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">nums[1] + nums[2] = 2 + 4 = 6 = target → answer [1, 2]. Note it's not always the first two elements.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Simplest, slowest way: check every pair of positions. What's its time and space complexity?<br>
+      2. For each number, you need to know: "have I already seen the <em>other half</em> of the pair?" What data structure answers that in O(1), and what would you store in it — just the number, or something more?<br>
+      3. Why check for the complement <em>before</em> you store the current number, not after?<br>
+      4. nums = [3, 3], target = 6 — the same value twice, at two different positions. Does your approach still work, or does it accidentally reuse one position for both numbers?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-twoSum.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force</h4>
+        <p>Check every pair of positions until one adds up to the target.</p>
+        <pre class="p0-code">function twoSum(nums, target) {
+  for (let i = 0; i &lt; nums.length; i++) {
+    for (let j = i + 1; j &lt; nums.length; j++) {
+      if (nums[i] + nums[j] === target) return [i, j];
+    }
+  }
+  return [];
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — nested loops over the array. Space: <strong>O(1)</strong> — no extra structure.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — a hash map, one pass</h4>
+        <p>Instead of asking "does some other number equal target − nums[i]?" by scanning, store <code>{number → index}</code> as you go. Before storing the current number, check whether its <strong>complement</strong> (target − current) is already in the map — if it is, you've found your pair instantly.</p>
+        <pre class="p0-code">function twoSum(nums, target) {
+  const numToIndex = new Map();
+  for (let i = 0; i &lt; nums.length; i++) {
+    const complement = target - nums[i];
+    if (numToIndex.has(complement)) {
+      return [numToIndex.get(complement), i];
+    }
+    numToIndex.set(nums[i], i);
+  }
+  return [];
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass, O(1) map lookup per element. Space: <strong>O(n)</strong> — worst case the map holds almost every element before the match is found.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [2, 7, 11, 15], target = 9</div>
+        <div id="p1-ts-array" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Map so far (number → index)</div>
+        <div id="p1-ts-map" class="p0-bucket" style="min-height:34px"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ts-step-btn">▶ Step</button>
+        <div class="p0-sim-log" id="p1-ts-log"></div>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Duplicate values, e.g. [3, 3], target 6:</strong> checking the complement <em>before</em> storing the current number means index 0's "3" isn't in the map yet when index 0 runs — it only gets checked against on index 1, so the two different positions never collide with themselves.<br>
+        <strong>Checking-before-storing order matters:</strong> if you stored first and checked second, nums=[3] with target 6 would find its own index as a false "pair."<br>
+        <strong>No valid pair:</strong> the problem guarantees one exists, so this isn't tested — but a real-world version should decide what to return (empty array, null, throw) if the loop finishes with nothing found.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+          <tr><td>Hash map</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1TwoSumStepper() {
+    const btn = document.getElementById('p1-ts-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-ts-array');
+    const mapHost = document.getElementById('p1-ts-map');
+    const logEl   = document.getElementById('p1-ts-log');
+    const ARR = [2, 7, 11, 15];
+    const TARGET = 9;
+    let i = 0;
+    let map = new Map();
+
+    function render(activeIdx, foundIdx) {
+      arrHost.innerHTML = ARR.map((v, idx) => {
+        let cls = 'p0-arr-cell';
+        if (idx === activeIdx) cls += ' active';
+        if (foundIdx !== undefined && idx === foundIdx) cls += ' shift';
+        return `<div class="${cls}">${v}</div>`;
+      }).join('');
+      mapHost.innerHTML = map.size
+        ? [...map.entries()].map(([k, v]) => `<div class="p0-key-chip">${k}→${v}</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      i = 0;
+      map = new Map();
+      render(-1);
+      logEl.textContent = '';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (i >= ARR.length) return;
+      const num = ARR[i];
+      const complement = TARGET - num;
+      if (map.has(complement)) {
+        const j = map.get(complement);
+        render(i, j);
+        logEl.textContent = `Index ${i}: need ${complement} (${TARGET} − ${num}). Map already has ${complement}→${j} → return [${j}, ${i}].`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+        return;
+      }
+      render(i);
+      logEl.textContent = `Index ${i}: need ${complement} (${TARGET} − ${num}). Not in map yet → store ${num}→${i}.`;
+      map.set(num, i);
+      i++;
+      if (i >= ARR.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Shared by Valid Anagram's concept viz — assigns one color per character across BOTH
+  // words so matching letters are visually obvious, mismatches are not.
+  function renderP1AnagramPair(a, b) {
+    const PALETTE = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#ef4444'];
+    const colorFor = {};
+    let ci = 0;
+    for (const ch of a + b) { if (!(ch in colorFor)) colorFor[ch] = PALETTE[ci++ % PALETTE.length]; }
+    const rowFor = str => str.length
+      ? str.split('').map(ch => `<div class="p0-arr-cell" style="border-color:${colorFor[ch]}">${ch}</div>`).join('')
+      : `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty string)</div>`;
+    return `<div class="p0-arr-row">${rowFor(a)}</div><div class="p0-arr-row" style="margin-top:6px">${rowFor(b)}</div>`;
+  }
+
+  function renderP1ValidAnagram() {
+    return `
+    <div class="p0-section-title">Valid Anagram<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get two words, <code>s</code> and <code>t</code>. Return <code>true</code> if <code>t</code> is just <code>s</code> with its letters rearranged — same letters, same counts, different order. Otherwise return <code>false</code>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "anagram" looks like</h4>
+      <p>Same border color = same letter. s = "anagram", t = "nagaram" — every letter in one has a matching letter in the other:</p>
+      ${renderP1AnagramPair('anagram', 'nagaram')}
+      <p style="margin-top:16px">s = "rat", t = "car" — same length, but the letters don't match up (no "t" in "car", no "c" in "rat"):</p>
+      ${renderP1AnagramPair('rat', 'car')}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Slowest way you could check this: what if you sorted both words and compared them? What's the time and space complexity of that?<br>
+      2. What's one O(1) check you can do <em>before</em> any real work, using only <code>.length</code>?<br>
+      3. What data structure tracks "how many of each letter have I seen"? Why does having only 26 lowercase letters possible make that structure's size <strong>not</strong> depend on <code>n</code>?<br>
+      4. What should happen if <code>t</code> has a letter that never appears in <code>s</code> at all?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-validAnagram.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force</h4>
+        <p>Sort both words into a canonical order — anagrams sort to the exact same string.</p>
+        <pre class="p0-code">function isAnagram(s, t) {
+  if (s.length !== t.length) return false;
+  const sortedS = s.split('').sort().join('');
+  const sortedT = t.split('').sort().join('');
+  return sortedS === sortedT;
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — dominated by the sort. Space: <strong>O(n)</strong> — two new sorted copies of the strings.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — a frequency counter, one pass each</h4>
+        <p>Count every letter of <code>s</code> up, then count every letter of <code>t</code> down. If a count ever goes negative, or <code>t</code> has a letter <code>s</code> never had, they can't be anagrams. If everything cancels to zero, they are.</p>
+        <pre class="p0-code">function isAnagram(s, t) {
+  if (s.length !== t.length) return false;
+  const count = {};
+  for (const ch of s) count[ch] = (count[ch] || 0) + 1;
+  for (const ch of t) {
+    if (!count[ch]) return false;
+    count[ch]--;
+  }
+  return true;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass over each string. Space: <strong>O(1)</strong> — bounded by the 26-lowercase-letter alphabet, not by <code>n</code> (this only holds because the character set is fixed and small — with arbitrary Unicode it would be O(k) for k distinct characters).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "ab", t = "ba"</div>
+        <div id="p1-va-words" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Letter counts</div>
+        <div id="p1-va-counts" class="p0-bucket" style="min-height:34px"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-va-step-btn">▶ Step</button>
+        <div class="p0-sim-log" id="p1-va-log"></div>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Different lengths:</strong> caught instantly by the length check — never even builds the count map.<br>
+        <strong>Empty strings:</strong> lengths match (both 0), both loops run zero times → returns true.<br>
+        <strong>Letter in t not in s:</strong> <code>count[ch]</code> is <code>undefined</code> (falsy) → the <code>!count[ch]</code> check catches it immediately.<br>
+        <strong>Repeated letters (e.g. "aacc" vs "ccaa"):</strong> counts go up to 2 for each letter during the first pass, then back down to 0 during the second — order never mattered, only totals.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Sort &amp; compare</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Frequency counter</td><td class="num">O(n)</td><td class="num">O(1)*</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:11.5px;color:var(--muted)">*Assumes a fixed, small alphabet (e.g. lowercase a–z). Arbitrary Unicode input would be O(k) for k distinct characters.</p>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ValidAnagramStepper() {
+    const btn = document.getElementById('p1-va-step-btn');
+    if (!btn) return;
+    const wordsHost  = document.getElementById('p1-va-words');
+    const countsHost = document.getElementById('p1-va-counts');
+    const logEl      = document.getElementById('p1-va-log');
+    const S = 'ab', T = 'ba';
+    const OPS = [
+      ...S.split('').map(ch => ({ mode: 'add', ch })),
+      ...T.split('').map(ch => ({ mode: 'sub', ch })),
+    ];
+    let step = 0;
+    let counts = {};
+    let failed = false;
+
+    function renderWords(activeMode, activeIdx) {
+      const sRow = S.split('').map((ch, i) =>
+        `<div class="p0-arr-cell${activeMode === 'add' && i === activeIdx ? ' active' : ''}">${ch}</div>`).join('');
+      const tRow = T.split('').map((ch, i) =>
+        `<div class="p0-arr-cell${activeMode === 'sub' && i === activeIdx ? ' active' : ''}${failed && activeMode === 'sub' && i === activeIdx ? ' shift' : ''}">${ch}</div>`).join('');
+      wordsHost.innerHTML = `<div class="p0-arr-row">${sRow}</div><div class="p0-arr-row" style="margin-top:6px">${tRow}</div>`;
+    }
+
+    function renderCounts() {
+      const entries = Object.entries(counts).filter(([, v]) => v !== 0 || true);
+      countsHost.innerHTML = entries.length
+        ? entries.map(([ch, v]) => `<div class="p0-key-chip${v < 0 ? ' collide' : ''}">${ch}:${v}</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      step = 0;
+      counts = {};
+      failed = false;
+      renderWords(null, -1);
+      renderCounts();
+      logEl.textContent = '';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = advance;
+    }
+
+    function advance() {
+      if (step >= OPS.length || failed) return;
+      const { mode, ch } = OPS[step];
+      const idxInWord = mode === 'add' ? step : step - S.length;
+
+      if (mode === 'add') {
+        counts[ch] = (counts[ch] || 0) + 1;
+        renderWords('add', idxInWord);
+        renderCounts();
+        logEl.textContent = `Counting s: '${ch}' → count['${ch}'] = ${counts[ch]}.`;
+      } else {
+        if (!counts[ch]) {
+          failed = true;
+          renderWords('sub', idxInWord);
+          renderCounts();
+          logEl.textContent = `Subtracting t: '${ch}' has count 0 (or never seen) → not an anagram, return false.`;
+          btn.textContent = '↺ Reset';
+          btn.onclick = reset;
+          return;
+        }
+        counts[ch]--;
+        renderWords('sub', idxInWord);
+        renderCounts();
+        logEl.textContent = `Subtracting t: '${ch}' → count['${ch}'] = ${counts[ch]}.`;
+      }
+
+      step++;
+      if (step >= OPS.length) {
+        logEl.textContent += ' All counts reached 0 with no misses → anagram, return true.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Minimal markdown → HTML: ### headings, bullet/numbered lists, paragraphs (inline handled by mdInline)
+  function renderMarkdown(md) {
+    return md.split(/\n\s*\n/).map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      if (trimmed === '<!-- LIVE_ROADMAP_CHECKLIST -->') return trimmed;
+      if (trimmed.startsWith('### ')) return `<h3>${mdInline(trimmed.slice(4).trim())}</h3>`;
+
+      const lines = trimmed.split('\n').map(l => l.trim());
+      if (lines.every(l => /^-\s+/.test(l))) {
+        return `<ul>${lines.map(l => `<li>${mdInline(l.replace(/^-\s+/, ''))}</li>`).join('')}</ul>`;
+      }
+      if (lines.every(l => /^\d+\.\s+/.test(l))) {
+        return `<ol>${lines.map(l => `<li>${mdInline(l.replace(/^\d+\.\s+/, ''))}</li>`).join('')}</ol>`;
+      }
+      return `<p>${mdInline(lines.join(' '))}</p>`;
+    }).join('\n');
+  }
+
+  function renderStats(roadmap) {
+    const done    = roadmap.filter(r => r.status === 'x').length;
+    const partial = roadmap.filter(r => r.status === '~').length;
+    const todo    = roadmap.filter(r => r.status === ' ').length;
+    document.getElementById('dashboard-stats').innerHTML = `
+      <div class="stat-tile"><div class="num">${allFiles.length}</div><div class="label">Solution Files</div></div>
+      <div class="stat-tile green"><div class="num">${done}</div><div class="label">Patterns Mastered</div></div>
+      <div class="stat-tile yellow"><div class="num">${partial}</div><div class="label">In Progress</div></div>
+      <div class="stat-tile muted"><div class="num">${todo}</div><div class="label">Not Started</div></div>`;
+  }
+
+  // Parses the fixed structure Claude maintains in co-founder/state.md + co-founder/roadmap.md
+  function parseMentorFiles(stateMd, roadmapMd) {
+    const state = { lastSession: [], nextMove: '', roadmap: [] };
+
+    const lastMatch = stateMd.match(/## Last Session\n([\s\S]*?)(?=\n## |$)/);
+    if (lastMatch) {
+      state.lastSession = lastMatch[1].split('\n')
+        .filter(l => l.trim().startsWith('- '))
+        .map(l => l.replace(/^- /, '').trim());
+    }
+
+    const nextMatch = stateMd.match(/## Next Session Starting Point\n([\s\S]*?)(?=\n## |$)/);
+    if (nextMatch) state.nextMove = nextMatch[1].trim();
+
+    state.roadmap = parseRoadmapChecklist(roadmapMd);
+
+    return state;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function mdInline(str) {
+    return escapeHtml(str)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
 </script>
 </body>
 </html>

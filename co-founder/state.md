@@ -1,0 +1,18 @@
+# State
+
+*(Rewritten in full on every `End Today`. This is what gets read cold at the start of the next session — keep it dense.)*
+
+## Last Session
+
+- **Date:** 2026-07-02
+- **Type:** First real DSA practice session — Arrays & Hashing, three problems solved live. Roadmap moves off 0/17.
+- **Problems solved:** **Contains Duplicate** (brute force O(n²)/O(1) → hash set O(n)/O(n)), **Two Sum** (brute force O(n²)/O(1) → hash map `{number: index}` O(n)/O(n)), **Valid Anagram** (brute force sort-and-compare O(n log n)/O(n) → frequency counter O(n)/O(1), bounded 26-letter alphabet). All three followed the full Phase 2 discipline: brute force stated first, optimized, complexity re-derived, edge cases covered, run live in LiveCoding.
+- **Complexity reasoning quality:** Strong — correctly justified Contains Duplicate's O(n) worst-case space (no duplicate found → every element added to the set), and Two Sum's check-complement-before-store ordering (why `[3,3]` target `6` still works — index 0 isn't in the map yet when index 0 runs, so it can't pair with itself).
+- **What got built:** Phase 1 in the Roadmap view is now an interactive per-problem module — same pattern as Phase 0. Each problem page: plain-English statement, a non-spoiler visual of the concept, a "which file to open" callout, then a closed-by-default `<details>` reveal gating brute force / optimal / an interactive step-through simulation / edge cases / complexity table. Lives in `PHASE1_PROBLEMS` in `index.html`; documented in `CLAUDE.md`. Verified end-to-end with headless-browser tests (reveal toggle, all 3 step simulations, footer chaining) — zero console errors.
+- **Also fixed:** All 3 solution `.js` files (`array-hashMap-containsDuplicate.js`, `-twoSum.js`, `-validAnagram.js`) still had their old bulk-imported baked solutions in them — stubbed each one (problem comment + empty method + test calls) before pointing Lawrence at it, so the reveal-gated workflow actually works. **Any remaining Arrays & Hashing file (groupAnagrams, topKFrequent, productExceptSelf, longestConsecutiveSequence, encodeAndDecodeStrings, firstUniqChar, reverseWords) almost certainly has the same problem — stub it before assigning, same as these three.**
+- **Weak area flagged:** None on DSA reasoning — every complexity justification was correct the first time. Process-only note: initially (wrongly) flagged Lawrence for skipping brute force on Contains Duplicate because he'd deleted the attempt before showing the file; he'd actually done it. He fixed this himself going forward (commented brute force, not deleted) — see `co-founder/notes.md`.
+- **Win:** Three problems, correct discipline, correct complexity, in one session — plus the Phase 1 teaching UI now exists to support every future problem the same way.
+
+## Next Session Starting Point
+
+Quick gut-check first: ask Lawrence to justify Valid Anagram's O(1) space claim from memory (why the fixed alphabet matters, and what breaks that claim with arbitrary Unicode input). If solid, continue **Arrays & Hashing** with **Group Anagrams** (medium) — next in the Blind 75 order after the three easy problems. Before assigning: (1) stub `array-hashMap-groupAnagrams.js` if it still has its old baked solution, (2) add a `groupAnagrams` entry to `PHASE1_PROBLEMS` in `index.html` following the exact same shape as the first three (concept visual, workflow callout, reveal with brute force/optimal/stepper/edge cases/complexity table), (3) verify with a quick headless-browser pass before handing it off. Keep the Q&A short once he answers correctly — confirm and move, per his direct feedback this session.

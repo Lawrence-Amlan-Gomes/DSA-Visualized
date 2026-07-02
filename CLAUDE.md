@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-Personal DSA (Data Structures & Algorithms) practice tool. Lawrence writes JavaScript algorithm solutions in VS Code, then runs them through a browser sidebar UI where each file executes in the browser and all `console.log` output appears in Chrome DevTools console. No frameworks, no build step.
+Personal DSA (Data Structures & Algorithms) practice tool. Lawrence writes JavaScript algorithm solutions in VS Code, then runs them through a browser UI where each file executes in the browser and all `console.log` output appears in Chrome DevTools console. No frameworks, no build step.
+
+The UI has three views, switched via a left activity bar: **LiveCoding** (the original sidebar file list — click a file, it runs, check DevTools), **Dashboard** (live status pulled from `co-founder/state.md` + `co-founder/roadmap.md`), and **Roadmap** (the 5-phase interview-prep curriculum from `co-founder/curriculum.md`, one page per phase). The project also has a mentor/co-founder system (`skills/skillCoFounderMentor.md` + `co-founder/`) that tracks DSA learning progress across sessions — see [co-founder/README.md](co-founder/README.md) for how that folder works.
 
 ---
 
@@ -25,14 +27,25 @@ No external npm dependencies. `package.json` exists only to provide `npm start`.
 
 ```
 DSA Visualized/
-├── index.html               # Browser UI — sidebar with file list + search
-├── manifest.json            # Auto-generated list of solution files shown in sidebar
+├── index.html               # Browser UI — 3 views (LiveCoding / Dashboard / Roadmap) via activity bar
+├── manifest.json            # Auto-generated list of solution files shown in LiveCoding
 ├── generate-manifest.js     # Node script — updates manifest.json when files are added
 ├── script.js                # ES module utility: export default print(...args)
 ├── server.js                # Optional alt to Live Server — serves on port 4040
 ├── package.json             # scripts.start → node server.js
 ├── .vscode/
 │   └── settings.json        # Live Server port set to 5501
+│
+├── co-founder/               # Claude's private folder — DSA mentor's memory, not Lawrence's to edit
+│   ├── README.md             # index of what's in this folder
+│   ├── state.md               # last session + next session starting point
+│   ├── roadmap.md             # pattern/topic checklist (live progress)
+│   ├── curriculum.md          # 5-phase interview-prep plan, rendered in the Roadmap view
+│   ├── session-history.md     # dated log of past sessions
+│   └── notes.md                # freeform cross-session observations
+├── skills/                   # Prompt-file conventions (not the Claude Code Skill tool — see skills/skillCoFounderMentor.md)
+│   ├── skillCoFounderMentor.md   # `@skills/skillCoFounderMentor.md` / `End Today` — the DSA mentor
+│   └── skill_AddCommitPush.md    # git add/commit/push in one shot
 │
 │   ── Solution files (all at root, naming: category-algorithm.js) ──
 ├── array-hashMap-longestConsecutiveSequence.js
@@ -71,7 +84,17 @@ npm start             # same thing
 
 ## Architecture & Key Concepts
 
-### How the sidebar UI works
+### How the UI works
+
+`index.html` has a left activity bar (3 icon buttons) that toggles which view is visible: **LiveCoding** (default), **Dashboard**, **Roadmap**. Only one `.view` element has the `active` class at a time (see `switchView()`).
+
+- **LiveCoding** — the original file-list sidebar, described below.
+- **Dashboard** — fetches and parses `co-founder/state.md` + `co-founder/roadmap.md` on every view switch (`loadDashboard()`), no caching, always fresh.
+- **Roadmap** — fetches `co-founder/curriculum.md` (`loadRoadmapView()`), splits it into phases on `## Phase N — Title` headings, renders each with a small hand-rolled markdown-to-HTML converter (`renderMarkdown()`). Phase 1's markdown body additionally re-fetches `co-founder/roadmap.md` and injects the live checklist wherever curriculum.md has a `<!-- LIVE_ROADMAP_CHECKLIST -->` marker. **Phase 0 is special-cased**: instead of rendering its whole body as markdown, `showPhase()` only renders curriculum.md's intro paragraph, then hands off to `renderPhase0Extra()` — a hand-built, self-contained interactive teaching module (sliders, SVG charts, toggles, animated simulations, self-check quizzes) defined entirely in `index.html`'s script, independent of curriculum.md's markdown content. Its sections live in the `PHASE0_SECTIONS` array (id, nav label, render function) — add a new Phase 0 section there, not in curriculum.md. Each section ends with a `#p0-next-footer` that `updateP0NextFooter()` fills with either a "Continue to next section" button, a "Go to Phase 1" handoff button (on the section flagged `final: true`), or a "more coming soon" note. **Phase 1 is also special-cased**, additively: `showPhase()` renders curriculum.md's markdown body as usual, then appends `renderPhase1Extra()` — a per-problem interactive module (same hand-built approach as Phase 0) listed in the `PHASE1_PROBLEMS` array (id, pattern, title, difficulty, `file`, `render`, `init`). Each problem page follows a fixed shape: plain-English statement, a non-spoiler visual of the *concept* (never the algorithm), a "before you code" prompt list, a `renderP1Workflow(file)` callout naming the exact `.js` file to open, then a closed-by-default `<details class="p0-reveal">` gating the brute force, optimal approach, an interactive step-through simulation, edge cases, and a complexity table — closed so Lawrence attempts the problem himself before seeing the answer. `#p1-next-footer` is filled by `updateP1NextFooter()` the same way `#p0-next-footer` is. New problems are added to `PHASE1_PROBLEMS` one at a time as mentor sessions reach them, not built out in bulk ahead of time — and the matching solution `.js` file should be stubbed (problem comment + empty method + test calls, no solution) before Lawrence is pointed at it, since the repo's solution files were bulk-imported from an old project and often already contain a full answer.
+
+Both Dashboard and Roadmap parse fixed markdown heading/checklist structure — if that structure changes in the `co-founder/*.md` files, the matching parser in `index.html` needs a matching update, or the view breaks silently (no error shown beyond the view's own try/catch fallback text).
+
+#### LiveCoding file list
 
 `index.html` fetches `manifest.json` on load to get the file list. When a file is clicked:
 
@@ -169,4 +192,6 @@ No test framework. Test cases are written inline inside each `run()` function as
 - **`script.js` is excluded from the sidebar** — it's a shared utility, not a solution. Do not rename or move it; existing solution files import it by relative path.
 - **`localStorage` key `'dsa-last'`** stores the last selected filename for auto-rerun on Live Server reload. If the stored filename is removed from `manifest.json`, the auto-rerun silently does nothing.
 - **ES Module dynamic import with query strings**: relative imports inside a solution file (like `import print from "./script.js"`) resolve correctly even when the parent module URL has a `?t=...` query string, because browsers resolve relative paths against the URL path only.
-- All solution files live at the **project root** — no subdirectories. The sidebar is a flat list sorted alphabetically.
+- All solution files live at the **project root** — no subdirectories. The LiveCoding list is flat, sorted alphabetically.
+- **`co-founder/` is Claude's, not Lawrence's.** Read/write it as directed by `skills/skillCoFounderMentor.md`'s Behavior section, not on your own initiative. Its files have a fixed heading/checklist structure that `index.html`'s Dashboard and Roadmap views parse directly — don't restructure headings there without updating the matching parser.
+- **`skills/*.md` files are a project-specific prompt convention, not the Claude Code Skill tool.** They're plain markdown, triggered by the user mentioning the filename (e.g. `@skills/skillCoFounderMentor.md`), not registered anywhere else.
