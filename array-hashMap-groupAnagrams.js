@@ -2,74 +2,68 @@
 export default function run() {
   /*
 
- Given an array of strings strs, group the anagrams together.
- You can return the answer in any order.
- 
- An Anagram is a word or phrase formed by rearranging the letters 
- of a different word or phrase, typically using all the original 
- letters exactly once.
+  Given an array of strings strs, group the anagrams together.
+  You can return the answer in any order.
 
- Example 1:
-  Input: strs = ["eat","tea","tan","ate","nat","bat"]
-  Output: [["bat"],["nat","tan"],["ate","eat","tea"]]
-  
- Example 2:
-  Input: strs = [""]  
-  Output: [[""]]
+  An Anagram is a word or phrase formed by rearranging the letters
+  of a different word or phrase, typically using all the original
+  letters exactly once.
 
- Example 3:
-  Input: strs = ["a"] 
-  Output: [["a"]]
- 
- Time Complexity : O(N × K)    [N = number of strings, K = max length of any string]
- Space Complexity:
-   • O(N × K) extra space (for the hash map + count arrays)
-   • O(N × K) space for the output list (we have to return all strings anyway)
- 
- This is the OPTIMAL solution (much better than sorting each string).
+  Example 1:
+   Input: strs = ["eat","tea","tan","ate","nat","bat"]
+   Output: [["bat"],["nat","tan"],["ate","eat","tea"]]
 
- */
+  Example 2:
+   Input: strs = [""]
+   Output: [[""]]
+
+  Example 3:
+   Input: strs = ["a"]
+   Output: [["a"]]
+
+  Follow the discipline (Roadmap view → Phase 1 → Group Anagrams):
+  1. Brute force first — comment its time and space complexity above it.
+  2. Optimize — say what the brute force wastes.
+  3. Re-derive complexity for the optimized version.
+  4. Edge cases — empty array, empty string, no anagram partners, one big family.
+  5. Run it here in LiveCoding, check DevTools.
+
+  */
 
   class Solution {
     /**
      * @param {string[]} strs
      * @return {string[][]}
      */
-
     groupAnagrams(strs) {
-      // Category: Arrays + HashMap (frequency count signature)
-      // Step 1: Create a plain object as our hash map
-      // Key = frequency signature string, Value = array of anagrams
-      const res = {};
-      // Step 2: Process every string in one pass
-      for (let s of strs) {
-        // Step 3: Build frequency count for 26 lowercase letters only
-        // beacause problem states input is lowercase letters
+      // const groups = {};
+      // for (const s of strs) {
+      //   const key = s.split("").sort().join("");
+      //   if (!groups[key]) groups[key] = [];
+      //   groups[key].push(s);
+      // }
+      // return Object.values(groups);
+      // Time: O(n · k log k) — n words, each sorted in O(k log k) for word length k. Space: O(n · k) — the map ends up holding every word.
+
+      const groups = {};
+      for (const s of strs) {
         const count = new Array(26).fill(0);
-        for (let c of s) {
-          // Convert char to index 0-25: 'a' → 0, 'b' → 1, ...
-          count[c.charCodeAt(0) - "a".charCodeAt(0)] += 1;
-        }
-        // Step 4: Create a unique key from the count array
-        // Example: [1,0,0,...,1] becomes "1,0,0,...,1"; length is fixed at 26
-        // This is the same for ALL anagrams → perfect hash key
+        for (const ch of s) count[ch.charCodeAt(0) - 97]++;
         const key = count.join(",");
-        // Step 5: If this group doesn't exist yet, initialize it
-        if (!res[key]) {
-          res[key] = [];
-        }
-        // Step 6: If this group exists, add the original string to its anagram group
-        res[key].push(s);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(s);
       }
-      // Step 7: Return all groups (Object.values gives us the arrays)
-      return Object.values(res);
+      return Object.values(groups);
+      // Time: O(n · k) — one pass counting each word's 26 letters, no sort. Space: O(n · k) — same map, plus a fixed 26-length array per word.
     }
   }
 
   // Test
   const solution = new Solution();
 
-  console.log(solution.groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]));
+  console.log(
+    solution.groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]),
+  );
   // Expected: [["eat","tea","ate"],["tan","nat"],["bat"]] (any order)
 
   console.log(solution.groupAnagrams([""])); // [[""]]
@@ -81,5 +75,4 @@ export default function run() {
   // Expected: [["ab","ba"],["abc","cab"]]
   console.log(solution.groupAnagrams(["hello", "world", "lloeh", "dlrow"]));
   // Expected: [["hello","lloeh"],["world","dlrow"]]
-
 }

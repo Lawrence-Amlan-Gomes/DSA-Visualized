@@ -1842,6 +1842,24 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1ValidAnagram,
       init: initP1ValidAnagramStepper,
     },
+    {
+      id: 'groupAnagrams',
+      pattern: 'Arrays & Hashing',
+      title: 'Group Anagrams',
+      difficulty: 'medium',
+      file: 'array-hashMap-groupAnagrams.js',
+      render: renderP1GroupAnagrams,
+      init: initP1GroupAnagramsStepper,
+    },
+    {
+      id: 'topKFrequent',
+      pattern: 'Arrays & Hashing',
+      title: 'Top K Frequent Elements',
+      difficulty: 'medium',
+      file: 'array-hashMap-topKFrequent.js',
+      render: renderP1TopKFrequent,
+      init: initP1TopKFrequentStepper,
+    },
   ];
   let currentP1Problem = localStorage.getItem('dsa-p1-problem') || PHASE1_PROBLEMS[0].id;
 
@@ -2374,6 +2392,334 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
+    }
+
+    reset();
+  }
+
+  // Shared by Group Anagrams' concept viz — colors every word by which anagram family it
+  // belongs to (computed purely for display, not tied to any specific coded approach).
+  function renderP1AnagramGroupsViz(strs) {
+    const PALETTE = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#ef4444'];
+    const keyFor = s => s.split('').sort().join('');
+    const colorFor = {};
+    let ci = 0;
+    strs.forEach(s => { const k = keyFor(s); if (!(k in colorFor)) colorFor[k] = PALETTE[ci++ % PALETTE.length]; });
+    return `<div class="p0-arr-row">${strs.map(s => `<div class="p0-arr-cell" style="border-color:${colorFor[keyFor(s)]}">${s}</div>`).join('')}</div>`;
+  }
+
+  function renderP1GroupAnagrams() {
+    return `
+    <div class="p0-section-title">Group Anagrams<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 4</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of words. Put every word that's an anagram of another word into the same group. A word with no anagram partner in the list just forms a group of one. Return the groups — order doesn't matter, inside or out.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "grouped" looks like</h4>
+      <p>Same border color = same group. strs = ["eat","tea","tan","ate","nat","bat"] has three groups: {eat, tea, ate}, {tan, nat}, {bat}:</p>
+      ${renderP1AnagramGroupsViz(['eat', 'tea', 'tan', 'ate', 'nat', 'bat'])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Valid Anagram told you if <em>two</em> words are anagrams. How could you turn that same idea into a "label" you could compare across <em>many</em> words at once, not just two?<br>
+      2. If two words are anagrams, what's true about their letters once you sort each word's letters into order?<br>
+      3. Once every word has a label, what data structure lets you collect every word sharing a label into the same group, in one pass?<br>
+      4. Sorting each word costs something — is there a labeling trick that skips sorting entirely, using the same "26-letter fixed alphabet" idea from Valid Anagram?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-groupAnagrams.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — sort each word, group by sorted string</h4>
+        <p>Anagrams sort to the exact same string. Sort every word's letters, use that sorted string as a hash map key, and push the original word into that key's group.</p>
+        <pre class="p0-code">function groupAnagrams(strs) {
+  const groups = {};
+  for (const s of strs) {
+    const key = s.split('').sort().join('');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  }
+  return Object.values(groups);
+}</pre>
+        <p>Time: <strong>O(n · k log k)</strong> — n words, each sorted in O(k log k) for word length k. Space: <strong>O(n · k)</strong> — the map ends up holding every word.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — frequency-count key, no sorting</h4>
+        <p>Same idea as Valid Anagram's frequency counter: build a 26-length count array per word instead of sorting it. Anagrams produce the identical count array, so joining it into a string gives a unique, sort-free key.</p>
+        <pre class="p0-code">function groupAnagrams(strs) {
+  const groups = {};
+  for (const s of strs) {
+    const count = new Array(26).fill(0);
+    for (const ch of s) count[ch.charCodeAt(0) - 97]++;
+    const key = count.join(',');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  }
+  return Object.values(groups);
+}</pre>
+        <p>Time: <strong>O(n · k)</strong> — one pass counting each word's 26 letters, no sort. Space: <strong>O(n · k)</strong> — same map, plus a fixed 26-length array per word.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — strs = ["eat", "tea", "bat"]</div>
+        <div id="p1-ga-word" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Groups so far (key → words)</div>
+        <div id="p1-ga-groups" class="p0-bucket" style="min-height:34px"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ga-step-btn">▶ Step</button>
+        <div class="p0-sim-log" id="p1-ga-log"></div>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty array:</strong> loop never runs → returns [].<br>
+        <strong>Single empty string [""]:</strong> count array is all zeros, one group containing [""].<br>
+        <strong>No anagram partners at all:</strong> every word gets its own group of one — still correct, just n groups of size 1.<br>
+        <strong>All words in one anagram family:</strong> one group holding every word.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Sort &amp; group</td><td class="num">O(n·k log k)</td><td class="num">O(n·k)</td></tr>
+          <tr><td>Frequency-count key</td><td class="num">O(n·k)</td><td class="num">O(n·k)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1GroupAnagramsStepper() {
+    const btn = document.getElementById('p1-ga-step-btn');
+    if (!btn) return;
+    const wordHost = document.getElementById('p1-ga-word');
+    const groupsHost = document.getElementById('p1-ga-groups');
+    const logEl = document.getElementById('p1-ga-log');
+    const STRS = ['eat', 'tea', 'bat'];
+    const keyFor = s => {
+      const count = new Array(26).fill(0);
+      for (const ch of s) count[ch.charCodeAt(0) - 97]++;
+      return count.join(',');
+    };
+    let i = 0;
+    let groups = {};
+
+    function render(activeIdx) {
+      wordHost.innerHTML = STRS.map((s, idx) =>
+        `<div class="p0-arr-cell${idx === activeIdx ? ' active' : ''}">${s}</div>`).join('');
+      const keys = Object.keys(groups);
+      groupsHost.innerHTML = keys.length
+        ? keys.map(k => `<div class="p0-key-chip">[${groups[k].join(', ')}]</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      i = 0;
+      groups = {};
+      render(-1);
+      logEl.textContent = '';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (i >= STRS.length) return;
+      const s = STRS[i];
+      const key = keyFor(s);
+      const isNew = !groups[key];
+      if (isNew) groups[key] = [];
+      groups[key].push(s);
+      render(i);
+      logEl.textContent = isNew
+        ? `"${s}": new frequency key → start a new group.`
+        : `"${s}": same frequency key as an existing group → add it there.`;
+      i++;
+      if (i >= STRS.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Shared by Top K Frequent's concept viz — bar height = frequency, top-k bars highlighted green.
+  function renderP1FrequencyBars(nums, topK) {
+    const counts = {};
+    nums.forEach(n => { counts[n] = (counts[n] || 0) + 1; });
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const max = Math.max(...entries.map(e => e[1]));
+    const topSet = new Set(entries.slice(0, topK).map(e => e[0]));
+    return `<div class="p0-arr-row" style="align-items:flex-end;gap:10px">${entries.map(([n, c]) => {
+      const h = Math.round((c / max) * 60) + 20;
+      const highlight = topSet.has(n);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:28px;height:${h}px;background:${highlight ? '#22c55e' : '#3b82f6'};border-radius:4px 4px 0 0"></div>
+        <div style="font-size:11px;color:var(--sublabel)">${n}</div>
+        <div style="font-size:10px;color:var(--muted)">×${c}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1TopKFrequent() {
+    return `
+    <div class="p0-section-title">Top K Frequent Elements<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 5</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers and a number <code>k</code>. Return the <code>k</code> numbers that show up most often in the list. Order of the answer doesn't matter.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "most frequent" looks like</h4>
+      <p>nums = [1,1,1,2,2,3], k = 2 — bar height is how many times each number appears. The tallest k bars (green) are the answer:</p>
+      ${renderP1FrequencyBars([1, 1, 1, 2, 2, 3], 2)}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Simplest way: count every number's frequency, then what do you do with those counts to find the top k? What's the time complexity of that step?<br>
+      2. Sorting the counts works, but is it the fastest possible? A count can only ever be a whole number between 1 and <code>n</code> (the array length) — is there a way to use that fact to skip sorting entirely?<br>
+      3. If you had one "bucket" per possible frequency value, what would you put in bucket number 5?<br>
+      4. Once the buckets are filled, which direction do you walk through them to get the <em>most</em> frequent numbers first?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-topKFrequent.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — count, then sort by frequency</h4>
+        <p>Count every number's frequency with a hash map, turn that into a list of [number, count] pairs, sort the pairs by count descending, take the first k.</p>
+        <pre class="p0-code">function topKFrequent(nums, k) {
+  const count = {};
+  for (const n of nums) count[n] = (count[n] || 0) + 1;
+  const sorted = Object.entries(count).sort((a, b) => b[1] - a[1]);
+  return sorted.slice(0, k).map(([n]) => Number(n));
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — counting is O(n), but sorting the unique values dominates. Space: <strong>O(n)</strong> — the count map.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — bucket sort by frequency, no sorting at all</h4>
+        <p>A frequency can never exceed <code>n</code> (the array length). So instead of sorting, make an array of <code>n + 1</code> "buckets," where bucket index = frequency. Drop each number into the bucket matching its count. Then walk the buckets from the highest index down to 1, collecting numbers until you have k.</p>
+        <pre class="p0-code">function topKFrequent(nums, k) {
+  const count = {};
+  for (const n of nums) count[n] = (count[n] || 0) + 1;
+
+  const buckets = Array.from({ length: nums.length + 1 }, () => []);
+  for (const n in count) buckets[count[n]].push(Number(n));
+
+  const res = [];
+  for (let f = buckets.length - 1; f > 0 && res.length < k; f--) {
+    for (const n of buckets[f]) {
+      res.push(n);
+      if (res.length === k) break;
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — counting is O(n), building buckets is O(n), walking buckets visits at most n items total. Space: <strong>O(n)</strong> — the count map and the buckets array together.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [1,1,1,2,2,3], k = 2</div>
+        <div id="p1-tk-buckets" class="p0-arr-row" style="flex-wrap:wrap"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Result so far</div>
+        <div id="p1-tk-result" class="p0-bucket" style="min-height:34px"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-tk-step-btn">▶ Step</button>
+        <div class="p0-sim-log" id="p1-tk-log"></div>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>k equals the number of unique elements:</strong> you end up collecting every unique number, just ordered by frequency.<br>
+        <strong>All elements identical:</strong> one bucket holds everything, at the highest index — the first bucket you visit.<br>
+        <strong>Negative numbers:</strong> the count map's keys work fine with negatives; just make sure you convert the key back with <code>Number()</code>, not leave it as a string.<br>
+        <strong>Ties in frequency:</strong> the problem says any valid k-set is acceptable, so which tied number comes out first doesn't matter.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Count &amp; sort</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Bucket sort</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1TopKFrequentStepper() {
+    const btn = document.getElementById('p1-tk-step-btn');
+    if (!btn) return;
+    const bucketsHost = document.getElementById('p1-tk-buckets');
+    const resultHost = document.getElementById('p1-tk-result');
+    const logEl = document.getElementById('p1-tk-log');
+    const NUMS = [1, 1, 1, 2, 2, 3];
+    const K = 2;
+
+    const count = {};
+    for (const n of NUMS) count[n] = (count[n] || 0) + 1;
+    const buckets = Array.from({ length: NUMS.length + 1 }, () => []);
+    for (const n in count) buckets[count[n]].push(Number(n));
+
+    let f, result;
+
+    function renderBuckets(activeF) {
+      bucketsHost.innerHTML = buckets.map((b, idx) => {
+        if (idx === 0) return '';
+        const empty = b.length === 0;
+        const style = idx === activeF ? 'background:#22c55e' : (empty ? 'opacity:0.35' : '');
+        return `<div class="p0-key-chip" style="${style}">freq ${idx}: [${b.join(', ') || '—'}]</div>`;
+      }).join('');
+    }
+
+    function renderResult() {
+      resultHost.innerHTML = result.length
+        ? result.map(n => `<div class="p0-key-chip">${n}</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      f = buckets.length - 1;
+      result = [];
+      renderBuckets(-1);
+      renderResult();
+      logEl.textContent = '';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function finish() {
+      logEl.textContent += ` Have ${K} elements → return [${result.join(', ')}].`;
+      btn.textContent = '↺ Reset';
+      btn.onclick = reset;
+    }
+
+    function step() {
+      if (result.length >= K) return;
+      while (f > 0 && buckets[f].length === 0) f--;
+      if (f <= 0) { finish(); return; }
+      for (const n of buckets[f]) {
+        if (result.length >= K) break;
+        result.push(n);
+      }
+      renderBuckets(f);
+      renderResult();
+      logEl.textContent = `Bucket ${f} (frequency ${f}): [${buckets[f].join(', ')}] → add to result.`;
+      f--;
+      if (result.length >= K) finish();
     }
 
     reset();
