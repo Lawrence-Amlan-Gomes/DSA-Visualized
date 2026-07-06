@@ -279,6 +279,7 @@
     #roadmap-content {
       flex: 1;
       overflow-y: auto;
+      overflow-anchor: none;
       padding: 30px 40px 60px;
       max-width: 760px;
     }
@@ -301,7 +302,7 @@
 
     /* ── Phase 0: interactive complexity module ── */
     .p0-nav { display:flex; gap:8px; flex-wrap:wrap; margin: 4px 0 18px; }
-    .p0-nav-item { padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.04); border:1px solid var(--border); font-size:12px; color:var(--sublabel); cursor:pointer; white-space:nowrap; user-select:none; }
+    .p0-nav-item { padding:6px 12px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid var(--border); font-size:12px; color:var(--sublabel); cursor:pointer; white-space:nowrap; user-select:none; }
     .p0-nav-item:hover { color:var(--body-text); }
     .p0-nav-item.active { background:var(--active-bg); border-color:rgba(59,130,246,0.4); color:var(--blue); font-weight:600; }
     .p0-container { display:flex; flex-direction:column; }
@@ -1860,18 +1861,103 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1TopKFrequent,
       init: initP1TopKFrequentStepper,
     },
+    {
+      id: 'productExceptSelf',
+      pattern: 'Arrays & Hashing',
+      title: 'Product of Array Except Self',
+      difficulty: 'medium',
+      file: 'array-hashMap-productExceptSelf.js',
+      render: renderP1ProductExceptSelf,
+      init: initP1ProductExceptSelfStepper,
+    },
+    {
+      id: 'longestConsecutiveSequence',
+      pattern: 'Arrays & Hashing',
+      title: 'Longest Consecutive Sequence',
+      difficulty: 'medium',
+      file: 'array-hashMap-longestConsecutiveSequence.js',
+      render: renderP1LongestConsecutive,
+      init: initP1LongestConsecutiveStepper,
+    },
+    {
+      id: 'encodeAndDecodeStrings',
+      pattern: 'Arrays & Hashing',
+      title: 'Encode and Decode Strings',
+      difficulty: 'medium',
+      file: 'array-hashMap-encodeAndDecodeStrings.js',
+      render: renderP1EncodeDecode,
+      init: initP1EncodeDecodeStepper,
+    },
+    {
+      id: 'firstUniqChar',
+      pattern: 'Arrays & Hashing',
+      title: 'First Unique Character',
+      difficulty: 'easy',
+      file: 'array-hashMap-firstUniqChar.js',
+      render: renderP1FirstUniqChar,
+      init: initP1FirstUniqCharStepper,
+    },
+    {
+      id: 'reverseWords',
+      pattern: 'Arrays & Hashing',
+      title: 'Reverse Words in a String',
+      difficulty: 'medium',
+      file: 'array-hashMap-reverseWords.js',
+      render: renderP1ReverseWords,
+      init: initP1ReverseWordsStepper,
+    },
   ];
+
+  // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
+  // clicking one reveals that pattern's problem pills (only Arrays & Hashing has any so far).
+  const PHASE1_CATEGORIES = [
+    'Arrays & Hashing',
+    'Two Pointers',
+    'Sliding Window',
+    'Stack',
+    'Binary Search',
+    'Linked List',
+    'Trees',
+    'Tries',
+    'Heap / Priority Queue',
+    'Backtracking',
+    'Graphs',
+    'Advanced Graphs (Union Find, Dijkstra, MST)',
+    '1-D Dynamic Programming',
+    '2-D Dynamic Programming',
+    'Greedy / Intervals',
+    'Bit Manipulation',
+    'Math & Geometry',
+  ];
+
   let currentP1Problem = localStorage.getItem('dsa-p1-problem') || PHASE1_PROBLEMS[0].id;
+  let currentP1Category = localStorage.getItem('dsa-p1-category')
+    || (PHASE1_PROBLEMS.find(p => p.id === currentP1Problem) || PHASE1_PROBLEMS[0]).pattern;
 
   function renderPhase1Extra() {
-    const navHtml = PHASE1_PROBLEMS.map(p =>
-      `<div class="p0-nav-item${p.id === currentP1Problem ? ' active' : ''}" data-p1="${p.id}">${escapeHtml(p.title)}</div>`
+    const categoryNavHtml = PHASE1_CATEGORIES.map(cat =>
+      `<div class="p0-nav-item${cat === currentP1Category ? ' active' : ''}" data-p1cat="${escapeHtml(cat)}">${escapeHtml(cat)}</div>`
     ).join('');
-    const active = PHASE1_PROBLEMS.find(p => p.id === currentP1Problem) || PHASE1_PROBLEMS[0];
-    return `<div class="p0-nav">${navHtml}</div><div class="p0-container" id="p1-body">${active.render()}</div>`;
+
+    const problemsInCategory = PHASE1_PROBLEMS.filter(p => p.pattern === currentP1Category);
+    let bodyHtml;
+    if (!problemsInCategory.length) {
+      bodyHtml = `<div class="p0-container"><p style="color:var(--muted);font-size:13px">No problems built yet for ${escapeHtml(currentP1Category)} — more added as sessions reach them.</p></div>`;
+    } else {
+      const problemNavHtml = problemsInCategory.map(p =>
+        `<div class="p0-nav-item${p.id === currentP1Problem ? ' active' : ''}" data-p1="${p.id}">${escapeHtml(p.title)}</div>`
+      ).join('');
+      const active = problemsInCategory.find(p => p.id === currentP1Problem) || problemsInCategory[0];
+      bodyHtml = `<div class="p0-nav">${problemNavHtml}</div><div class="p0-container" id="p1-body">${active.render()}</div>`;
+    }
+
+    return `<div class="p0-nav">${categoryNavHtml}</div>${bodyHtml}`;
   }
 
   function bindPhase1Handlers() {
+    document.querySelectorAll('[data-p1cat]').forEach(el => {
+      el.onclick = () => goToP1Category(el.dataset.p1cat);
+    });
     document.querySelectorAll('[data-p1]').forEach(el => {
       el.onclick = () => goToP1Problem(el.dataset.p1);
     });
@@ -1879,12 +1965,32 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     updateP1NextFooter();
   }
 
+  async function goToP1Category(cat) {
+    currentP1Category = cat;
+    localStorage.setItem('dsa-p1-category', cat);
+    const problemsInCategory = PHASE1_PROBLEMS.filter(p => p.pattern === cat);
+    if (problemsInCategory.length && !problemsInCategory.some(p => p.id === currentP1Problem)) {
+      currentP1Problem = problemsInCategory[0].id;
+      localStorage.setItem('dsa-p1-problem', currentP1Problem);
+    }
+    const contentEl = document.getElementById('roadmap-content');
+    const scrollBefore = contentEl ? contentEl.scrollTop : 0;
+    await showPhase(currentPhaseIndex);
+    if (contentEl) contentEl.scrollTop = scrollBefore;
+  }
+
   async function goToP1Problem(id) {
     currentP1Problem = id;
     localStorage.setItem('dsa-p1-problem', id);
-    await showPhase(currentPhaseIndex);
+    const p = PHASE1_PROBLEMS.find(pp => pp.id === id);
+    if (p) {
+      currentP1Category = p.pattern;
+      localStorage.setItem('dsa-p1-category', currentP1Category);
+    }
     const contentEl = document.getElementById('roadmap-content');
-    if (contentEl) contentEl.scrollTop = 0;
+    const scrollBefore = contentEl ? contentEl.scrollTop : 0;
+    await showPhase(currentPhaseIndex);
+    if (contentEl) contentEl.scrollTop = scrollBefore;
   }
 
   // Renders a "Continue to next problem" button when one exists, otherwise an honest
@@ -2720,6 +2826,860 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       logEl.textContent = `Bucket ${f} (frequency ${f}): [${buckets[f].join(', ')}] → add to result.`;
       f--;
       if (result.length >= K) finish();
+    }
+
+    reset();
+  }
+
+  function renderP1ExceptSelfViz(nums, excludeIdx) {
+    const rest = nums.filter((_, i) => i !== excludeIdx);
+    const product = rest.reduce((a, b) => a * b, 1);
+    return `<div class="p0-arr-row">${nums.map((n, i) => {
+      const excluded = i === excludeIdx;
+      return `<div class="p0-arr-cell${excluded ? '' : ' active'}" style="${excluded ? 'opacity:0.35;text-decoration:line-through' : ''}">${n}</div>`;
+    }).join('')}</div>
+    <p style="margin-top:8px;font-size:12px;color:var(--sublabel)">Skip index ${excludeIdx} (value ${nums[excludeIdx]}) → multiply the rest: ${rest.join(' × ')} = <strong>${product}</strong></p>`;
+  }
+
+  function renderP1ProductExceptSelf() {
+    return `
+    <div class="p0-section-title">Product of Array Except Self<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 6</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers. For every position, return the product of all the <em>other</em> numbers (not the one at that position). You can't use division, and it has to run in O(n) time.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "except self" means</h4>
+      <p>nums = [1,2,3,4] — to get the answer at index 2, cross out that position and multiply everything else:</p>
+      ${renderP1ExceptSelfViz([1, 2, 3, 4], 2)}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. The obvious way: for every index, loop through the whole array again and multiply everything except that spot. What's the time complexity of that?<br>
+      2. Without division, how could you describe the answer at index <code>i</code> as two separate pieces — one built from the numbers <em>to the left</em> of <code>i</code>, and one built from the numbers <em>to the right</em>?<br>
+      3. If you built a "product of everything to the left" array in one left-to-right pass, and a "product of everything to the right" array in one right-to-left pass, how would you combine them at each index?<br>
+      4. Can you avoid allocating two extra arrays and instead reuse the output array for one of the two passes?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-productExceptSelf.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — nested loop, recompute every product from scratch</h4>
+        <p>For every index i, loop through the whole array again and multiply every value except nums[i].</p>
+        <pre class="p0-code">function productExceptSelf(nums) {
+  const res = [];
+  for (let i = 0; i < nums.length; i++) {
+    let product = 1;
+    for (let j = 0; j < nums.length; j++) {
+      if (j !== i) product *= nums[j];
+    }
+    res.push(product);
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n&sup2;)</strong> — an inner loop over the whole array for every index. Space: <strong>O(n)</strong> — the output array.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — prefix product, then suffix product, in two linear passes</h4>
+        <p>The answer at index i is (product of everything left of i) × (product of everything right of i). Build the left products into the output array on a left-to-right pass. Then walk right-to-left with a running "suffix product" variable, multiplying it into each slot as you go — no second array needed.</p>
+        <pre class="p0-code">function productExceptSelf(nums) {
+  const n = nums.length;
+  const res = new Array(n).fill(1);
+
+  for (let i = 1; i < n; i++) {
+    res[i] = res[i - 1] * nums[i - 1];
+  }
+
+  let suffix = 1;
+  for (let i = n - 1; i >= 0; i--) {
+    res[i] *= suffix;
+    suffix *= nums[i];
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — two linear passes. Space: <strong>O(1)</strong> extra — only the output array, which the problem allows since you have to return it anyway.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [1,2,3,4]</div>
+        <div id="p1-pes-res" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-pes-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-pes-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>One zero in the array:</strong> every index except the zero's own position gets 0 (because the zero is part of their product); the zero's own position gets the product of everything else.<br>
+        <strong>Two or more zeros:</strong> every position's answer becomes 0, since every product now includes at least one of the zeros.<br>
+        <strong>Negative numbers:</strong> just carry the sign through the multiplication normally — no special-casing needed.<br>
+        <strong>Array of length 1:</strong> there's nothing to multiply, so the answer is <code>[1]</code> — an empty product.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Nested loop</td><td class="num">O(n&sup2;)</td><td class="num">O(n)</td></tr>
+          <tr><td>Prefix + suffix pass</td><td class="num">O(n)</td><td class="num">O(1) extra</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ProductExceptSelfStepper() {
+    const btn = document.getElementById('p1-pes-step-btn');
+    if (!btn) return;
+    const resHost = document.getElementById('p1-pes-res');
+    const logEl = document.getElementById('p1-pes-log');
+    const NUMS = [1, 2, 3, 4];
+
+    const steps = [];
+    {
+      const n = NUMS.length;
+      const res = new Array(n).fill(1);
+      for (let i = 1; i < n; i++) {
+        res[i] = res[i - 1] * NUMS[i - 1];
+        steps.push({ res: res.slice(), note: `Left pass: res[${i}] = res[${i - 1}] × nums[${i - 1}] = ${res[i]}` });
+      }
+      let suffix = 1;
+      for (let i = n - 1; i >= 0; i--) {
+        res[i] *= suffix;
+        steps.push({ res: res.slice(), note: `Right pass: res[${i}] ×= suffix(${suffix}) → ${res[i]}` });
+        suffix *= NUMS[i];
+      }
+    }
+
+    let idx;
+
+    function renderResAt(res, activeIdx) {
+      resHost.innerHTML = res.map((v, i) => {
+        const active = i === activeIdx;
+        return `<div class="p0-arr-cell${active ? ' active' : ''}">${v}</div>`;
+      }).join('');
+    }
+
+    function reset() {
+      idx = 0;
+      renderResAt(new Array(NUMS.length).fill(1), -1);
+      logEl.textContent = 'Start: res = [1, 1, 1, 1]';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      const match = s.note.match(/res\[(\d+)\]/);
+      renderResAt(s.res, match ? Number(match[1]) : -1);
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` → done: [${s.res.join(', ')}]`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ConsecutiveViz(nums) {
+    const uniqueSorted = [...new Set(nums)].sort((a, b) => a - b);
+    const runs = [];
+    let current = [];
+    for (const n of uniqueSorted) {
+      if (current.length && n !== current[current.length - 1] + 1) {
+        runs.push(current);
+        current = [];
+      }
+      current.push(n);
+    }
+    if (current.length) runs.push(current);
+
+    const longest = runs.reduce((a, b) => (b.length > a.length ? b : a), []);
+    const PALETTE = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#06b6d4', '#ef4444'];
+    const runOf = new Map();
+    runs.forEach((run, i) => run.forEach(n => runOf.set(n, i)));
+    const longestSet = new Set(longest);
+
+    const cellsHtml = nums.map(n => {
+      const color = PALETTE[runOf.get(n) % PALETTE.length];
+      return `<div class="p0-arr-cell${longestSet.has(n) ? ' active' : ''}" style="border-color:${color}">${n}</div>`;
+    }).join('');
+
+    return `<div class="p0-arr-row">${cellsHtml}</div>
+    <p style="margin-top:8px;font-size:12px;color:var(--sublabel)">Same border color = same run of back-to-back numbers. The highlighted run is <strong>${longest.join(' → ')}</strong> — length ${longest.length}.</p>`;
+  }
+
+  function renderP1LongestConsecutive() {
+    return `
+    <div class="p0-section-title">Longest Consecutive Sequence<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 7</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers, in any order. Find the longest run of numbers that are back-to-back (like 1, 2, 3, 4 — each one exactly one more than the last). Return how long that longest run is. Has to run in O(n) time.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "consecutive" looks like</h4>
+      <p>nums = [100, 4, 200, 1, 3, 2] — the numbers are scattered, but 1, 2, 3, 4 are all back-to-back:</p>
+      ${renderP1ConsecutiveViz([100, 4, 200, 1, 3, 2])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Simplest way: what happens if you sort the array first? Once it's sorted, how would you walk through it once and count how long each streak of back-to-back numbers is? What's the time complexity, given sorting alone costs O(n log n)?<br>
+      2. Sorting works but isn't O(n). If you drop every number into a Set instead (O(1) lookups, no order), how could you tell just by looking at a number whether it's the <em>start</em> of a run — not the middle of one?<br>
+      3. Once you find a number that starts a run, how do you count how long that run goes?<br>
+      4. There's a while loop nested inside a for loop here — so why is the total work still O(n) and not O(n&sup2;)? Think about which numbers actually get expanded from.</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-longestConsecutiveSequence.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — sort, then scan for streaks</h4>
+        <p>Sort the deduplicated numbers. Walk through once, tracking how long the current back-to-back streak is; reset it to 1 whenever the next number isn't exactly one more than the last.</p>
+        <pre class="p0-code">function longestConsecutive(nums) {
+  if (nums.length === 0) return 0;
+  const sorted = [...new Set(nums)].sort((a, b) => a - b);
+  let longest = 1, current = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === sorted[i - 1] + 1) {
+      current++;
+    } else {
+      current = 1;
+    }
+    longest = Math.max(longest, current);
+  }
+  return longest;
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — the sort dominates. Space: <strong>O(n)</strong> — the deduplicated, sorted copy.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — a Set, but only expand from run starts</h4>
+        <p>Put every number in a Set. For each number, check if it's a run <em>start</em> — meaning <code>number - 1</code> is NOT in the set. Only then expand forward (<code>number + 1</code>, <code>+2</code>, ...) counting how far the run goes. Numbers in the middle of a run get skipped instantly, so every number only ever gets expanded into once across the whole algorithm.</p>
+        <pre class="p0-code">function longestConsecutive(nums) {
+  const set = new Set(nums);
+  let longest = 0;
+  for (const n of set) {
+    if (!set.has(n - 1)) {
+      let length = 1;
+      while (set.has(n + length)) length++;
+      longest = Math.max(longest, length);
+    }
+  }
+  return longest;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — every number is visited once as a candidate, and the inner while loop only ever runs for numbers that are true run starts, so the total expansion work across all runs is also O(n). Space: <strong>O(n)</strong> — the set.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [100, 4, 200, 1, 3, 2]</div>
+        <div id="p1-lcs-arr" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-lcs-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-lcs-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty array:</strong> return 0 — there's nothing to form a run.<br>
+        <strong>Duplicates:</strong> the Set removes them automatically, so repeats never inflate a run's length.<br>
+        <strong>All one number, repeated:</strong> the Set collapses to a single value, so the longest run is 1.<br>
+        <strong>Negative numbers:</strong> the Set and the <code>n - 1</code> / <code>n + 1</code> checks work identically — sign doesn't matter.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Sort &amp; scan</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Set, expand from run starts</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1LongestConsecutiveStepper() {
+    const btn = document.getElementById('p1-lcs-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-lcs-arr');
+    const logEl = document.getElementById('p1-lcs-log');
+    const NUMS = [100, 4, 200, 1, 3, 2];
+    const set = new Set(NUMS);
+
+    const steps = [];
+    let precomputeLongest = 0;
+    for (const n of set) {
+      if (!set.has(n - 1)) {
+        let length = 1;
+        while (set.has(n + length)) length++;
+        precomputeLongest = Math.max(precomputeLongest, length);
+        steps.push({ n, isStart: true, length, longest: precomputeLongest, run: Array.from({ length }, (_, i) => n + i) });
+      } else {
+        steps.push({ n, isStart: false, longest: precomputeLongest });
+      }
+    }
+
+    let idx;
+
+    function renderArr(activeN, runSet) {
+      arrHost.innerHTML = NUMS.map(v => {
+        const inRun = runSet && runSet.has(v);
+        const isActive = v === activeN;
+        return `<div class="p0-arr-cell${inRun ? ' active' : ''}" style="${isActive && !inRun ? 'opacity:0.5' : ''}">${v}</div>`;
+      }).join('');
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(null, null);
+      logEl.textContent = 'Set built: {100, 4, 200, 1, 3, 2}. Longest so far: 0';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.isStart) {
+        renderArr(s.n, new Set(s.run));
+        logEl.textContent = `${s.n} - 1 = ${s.n - 1} is NOT in the set → run start. Expand: ${s.run.join(' → ')} (length ${s.length}). Longest so far: ${s.longest}.`;
+      } else {
+        renderArr(s.n, null);
+        logEl.textContent = `${s.n} - 1 = ${s.n - 1} IS in the set → not a run start, skip. Longest so far: ${s.longest}.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` → done: longest run length = ${s.longest}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1JoinDemo(strs, broken) {
+    const boxesHtml = strs.map(s => `<div class="p0-arr-cell">${escapeHtml(s) || '<span style="color:var(--muted)">(empty)</span>'}</div>`).join('');
+    const joined = strs.join(',');
+    return `<div class="p0-arr-row">${boxesHtml}</div>
+    <div style="text-align:center;margin:8px 0;color:var(--muted);font-size:16px">↓ join with a comma ↓</div>
+    <div class="p0-arr-row"><div class="p0-arr-cell${broken ? ' active' : ''}" style="width:auto;padding:0 12px;flex:none${broken ? ';border-color:#ef4444' : ''}">${escapeHtml(joined)}</div></div>
+    ${broken ? `<p style="margin-top:8px;font-size:12px;color:#ef4444">Split this back by comma and you get ${JSON.stringify(joined.split(','))} — not the original list. The comma inside a string got mistaken for a separator.</p>` : ''}`;
+  }
+
+  function renderP1EncodeDecode() {
+    return `
+    <div class="p0-section-title">Encode and Decode Strings<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 8</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Turn a list of strings into one single string (so it can be sent somewhere, like over a network), then turn that one string back into the exact same list. The strings can contain <em>any</em> character at all — letters, numbers, even punctuation like <code>#</code> or <code>,</code>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Why the obvious idea breaks</h4>
+      <p>The first instinct is usually: glue the strings together with a separator (like a comma), and split on that separator to decode. That works here:</p>
+      ${renderP1JoinDemo(['Hello', 'World'], false)}
+      <p style="margin-top:14px">But it quietly breaks the moment a string contains that same separator character:</p>
+      ${renderP1JoinDemo(['a,b', 'c'], true)}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Since strings can contain <em>any</em> character, is there any single separator character you could pick that's guaranteed to never appear inside a string?<br>
+      2. Instead of relying on a separator being "safe," what if you told the decoder exactly how many characters belong to each string, up front?<br>
+      3. If you write a string's length before the string itself (like <code>5Hello</code>), how does the decoder know where the number ends and the actual string starts? What tiny piece of punctuation would fix that?<br>
+      4. Walk through decoding <code>5#Hello5#World</code> by hand: what do you read first, and how do you know when to stop reading digits and start reading letters?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-encodeAndDecodeStrings.js')}
+
+    <details class="p0-reveal">
+      <summary>Approach &amp; walkthrough — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Why "just pick a rare separator" isn't good enough</h4>
+        <p>You might think: use a separator so unusual it'll never show up (like <code>|||</code>). But the problem explicitly allows <em>any</em> character in the input, so no fixed separator is ever 100% safe — there's always some input that breaks it. You need an approach that works no matter what the strings contain.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>The fix — prefix every string with its own length</h4>
+        <p>Before each string, write its length, then a delimiter (like <code>#</code>), then the string itself. <code>"Hello"</code> becomes <code>"5#Hello"</code>. The delimiter after the number is just there so the decoder knows where the digits end — the number itself is never ambiguous, because digits and non-digits can't be confused with each other.</p>
+        <pre class="p0-code">function encode(strs) {
+  let res = '';
+  for (const s of strs) {
+    res += s.length + '#' + s;
+  }
+  return res;
+}
+
+function decode(str) {
+  const res = [];
+  let i = 0;
+  while (i < str.length) {
+    let j = i;
+    while (str[j] !== '#') j++;
+    const length = parseInt(str.substring(i, j));
+    i = j + 1;
+    j = i + length;
+    res.push(str.substring(i, j));
+    i = j;
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n)</strong> for encode and decode, where n is the total number of characters across all strings — each character is visited a constant number of times. Space: <strong>O(n)</strong> — the encoded string and the output array.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Decode it, step by step — str = "5#Hello5#World"</div>
+        <div id="p1-ed-str" class="p0-code" style="font-size:14px"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Decoded so far</div>
+        <div id="p1-ed-result" class="p0-bucket" style="min-height:34px"></div>
+        <div class="p0-sim-log" id="p1-ed-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ed-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty string in the list:</strong> <code>""</code> encodes as <code>"0#"</code> — length 0, nothing after the delimiter. Decodes back to <code>""</code> correctly.<br>
+        <strong>A string that contains <code>#</code>:</strong> doesn't matter — the decoder never searches for <code>#</code> inside the string body, only in the length prefix, and it knows exactly how many characters to take because it already read the length.<br>
+        <strong>Empty input list:</strong> encode returns <code>""</code>, and the decode loop's <code>while (i &lt; str.length)</code> never runs, so it correctly returns <code>[]</code>.<br>
+        <strong>A string that starts with digits:</strong> (like <code>"123"</code>) still works — the length prefix and the string body are read independently, so digits inside the string are never mistaken for a new length prefix.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Naive delimiter join</td><td class="num">—</td><td class="num">incorrect on some inputs</td></tr>
+          <tr><td>Length-prefix encoding</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1EncodeDecodeStepper() {
+    const btn = document.getElementById('p1-ed-step-btn');
+    if (!btn) return;
+    const strHost = document.getElementById('p1-ed-str');
+    const resultHost = document.getElementById('p1-ed-result');
+    const logEl = document.getElementById('p1-ed-log');
+    const STR = '5#Hello5#World';
+
+    const steps = [];
+    {
+      let i = 0;
+      const result = [];
+      while (i < STR.length) {
+        let j = i;
+        while (STR[j] !== '#') j++;
+        const length = parseInt(STR.substring(i, j));
+        steps.push({ type: 'length', from: i, to: j, length });
+        const bodyStart = j + 1;
+        const bodyEnd = bodyStart + length;
+        const value = STR.substring(bodyStart, bodyEnd);
+        result.push(value);
+        steps.push({ type: 'body', from: bodyStart, to: bodyEnd, value, result: result.slice() });
+        i = bodyEnd;
+      }
+    }
+
+    let idx;
+
+    function renderStr(highlightFrom, highlightTo) {
+      const chars = STR.split('');
+      strHost.innerHTML = chars.map((c, i) => {
+        const on = highlightFrom != null && i >= highlightFrom && i < highlightTo;
+        return `<span style="${on ? 'background:var(--active-bg);color:var(--blue);font-weight:700' : ''}">${c}</span>`;
+      }).join('');
+    }
+
+    function renderResult(result) {
+      resultHost.innerHTML = result && result.length
+        ? result.map(s => `<div class="p0-key-chip">"${escapeHtml(s)}"</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderStr(null, null);
+      renderResult([]);
+      logEl.textContent = `Start decoding: "${STR}"`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'length') {
+        renderStr(s.from, s.to);
+        logEl.textContent = `Read digits from index ${s.from} to ${s.to - 1} → length = ${s.length}.`;
+      } else {
+        renderStr(s.from, s.to);
+        renderResult(s.result);
+        logEl.textContent = `Take the next ${s.value.length} characters (index ${s.from}–${s.to - 1}) → "${s.value}". Add to result.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' → done decoding.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1FirstUniqCharViz(str) {
+    const counts = {};
+    for (const c of str) counts[c] = (counts[c] || 0) + 1;
+    const firstUniqIdx = str.split('').findIndex(c => counts[c] === 1);
+    const cellsHtml = str.split('').map((c, i) => {
+      const unique = counts[c] === 1;
+      const isFirst = i === firstUniqIdx;
+      return `<div class="p0-arr-cell${isFirst ? ' active' : ''}" style="${unique ? '' : 'opacity:0.35'}">${c}</div>`;
+    }).join('');
+    const caption = firstUniqIdx === -1
+      ? 'Every character repeats — no unique character, answer is -1.'
+      : `Dimmed letters repeat somewhere else. "${str[firstUniqIdx]}" at index ${firstUniqIdx} is the first one that never repeats.`;
+    return `<div class="p0-arr-row">${cellsHtml}</div>
+    <p style="margin-top:8px;font-size:12px;color:var(--sublabel)">${caption}</p>`;
+  }
+
+  function renderP1FirstUniqChar() {
+    return `
+    <div class="p0-section-title">First Unique Character<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 9</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string. Find the first character that never repeats anywhere else in it, and return its index. If every character repeats, return -1.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "first unique" means</h4>
+      <p>s = "loveleetcode" — dimmed letters show up more than once. The first one that doesn't:</p>
+      ${renderP1FirstUniqCharViz('loveleetcode')}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Simplest way: for each character, how would you check whether it shows up anywhere else in the string? If you do that check for every character, what's the total time complexity?<br>
+      2. What if you counted how many times every character appears in one pass, then made a second pass through the string <em>in order</em> looking for the first one whose count is 1? Why does doing it in two separate passes still add up to O(n) overall, not O(n&sup2;)?<br>
+      3. The problem is usually restricted to lowercase English letters. What does that fixed-size alphabet mean for the space complexity of your count map?<br>
+      4. In "loveleetcode", why isn't the answer 'l' (which appears at index 0)?</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-firstUniqChar.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every character against every other character</h4>
+        <p>For each index, scan the whole string again looking for the same character anywhere else. The first index with no match is the answer.</p>
+        <pre class="p0-code">function firstUniqChar(s) {
+  for (let i = 0; i < s.length; i++) {
+    let unique = true;
+    for (let j = 0; j < s.length; j++) {
+      if (j !== i && s[j] === s[i]) { unique = false; break; }
+    }
+    if (unique) return i;
+  }
+  return -1;
+}</pre>
+        <p>Time: <strong>O(n&sup2;)</strong> — a full inner scan for every character. Space: <strong>O(1)</strong>.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — count once, then scan in order</h4>
+        <p>First pass: count how many times every character appears, using a map. Second pass: walk the string in its original order, and return the first index whose character has a count of exactly 1.</p>
+        <pre class="p0-code">function firstUniqChar(s) {
+  const count = new Map();
+  for (const c of s) count.set(c, (count.get(c) || 0) + 1);
+
+  for (let i = 0; i < s.length; i++) {
+    if (count.get(s[i]) === 1) return i;
+  }
+  return -1;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — two linear passes. Space: <strong>O(1)</strong> when the alphabet is a fixed size (26 lowercase letters), since the count map can never hold more than 26 entries no matter how long the string is. With arbitrary Unicode input, this would become O(n) space instead — same reasoning as Contains Duplicate's fixed-alphabet trick.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "loveleetcode"</div>
+        <div id="p1-fu-str" class="p0-code" style="font-size:14px"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Character counts</div>
+        <div id="p1-fu-counts" class="p0-arr-row" style="flex-wrap:wrap"></div>
+        <div class="p0-sim-log" id="p1-fu-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-fu-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty string:</strong> return -1 immediately — there's nothing to scan.<br>
+        <strong>Single character:</strong> it's automatically unique (count of 1), so the answer is index 0.<br>
+        <strong>Every character repeats:</strong> the second pass never finds a count of 1, so it falls through to -1.<br>
+        <strong>The unique character isn't the visually "obvious" one:</strong> always trust the count map, not intuition — a character can look rare in a short glance but still repeat later in the string.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Check every pair</td><td class="num">O(n&sup2;)</td><td class="num">O(1)</td></tr>
+          <tr><td>Count, then scan</td><td class="num">O(n)</td><td class="num">O(1)*</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1FirstUniqCharStepper() {
+    const btn = document.getElementById('p1-fu-step-btn');
+    if (!btn) return;
+    const strHost = document.getElementById('p1-fu-str');
+    const countsHost = document.getElementById('p1-fu-counts');
+    const logEl = document.getElementById('p1-fu-log');
+    const STR = 'loveleetcode';
+
+    const steps = [];
+    {
+      const count = new Map();
+      for (const c of STR) {
+        count.set(c, (count.get(c) || 0) + 1);
+        steps.push({ phase: 'count', char: c, counts: new Map(count) });
+      }
+      for (let i = 0; i < STR.length; i++) {
+        const c = STR[i];
+        const isUnique = count.get(c) === 1;
+        steps.push({ phase: 'scan', index: i, char: c, isUnique, freq: count.get(c) });
+        if (isUnique) break;
+      }
+    }
+
+    let idx;
+
+    function renderStr(activeIdx) {
+      strHost.innerHTML = STR.split('').map((c, i) =>
+        `<span style="${i === activeIdx ? 'background:var(--active-bg);color:var(--blue);font-weight:700' : ''}">${c}</span>`
+      ).join('');
+    }
+
+    function renderCounts(counts) {
+      countsHost.innerHTML = [...counts.entries()].map(([c, n]) =>
+        `<div class="p0-key-chip">${c}: ${n}</div>`
+      ).join('');
+    }
+
+    function reset() {
+      idx = 0;
+      renderStr(-1);
+      renderCounts(new Map());
+      logEl.textContent = `Start counting characters in "${STR}"`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.phase === 'count') {
+        renderStr(-1);
+        renderCounts(s.counts);
+        logEl.textContent = `Counted "${s.char}" → now ${s.counts.get(s.char)}.`;
+      } else {
+        renderStr(s.index);
+        logEl.textContent = s.isUnique
+          ? `Index ${s.index}: "${s.char}" has count ${s.freq} → unique! Return ${s.index}.`
+          : `Index ${s.index}: "${s.char}" has count ${s.freq} → repeats, skip.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ReverseWordsViz(str) {
+    const words = str.trim().split(/\s+/).filter(Boolean);
+    const cellsHtml = arr => arr.map(w =>
+      `<div class="p0-arr-cell" style="width:auto;padding:0 14px;flex:none">${escapeHtml(w)}</div>`
+    ).join('');
+    return `<div class="p0-arr-row" style="flex-wrap:wrap">${cellsHtml(words)}</div>
+    <div style="text-align:center;margin:10px 0;color:var(--muted);font-size:16px">↓ reverse the order ↓</div>
+    <div class="p0-arr-row" style="flex-wrap:wrap">${cellsHtml([...words].reverse())}</div>`;
+  }
+
+  function renderP1ReverseWords() {
+    return `
+    <div class="p0-section-title">Reverse Words in a String<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Arrays &amp; Hashing — problem 10</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string of words separated by spaces. Reverse the <em>order</em> of the words (not the letters inside each word). The input might have extra spaces anywhere — leading, trailing, or multiple spaces between words — but your answer should have exactly one space between words and none at the start or end.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "reverse the words" means</h4>
+      <p>s = "  Bob    Loves  Alice   " — messy spacing collapses away, and only the word order flips:</p>
+      ${renderP1ReverseWordsViz('  Bob    Loves  Alice   ')}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you scan the string from the <em>end</em> backwards, one character at a time, how would you tell where one word stops and the next one starts?<br>
+      2. What do you do when you hit a run of multiple spaces — how many times should your pointer move before you're back at real letters?<br>
+      3. JS strings already have tools for this: splitting on whitespace, reversing an array, joining with a single space. What's the shortest correct solution using those, and does it still handle leading/trailing/multiple spaces correctly?<br>
+      4. Both approaches end up visiting every character roughly once — so what's actually different between "parse it by hand" and "use the built-ins"? (Hint: it's not the Big-O.)</p>
+    </div>
+
+    ${renderP1Workflow('array-hashMap-reverseWords.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Manual approach — scan backwards, extract words by hand</h4>
+        <p>Walk the string from the last character to the first. Skip over any spaces. Once you hit a real character, keep walking backwards until you hit a space (or the start) — that span is one word. Collect words in this order (which is already reverse order) and join with single spaces.</p>
+        <pre class="p0-code">function reverseWords(s) {
+  const result = [];
+  let i = s.length - 1;
+  while (i >= 0) {
+    while (i >= 0 && s[i] === ' ') i--;
+    if (i < 0) break;
+    let end = i;
+    while (i >= 0 && s[i] !== ' ') i--;
+    result.push(s.substring(i + 1, end + 1));
+  }
+  return result.join(' ');
+}</pre>
+        <p>Time: <strong>O(n)</strong> — every character is visited once. Space: <strong>O(n)</strong> — the result array and output string.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal &amp; most compact — trim, split, reverse, join</h4>
+        <p>Trim the string, split on any run of whitespace (<code>/\s+/</code> handles single or multiple spaces identically), reverse the resulting array, and join with a single space.</p>
+        <pre class="p0-code">function reverseWords(s) {
+  return s.trim().split(/\s+/).reverse().join(' ');
+}</pre>
+        <p>Time: <strong>O(n)</strong> — same as the manual version. Space: <strong>O(n)</strong> — same too. The win here isn't asymptotic, it's correctness and readability: no off-by-one risk on word boundaries, and the regex split handles all the messy-spacing edge cases for you in one call.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through the manual scan — s = "  Bob    Loves  Alice   "</div>
+        <div id="p1-rw-str" class="p0-code" style="font-size:14px;word-break:break-all"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Words found so far (already in reverse order)</div>
+        <div id="p1-rw-result" class="p0-bucket" style="min-height:34px"></div>
+        <div class="p0-sim-log" id="p1-rw-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-rw-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Leading/trailing spaces:</strong> both approaches naturally drop them — <code>trim()</code> in the compact version, and the backward space-skipping in the manual version.<br>
+        <strong>Multiple spaces between words:</strong> collapse to a single space in the output either way.<br>
+        <strong>Single word, no spaces:</strong> the "reversed" order is just that one word, unchanged.<br>
+        <strong>All spaces, or empty string:</strong> no words at all — the answer is an empty string.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Manual backward scan</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>trim + split + reverse + join</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ReverseWordsStepper() {
+    const btn = document.getElementById('p1-rw-step-btn');
+    if (!btn) return;
+    const strHost = document.getElementById('p1-rw-str');
+    const resultHost = document.getElementById('p1-rw-result');
+    const logEl = document.getElementById('p1-rw-log');
+    const STR = '  Bob    Loves  Alice   ';
+
+    const steps = [];
+    {
+      let i = STR.length - 1;
+      const result = [];
+      while (i >= 0) {
+        const skipFrom = i;
+        while (i >= 0 && STR[i] === ' ') i--;
+        if (skipFrom !== i && i >= 0) steps.push({ type: 'skip', from: i + 1, to: skipFrom });
+        if (i < 0) break;
+        const end = i;
+        while (i >= 0 && STR[i] !== ' ') i--;
+        const word = STR.substring(i + 1, end + 1);
+        result.push(word);
+        steps.push({ type: 'word', from: i + 1, to: end, word, result: result.slice() });
+      }
+    }
+
+    let idx;
+
+    function renderStr(from, to) {
+      strHost.innerHTML = STR.split('').map((c, i) => {
+        const on = from != null && i >= from && i <= to;
+        return `<span style="${on ? 'background:var(--active-bg);color:var(--blue);font-weight:700' : ''}">${c === ' ' ? '&middot;' : c}</span>`;
+      }).join('');
+    }
+
+    function renderResult(result) {
+      resultHost.innerHTML = result && result.length
+        ? result.map(w => `<div class="p0-key-chip">${escapeHtml(w)}</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderStr(null, null);
+      renderResult([]);
+      logEl.textContent = `Start scanning from the end of "${STR}"`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'skip') {
+        renderStr(s.from, s.to);
+        logEl.textContent = `Skip spaces (index ${s.from}–${s.to}).`;
+      } else {
+        renderStr(s.from, s.to);
+        renderResult(s.result);
+        logEl.textContent = `Found word "${s.word}" (index ${s.from}–${s.to}). Add to result.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        const lastWordStep = [...steps].reverse().find(st => st.type === 'word');
+        logEl.textContent += ` → done: "${lastWordStep ? lastWordStep.result.join(' ') : ''}"`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
     }
 
     reset();
