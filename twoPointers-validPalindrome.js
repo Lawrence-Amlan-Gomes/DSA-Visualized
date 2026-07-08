@@ -1,103 +1,69 @@
 // validPalindrome.js
 export default function run() {
-/*
+  /*
 
-Given a string s, return true if it is a palindrome after converting 
-all uppercase letters into lowercase letters and removing all 
+Given a string s, return true if it is a palindrome after converting
+all uppercase letters into lowercase letters and removing all
 non-alphanumeric characters.
 
-A phrase is a palindrome if, after converting all uppercase letters 
-into lowercase letters and removing all non-alphanumeric characters, 
-it reads the same forward and backward. Alphanumeric characters 
+A phrase is a palindrome if, after converting all uppercase letters
+into lowercase letters and removing all non-alphanumeric characters,
+it reads the same forward and backward. Alphanumeric characters
 include letters and numbers.
 
-Time Complexity : O(N)     [N = length of string — each char visited at most twice]
-Space Complexity: O(1)     [only two pointers, no extra data structures]
-
-This is the OPTIMAL two-pointer solution (in-place, no string cleaning needed).
+Time Complexity :
+Space Complexity:
 
 */
 
-class Solution {
-  /**
-   * @param {string} s
-   * @return {boolean}
-   */
-  
-  isPalindrome(s) {
-    // Category: Two Pointers (Very High Frequency)
-    // Step 1: Initialize left (start) and right (end) pointers
-    let l = 0,
-        r = s.length - 1;
+  class Solution {
+    /**
+     * @param {string} s
+     * @return {boolean}
+     */
+    isPalindrome(s) {
+      // const cleaned = s.toLowerCase().replace(/[^a-z0-9]/g, "");
+      // return cleaned === cleaned.split("").reverse().join("");
+      // Time: O(n) — one pass to clean, one pass to reverse/compare. Space: O(n) — the cleaned string and its reverse are new arrays/strings the size of the input.
 
-    while (l < r) {
-      // Step 2: Move left pointer right until we find an alphanumeric char
-      while (l < r && !this.alphaNum(s[l])) {
+      let l = 0,
+        r = s.length - 1;
+      const alphaNum = (c) => /[a-z0-9]/i.test(c);
+      while (l < r) {
+        while (l < r && !alphaNum(s[l])) l++;
+        while (r > l && !alphaNum(s[r])) r--;
+        if (s[l].toLowerCase() !== s[r].toLowerCase()) return false;
         l++;
-      }
-      // Step 3: Move right pointer left until we find an alphanumeric char
-      while (r > l && !this.alphaNum(s[r])) {
         r--;
       }
-      // Step 4: Compare both chars (case-insensitive)
-      if (s[l].toLowerCase() !== s[r].toLowerCase()) {
-        return false;
-      }
-      // Step 5: Move both pointers toward center
-      l++;
-      r--;
+      return true;
+
+      // Time: O(n) — same as brute force, each character is visited at most twice. Space: O(1) — only two pointers, no second string built. The win here is real: no extra memory, and it's the pattern (two pointers converging from both ends) that shows up again and again in this category.
     }
-    // Step 6: If we never found a mismatch, it's a palindrome
-    return true;
   }
 
-  /**
-   * @param {char} c
-   * @return {boolean}
-   */
+  // Test
+  const solution = new Solution();
 
-  alphaNum(c) {
-    return (
-      (c >= 'A' && c <= 'Z') ||
-      (c >= 'a' && c <= 'z') ||
-      (c >= '0' && c <= '9')
-    );
-  }
+  console.log(solution.isPalindrome("A man, a plan, a canal: Panama"));
+  // Expected: true
 
-}
-
-// Test
-const solution = new Solution();
-
-console.log(solution.isPalindrome("A man, a plan, a canal: Panama"));
-// Expected: true
-
-console.log(solution.isPalindrome("race a car"));
-// Expected: false
-console.log(solution.isPalindrome(" "));
-// Expected: true
-console.log(solution.isPalindrome(""));
-// Expected: true
-console.log(solution.isPalindrome("a"));
-// Expected: true
-console.log(solution.isPalindrome("ab"));
-// Expected: false
-console.log(solution.isPalindrome("121"));
-// Expected: true
-console.log(solution.isPalindrome("0P"));
-// Expected: false
-console.log(solution.isPalindrome("Madam, I'm Adam"));
-// Expected: true
-console.log(solution.isPalindrome("Was it a car or a cat I saw?"));
-// Expected: true
-
-/* 
-
-We use two pointers — one starting from the beginning (left) and one from the end (right).  
-We move them toward the center, but we skip any character that is not a letter or number.  
-For each pair of valid characters we find, we compare them (ignoring case — both turned to 
-lowercase). If they don’t match at any point → not a palindrome.  
-If we successfully meet in the middle without any mismatch → it is a palindrome.
-
-*/
+  console.log(solution.isPalindrome("race a car"));
+  // Expected: false
+  console.log(solution.isPalindrome(" "));
+  // Expected: true
+  console.log(solution.isPalindrome(""));
+  // Expected: true
+  console.log(solution.isPalindrome("a"));
+  // Expected: true
+  console.log(solution.isPalindrome("ab"));
+  // Expected: false
+  console.log(solution.isPalindrome("121"));
+  // Expected: true
+  console.log(solution.isPalindrome("0P"));
+  // Expected: false
+  console.log(solution.isPalindrome("Madam, I'm Adam"));
+  // Expected: true
+  console.log(solution.isPalindrome("Was it a car or a cat I saw?"));
+  // Expected: true
 }

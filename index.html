@@ -1906,6 +1906,69 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1ReverseWords,
       init: initP1ReverseWordsStepper,
     },
+    {
+      id: 'validPalindrome',
+      pattern: 'Two Pointers',
+      title: 'Valid Palindrome',
+      difficulty: 'easy',
+      file: 'twoPointers-validPalindrome.js',
+      render: renderP1ValidPalindrome,
+      init: initP1ValidPalindromeStepper,
+    },
+    {
+      id: 'threeSum',
+      pattern: 'Two Pointers',
+      title: '3Sum',
+      difficulty: 'medium',
+      file: 'twoPointers-threeSum.js',
+      render: renderP1ThreeSum,
+      init: initP1ThreeSumStepper,
+    },
+    {
+      id: 'containerWithMostWater',
+      pattern: 'Two Pointers',
+      title: 'Container With Most Water',
+      difficulty: 'medium',
+      file: 'twoPointers-containerWithMostWater.js',
+      render: renderP1ContainerWater,
+      init: initP1ContainerWaterStepper,
+    },
+    {
+      id: 'bestTimeToBuyAndSellStock',
+      pattern: 'Sliding Window',
+      title: 'Best Time to Buy and Sell Stock',
+      difficulty: 'easy',
+      file: 'slidingWindow-bestTimeToBuyAndSellStock.js',
+      render: renderP1BestTimeToBuySell,
+      init: initP1BestTimeToBuySellStepper,
+    },
+    {
+      id: 'longestSubstringWithoutRepeating',
+      pattern: 'Sliding Window',
+      title: 'Longest Substring Without Repeating Characters',
+      difficulty: 'medium',
+      file: 'slidingWindow-longestSubstringWithoutRepeating.js',
+      render: renderP1LongestSubstring,
+      init: initP1LongestSubstringStepper,
+    },
+    {
+      id: 'longestRepeatingCharacterReplacement',
+      pattern: 'Sliding Window',
+      title: 'Longest Repeating Character Replacement',
+      difficulty: 'medium',
+      file: 'slidingWindow-longestRepeatingCharacterReplacement.js',
+      render: renderP1CharReplacement,
+      init: initP1CharReplacementStepper,
+    },
+    {
+      id: 'minimumWindowSubstring',
+      pattern: 'Sliding Window',
+      title: 'Minimum Window Substring',
+      difficulty: 'hard',
+      file: 'slidingWindow-minimumWindowSubstring.js',
+      render: renderP1MinWindow,
+      init: initP1MinWindowStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -3677,6 +3740,1200 @@ function decode(str) {
       if (idx >= steps.length) {
         const lastWordStep = [...steps].reverse().find(st => st.type === 'word');
         logEl.textContent += ` → done: "${lastWordStep ? lastWordStep.result.join(' ') : ''}"`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ValidPalindromeViz(str) {
+    const cleaned = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cellsHtml = s => s.split('').map(c =>
+      `<div class="p0-arr-cell" style="width:auto;padding:0 10px;flex:none">${escapeHtml(c)}</div>`
+    ).join('');
+    return `<div class="p0-diagram-label">Cleaned (lowercase, letters/digits only)</div>
+    <div class="p0-arr-row" style="flex-wrap:wrap">${cellsHtml(cleaned)}</div>
+    <div style="text-align:center;margin:10px 0;color:var(--muted);font-size:16px">↓ same string, reversed ↓</div>
+    <div class="p0-arr-row" style="flex-wrap:wrap">${cellsHtml(cleaned.split('').reverse().join(''))}</div>`;
+  }
+
+  function renderP1ValidPalindrome() {
+    return `
+    <div class="p0-section-title">Valid Palindrome<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Two Pointers — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string. First, lowercase every letter and throw away anything that isn't a letter or a digit (spaces, commas, colons, punctuation — all gone). Then check: does the cleaned-up string read exactly the same forwards and backwards? Return true or false.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "reads the same forwards and backwards" means</h4>
+      <p>s = "A man, a plan, a canal: Panama" — after cleaning, the string forwards and the same string reversed are identical, letter for letter:</p>
+      ${renderP1ValidPalindromeViz('A man, a plan, a canal: Panama')}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you had to build a cleaned-up copy of the string first (lowercase, letters/digits only), how would you compare it to check it's a palindrome — and what would that cost in extra space?<br>
+      2. Now the harder version: can you check the answer without building a second string at all, using one pointer at each end of the <em>original</em> string moving toward the middle?<br>
+      3. What should happen when a pointer is sitting on a character that isn't a letter or digit — does it move once, or does it need to keep moving until it lands on something valid?<br>
+      4. What's the very first thing you should check when the two pointers meet or cross — have you actually proven anything yet if you never found a mismatch?</p>
+    </div>
+
+    ${renderP1Workflow('twoPointers-validPalindrome.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — build a cleaned string, then compare to its reverse</h4>
+        <p>Walk the whole string once, keeping only lowercased letters/digits, to build a new cleaned string. Then compare that string to its own reverse.</p>
+        <pre class="p0-code">function isPalindrome(s) {
+  const cleaned = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return cleaned === cleaned.split('').reverse().join('');
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass to clean, one pass to reverse/compare. Space: <strong>O(n)</strong> — the cleaned string and its reverse are new arrays/strings the size of the input.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — two pointers, no extra string</h4>
+        <p>Keep one pointer at the start and one at the end of the <em>original</em> string. Each step: skip forward/backward over any character that isn't a letter or digit, then compare the two characters (case-insensitive). If they ever differ, it's not a palindrome. If the pointers meet or cross without a mismatch, it is.</p>
+        <pre class="p0-code">function isPalindrome(s) {
+  let l = 0, r = s.length - 1;
+  const alphaNum = c => /[a-z0-9]/i.test(c);
+  while (l < r) {
+    while (l < r && !alphaNum(s[l])) l++;
+    while (r > l && !alphaNum(s[r])) r--;
+    if (s[l].toLowerCase() !== s[r].toLowerCase()) return false;
+    l++; r--;
+  }
+  return true;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — same as brute force, each character is visited at most twice. Space: <strong>O(1)</strong> — only two pointers, no second string built. The win here is real: no extra memory, and it's the pattern (two pointers converging from both ends) that shows up again and again in this category.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through the two pointers — s = "A man, a plan, a canal: Panama"</div>
+        <div id="p1-vp-str" class="p0-code" style="font-size:14px;word-break:break-all"></div>
+        <div class="p0-sim-log" id="p1-vp-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-vp-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty string or all-spaces:</strong> nothing alphanumeric to compare — vacuously true.<br>
+        <strong>Single character:</strong> true — a lone character always mirrors itself.<br>
+        <strong>String with only punctuation between two different letters (e.g. "0P"):</strong> both characters are alphanumeric, so they get compared directly — mismatched case/value still fails.<br>
+        <strong>Numbers mixed with letters:</strong> digits count as alphanumeric too, so "121" is a valid palindrome on its own.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Build cleaned string + compare</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Two pointers, in place</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ValidPalindromeStepper() {
+    const btn = document.getElementById('p1-vp-step-btn');
+    if (!btn) return;
+    const strHost = document.getElementById('p1-vp-str');
+    const logEl = document.getElementById('p1-vp-log');
+    const STR = 'A man, a plan, a canal: Panama';
+    const alphaNum = c => /[a-z0-9]/i.test(c);
+
+    const steps = [];
+    {
+      let l = 0, r = STR.length - 1;
+      while (l < r) {
+        while (l < r && !alphaNum(STR[l])) { steps.push({ type: 'skipL', l, r }); l++; }
+        while (r > l && !alphaNum(STR[r])) { steps.push({ type: 'skipR', l, r }); r--; }
+        if (l >= r) break;
+        const match = STR[l].toLowerCase() === STR[r].toLowerCase();
+        steps.push({ type: 'compare', l, r, match });
+        if (!match) break;
+        l++; r--;
+      }
+      if (l >= r) steps.push({ type: 'done' });
+    }
+
+    let idx;
+
+    function renderStr(l, r) {
+      strHost.innerHTML = STR.split('').map((c, i) => {
+        const on = i === l || i === r;
+        return `<span style="${on ? 'background:var(--active-bg);color:var(--blue);font-weight:700' : ''}">${c === ' ' ? '&middot;' : c}</span>`;
+      }).join('');
+    }
+
+    function reset() {
+      idx = 0;
+      renderStr(0, STR.length - 1);
+      logEl.textContent = `l = 0, r = ${STR.length - 1}. Start closing in from both ends.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'skipL') {
+        renderStr(s.l, s.r);
+        logEl.textContent = `s[${s.l}] = "${STR[s.l]}" isn't alphanumeric — move l forward.`;
+      } else if (s.type === 'skipR') {
+        renderStr(s.l, s.r);
+        logEl.textContent = `s[${s.r}] = "${STR[s.r]}" isn't alphanumeric — move r backward.`;
+      } else if (s.type === 'compare') {
+        renderStr(s.l, s.r);
+        logEl.textContent = s.match
+          ? `Compare "${STR[s.l].toLowerCase()}" vs "${STR[s.r].toLowerCase()}" — match. Move both pointers inward.`
+          : `Compare "${STR[s.l].toLowerCase()}" vs "${STR[s.r].toLowerCase()}" — mismatch! Not a palindrome.`;
+      } else if (s.type === 'done') {
+        logEl.textContent = 'Pointers met without a mismatch → it is a palindrome.';
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ThreeSum() {
+    return `
+    <div class="p0-section-title">3Sum<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Two Pointers — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of numbers. Find every group of <strong>three different positions</strong> whose values add up to zero. Return the list of value-triplets (not positions), and don't return the same triplet of values twice, even if it can be formed from different positions.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a valid triplet looks like</h4>
+      <p>nums = [-1, 0, 1, 2, -1, -4] — two valid triplets exist, [-1,-1,2] and [-1,0,1]. Here's the first one, at positions 0, 4, and 3:</p>
+      <div class="p0-arr-row">${[-1, 0, 1, 2, -1, -4].map((v, i) => `<div class="p0-arr-cell${[0,3,4].includes(i) ? ' active' : ''}">${v}</div>`).join('')}</div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">nums[0] + nums[4] + nums[3] = -1 + (-1) + 2 = 0. The full answer is [[-1,-1,2],[-1,0,1]] — two different value-triplets, each summing to exactly 0.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you checked every possible group of three positions directly, how many combinations is that, and what's the time complexity?<br>
+      2. The problem bans duplicate triplets in the output. If the array were sorted first, how would that make it easy to spot and skip a value you've already used as the "first number" of a triplet?<br>
+      3. Once the first number is fixed and the array is sorted, finding the other two numbers that sum to a specific target (zero minus the first number) in the <em>remaining</em> sorted slice — what earlier problem does that reduce to?<br>
+      4. If the fixed first number is already positive, and the array is sorted ascending, can any two numbers after it ever bring the sum back down to zero? What does that let you do early?</p>
+    </div>
+
+    ${renderP1Workflow('twoPointers-threeSum.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every triplet of positions</h4>
+        <p>Three nested loops over all distinct positions i &lt; j &lt; k, checking every combination. Use a Set keyed by the sorted triplet's values to avoid duplicate output.</p>
+        <pre class="p0-code">function threeSum(nums) {
+  const seen = new Set();
+  const res = [];
+  for (let i = 0; i &lt; nums.length; i++) {
+    for (let j = i + 1; j &lt; nums.length; j++) {
+      for (let k = j + 1; k &lt; nums.length; k++) {
+        if (nums[i] + nums[j] + nums[k] === 0) {
+          const key = [nums[i], nums[j], nums[k]].sort((a, b) => a - b).join(',');
+          if (!seen.has(key)) {
+            seen.add(key);
+            res.push([nums[i], nums[j], nums[k]]);
+          }
+        }
+      }
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n³)</strong> — three nested loops. Space: <strong>O(n)</strong> — the dedup set, on top of the output.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sort, then two pointers per fixed first number</h4>
+        <p>Sort the array first. Fix each position <code>i</code> as the first number of the triplet (skipping it if it's the same value as the previous <code>i</code>, to avoid duplicate triplets). For the rest of the array, run the same two-pointer sweep as a sorted "two numbers sum to target" problem, where the target is <code>-nums[i]</code>. Skip duplicate values on both pointers after a match, and stop the outer loop early once <code>nums[i]</code> turns positive.</p>
+        <pre class="p0-code">function threeSum(nums) {
+  nums.sort((a, b) => a - b);
+  const res = [];
+  for (let i = 0; i &lt; nums.length; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    if (nums[i] > 0) break;
+    let l = i + 1, r = nums.length - 1;
+    while (l &lt; r) {
+      const sum = nums[i] + nums[l] + nums[r];
+      if (sum &lt; 0) l++;
+      else if (sum > 0) r--;
+      else {
+        res.push([nums[i], nums[l], nums[r]]);
+        l++; r--;
+        while (l &lt; r && nums[l] === nums[l - 1]) l++;
+        while (l &lt; r && nums[r] === nums[r + 1]) r--;
+      }
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — O(n log n) to sort, then O(n) outer loop each running an O(n) two-pointer sweep. Space: <strong>O(1)</strong> extra besides the output (or O(n)/O(log n) depending on the sort's internals — no extra data structure either way).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums (sorted) = [-4, -1, -1, 0, 1, 2]</div>
+        <div id="p1-3s-array" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:12px">Triplets found so far</div>
+        <div id="p1-3s-result" class="p0-bucket" style="min-height:34px"></div>
+        <div class="p0-sim-log" id="p1-3s-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-3s-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Fewer than 3 numbers:</strong> no triplet is possible — return an empty list.<br>
+        <strong>All zeros, e.g. [0,0,0]:</strong> one valid triplet, [0,0,0] — the duplicate-skip logic must not delete it entirely.<br>
+        <strong>No valid triplet exists:</strong> the two-pointer sweep just never lands on sum === 0 for any fixed first number — return an empty list.<br>
+        <strong>Many duplicate values:</strong> the "skip if same as previous i" check, plus the post-match duplicate skips on l and r, are what keep the output free of repeated triplets.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (triple loop + dedup set)</td><td class="num">O(n³)</td><td class="num">O(n)</td></tr>
+          <tr><td>Sort + two pointers per fixed i</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ThreeSumStepper() {
+    const btn = document.getElementById('p1-3s-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-3s-array');
+    const resultHost = document.getElementById('p1-3s-result');
+    const logEl = document.getElementById('p1-3s-log');
+    const ARR = [-4, -1, -1, 0, 1, 2];
+
+    const steps = [];
+    {
+      const result = [];
+      for (let i = 0; i < ARR.length; i++) {
+        if (i > 0 && ARR[i] === ARR[i - 1]) {
+          steps.push({ type: 'skipI', i });
+          continue;
+        }
+        if (ARR[i] > 0) {
+          steps.push({ type: 'breakI', i });
+          break;
+        }
+        let l = i + 1, r = ARR.length - 1;
+        steps.push({ type: 'startI', i, l, r });
+        while (l < r) {
+          const sum = ARR[i] + ARR[l] + ARR[r];
+          if (sum < 0) {
+            steps.push({ type: 'moveL', i, l, r, sum });
+            l++;
+          } else if (sum > 0) {
+            steps.push({ type: 'moveR', i, l, r, sum });
+            r--;
+          } else {
+            result.push([ARR[i], ARR[l], ARR[r]]);
+            steps.push({ type: 'found', i, l, r, result: result.slice() });
+            l++; r--;
+            while (l < r && ARR[l] === ARR[l - 1]) l++;
+            while (l < r && ARR[r] === ARR[r + 1]) r--;
+          }
+        }
+      }
+      steps.push({ type: 'done', result: result.slice() });
+    }
+
+    let idx;
+
+    function renderArr(i, l, r) {
+      arrHost.innerHTML = ARR.map((v, pos) => {
+        let style = '';
+        if (pos === i) style = 'border-color:#22c55e;color:#22c55e;font-weight:700';
+        else if (pos === l) style = 'background:var(--active-bg);border-color:var(--blue);color:var(--blue);font-weight:700';
+        else if (pos === r) style = 'background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);color:#ef4444;font-weight:700';
+        return `<div class="p0-arr-cell" style="${style}">${v}</div>`;
+      }).join('');
+    }
+
+    function renderResult(result) {
+      resultHost.innerHTML = result.length
+        ? result.map(t => `<div class="p0-key-chip">[${t.join(',')}]</div>`).join('')
+        : `<span style="font-size:11px;color:var(--muted)">empty</span>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(-1, -1, -1);
+      renderResult([]);
+      logEl.textContent = 'i = green, l = blue, r = red. Start with i = 0.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'skipI') {
+        renderArr(s.i, -1, -1);
+        logEl.textContent = `i = ${s.i}: nums[${s.i}] = ${ARR[s.i]} same as previous — skip to avoid a duplicate first number.`;
+      } else if (s.type === 'breakI') {
+        renderArr(s.i, -1, -1);
+        logEl.textContent = `i = ${s.i}: nums[${s.i}] = ${ARR[s.i]} is already positive — no way left to reach sum 0. Stop.`;
+      } else if (s.type === 'startI') {
+        renderArr(s.i, s.l, s.r);
+        logEl.textContent = `Fix i = ${s.i} (value ${ARR[s.i]}). l = ${s.l}, r = ${s.r}.`;
+      } else if (s.type === 'moveL') {
+        renderArr(s.i, s.l, s.r);
+        logEl.textContent = `Sum = ${s.sum} < 0 — need bigger → move l right.`;
+      } else if (s.type === 'moveR') {
+        renderArr(s.i, s.l, s.r);
+        logEl.textContent = `Sum = ${s.sum} > 0 — need smaller → move r left.`;
+      } else if (s.type === 'found') {
+        renderArr(s.i, s.l, s.r);
+        renderResult(s.result);
+        logEl.textContent = `Sum = 0 → found [${ARR[s.i]},${ARR[s.l]},${ARR[s.r]}]. Move both pointers, skip duplicates.`;
+      } else if (s.type === 'done') {
+        renderResult(s.result);
+        logEl.textContent = `Done. All triplets found: ${JSON.stringify(s.result)}`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ContainerWaterBars(heights, l, r) {
+    const max = Math.max(...heights);
+    return `<div class="p0-arr-row" style="align-items:flex-end;gap:8px">${heights.map((h, i) => {
+      const barPx = Math.round((h / max) * 70) + 6;
+      const on = i === l || i === r;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+        <div style="width:100%;max-width:28px;height:${barPx}px;background:${on ? '#3b82f6' : 'rgba(255,255,255,0.2)'};border-radius:3px 3px 0 0"></div>
+        <div style="font-size:10px;color:var(--sublabel)">${h}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1ContainerWaterViz(heights) {
+    return renderP1ContainerWaterBars(heights, 1, heights.length - 1);
+  }
+
+  function renderP1ContainerWater() {
+    return `
+    <div class="p0-section-title">Container With Most Water<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Two Pointers — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of heights — think of them as vertical lines standing on the x-axis. Pick any two lines. Together with the ground between them, they form a container that can hold water. The water's height is capped by whichever of the two lines is shorter (water spills over the short side), and the width is just the distance between them. Find the two lines that hold the <strong>most</strong> water.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "container" and "water held" mean</h4>
+      <p>height = [1, 8, 6, 2, 5, 4, 8, 3, 7] — picking the lines at index 1 (height 8) and index 8 (height 7) gives width 7 and a water height capped at 7 (the shorter of the two), so area = 7 × 7 = 49:</p>
+      ${renderP1ContainerWaterViz([1, 8, 6, 2, 5, 4, 8, 3, 7])}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Area = min(height[left], height[right]) × (right − left). Every pair of lines forms one candidate container — you want the biggest area over all pairs.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you checked every possible pair of lines directly, how many pairs is that, and what's the time complexity?<br>
+      2. Start with the widest possible container — one pointer at each end. If you want to try a narrower container, moving <em>which</em> pointer inward could still possibly increase the area, and which one provably never can? (Think about what caps the height.)<br>
+      3. If the left line is shorter than the right line, and you move the <em>right</em> pointer inward instead, can the new area ever beat the one you already have? Why not?<br>
+      4. Once you always move the shorter side's pointer, how many total steps does the whole scan take before the pointers meet?</p>
+    </div>
+
+    ${renderP1Workflow('twoPointers-containerWithMostWater.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every pair of lines</h4>
+        <p>Try every pair of indices (i, j) and compute the area for each, keeping the max.</p>
+        <pre class="p0-code">function maxArea(height) {
+  let res = 0;
+  for (let i = 0; i &lt; height.length; i++) {
+    for (let j = i + 1; j &lt; height.length; j++) {
+      const area = Math.min(height[i], height[j]) * (j - i);
+      res = Math.max(res, area);
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — every pair is checked. Space: <strong>O(1)</strong> — just a running max.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — two pointers, greedy inward move</h4>
+        <p>Start with the widest container: one pointer at each end. At each step, compute the area, update the max, then move the pointer at the <strong>shorter</strong> line inward. Why the shorter one? The area is capped by the shorter line — keeping it and moving the other pointer can only shrink the width without any chance of a taller cap, so it can never beat what you already have. Moving the shorter line's pointer is the only move that has a chance of finding a taller line to raise the cap.</p>
+        <pre class="p0-code">function maxArea(height) {
+  let l = 0, r = height.length - 1;
+  let res = 0;
+  while (l &lt; r) {
+    const area = Math.min(height[l], height[r]) * (r - l);
+    res = Math.max(res, area);
+    if (height[l] &lt;= height[r]) l++;
+    else r--;
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — each pointer moves inward at most n times total, so the whole scan is one pass. Space: <strong>O(1)</strong> — only two pointers and a running max.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — height = [1, 8, 6, 2, 5, 4, 8, 3, 7]</div>
+        <div id="p1-cw-array" class="p0-arr-row" style="align-items:flex-end"></div>
+        <div class="p0-sim-log" id="p1-cw-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cw-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Fewer than 2 lines:</strong> no container can be formed — area is 0.<br>
+        <strong>All heights are 0:</strong> every container holds 0 water no matter the width.<br>
+        <strong>Equal heights on both pointers:</strong> either pointer can move inward — the code picks left (<code>&lt;=</code>), and it doesn't change correctness either way.<br>
+        <strong>Tallest lines at both ends already:</strong> the very first area checked (widest container) may already be the max — the algorithm still keeps scanning inward but won't find anything better.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (every pair)</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+          <tr><td>Two pointers, greedy inward</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ContainerWaterStepper() {
+    const btn = document.getElementById('p1-cw-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-cw-array');
+    const logEl = document.getElementById('p1-cw-log');
+    const ARR = [1, 8, 6, 2, 5, 4, 8, 3, 7];
+
+    const steps = [];
+    {
+      let l = 0, r = ARR.length - 1;
+      let res = 0;
+      while (l < r) {
+        const area = Math.min(ARR[l], ARR[r]) * (r - l);
+        res = Math.max(res, area);
+        steps.push({ l, r, area, res });
+        if (ARR[l] <= ARR[r]) l++;
+        else r--;
+      }
+    }
+
+    let idx;
+
+    function renderArr(l, r) {
+      arrHost.innerHTML = renderP1ContainerWaterBars(ARR, l, r);
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(0, ARR.length - 1);
+      logEl.textContent = 'l = 0, r = last index. Start with the widest container.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      renderArr(s.l, s.r);
+      const shorter = ARR[s.l] <= ARR[s.r] ? 'left' : 'right';
+      logEl.textContent = `l=${s.l} (h=${ARR[s.l]}), r=${s.r} (h=${ARR[s.r]}) → area = ${s.area}. Best so far: ${s.res}. Move ${shorter} pointer inward.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Pointers met — done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1PriceBars(prices, buyIdx, sellIdx) {
+    const max = Math.max(...prices, 1);
+    return `<div class="p0-arr-row" style="align-items:flex-end;gap:8px">${prices.map((p, i) => {
+      const barPx = Math.round((p / max) * 70) + 6;
+      const isBuy = i === buyIdx;
+      const isSell = i === sellIdx;
+      const color = isBuy ? '#22c55e' : isSell ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+        <div style="font-size:10px;color:var(--sublabel)">${isBuy ? 'buy' : isSell ? 'sell' : ''}</div>
+        <div style="width:100%;max-width:28px;height:${barPx}px;background:${color};border-radius:3px 3px 0 0"></div>
+        <div style="font-size:10px;color:var(--sublabel)">${p}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1BestTimeToBuySell() {
+    return `
+    <div class="p0-section-title">Best Time to Buy and Sell Stock<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Sliding Window — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of stock prices, one per day, in order. Pick one day to buy and a <strong>later</strong> day to sell. You want the biggest possible profit (sell price minus buy price). If there's no way to make a profit, the answer is 0 — you're not forced to buy and sell.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "profit" means here</h4>
+      <p>prices = [7, 1, 5, 3, 6, 4] — buying on day 1 (price 1) and selling on day 4 (price 6) gives profit 6 − 1 = 5, the best you can do:</p>
+      ${renderP1PriceBars([7, 1, 5, 3, 6, 4], 1, 4)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">You only ever hold one share at a time, and you must buy before you sell — a later day's price minus an earlier day's price.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you checked every possible (buy day, sell day) pair directly, how many pairs is that, and what's the time complexity?<br>
+      2. As you scan left to right, what's the only price from the days you've already seen that could ever matter for today's sell decision?<br>
+      3. If today's price is lower than the cheapest price you've seen so far, is today ever a good day to sell? What should it become instead?<br>
+      4. Can you get the answer in a single pass, keeping track of just two numbers as you go?</p>
+    </div>
+
+    ${renderP1Workflow('slidingWindow-bestTimeToBuyAndSellStock.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every buy/sell pair</h4>
+        <p>Try every pair of days (i, j) with j after i, compute the profit for each, keeping the max.</p>
+        <pre class="p0-code">function maxProfit(prices) {
+  let res = 0;
+  for (let i = 0; i &lt; prices.length; i++) {
+    for (let j = i + 1; j &lt; prices.length; j++) {
+      res = Math.max(res, prices[j] - prices[i]);
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — every pair is checked. Space: <strong>O(1)</strong> — just a running max.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sliding window, track the cheapest buy so far</h4>
+        <p>Walk through the prices once. Keep the lowest price seen so far (your best buy day). At each day, check the profit if you sold today against that lowest price, and update the max profit. If today's price is even lower than your current best buy, that becomes the new best buy — there's no reason to ever sell on a day whose price is below a cheaper day you already passed.</p>
+        <pre class="p0-code">function maxProfit(prices) {
+  let minPrice = Infinity;
+  let maxP = 0;
+  for (let i = 0; i &lt; prices.length; i++) {
+    if (prices[i] &lt; minPrice) {
+      minPrice = prices[i];
+    } else {
+      maxP = Math.max(maxP, prices[i] - minPrice);
+    }
+  }
+  return maxP;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass over the prices. Space: <strong>O(1)</strong> — just the running min and max.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — prices = [7, 1, 5, 3, 6, 4]</div>
+        <div id="p1-bt-array" class="p0-arr-row" style="align-items:flex-end"></div>
+        <div class="p0-sim-log" id="p1-bt-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-bt-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Fewer than 2 days:</strong> no transaction is possible — profit is 0.<br>
+        <strong>Prices only ever fall:</strong> every day is a new low, profit stays 0 the whole way through.<br>
+        <strong>Prices only ever rise:</strong> the first day is the best (and only) buy day, and the running max profit keeps growing until the last day.<br>
+        <strong>Empty array:</strong> nothing to scan — profit is 0.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (every pair)</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+          <tr><td>Sliding window, running min</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1BestTimeToBuySellStepper() {
+    const btn = document.getElementById('p1-bt-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-bt-array');
+    const logEl = document.getElementById('p1-bt-log');
+    const ARR = [7, 1, 5, 3, 6, 4];
+
+    const steps = [];
+    {
+      let minPrice = Infinity;
+      let maxP = 0;
+      for (let i = 0; i < ARR.length; i++) {
+        if (ARR[i] < minPrice) {
+          minPrice = ARR[i];
+          steps.push({ i, minPrice, maxP, action: 'newMin' });
+        } else {
+          maxP = Math.max(maxP, ARR[i] - minPrice);
+          steps.push({ i, minPrice, maxP, action: 'checkSell' });
+        }
+      }
+    }
+
+    let idx;
+    let bestBuyIdx;
+
+    function renderArr(sellIdx) {
+      arrHost.innerHTML = renderP1PriceBars(ARR, bestBuyIdx, sellIdx);
+    }
+
+    function reset() {
+      idx = 0;
+      bestBuyIdx = null;
+      renderArr(null);
+      logEl.textContent = 'Scanning day by day. Tracking the lowest price seen so far.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.action === 'newMin') {
+        bestBuyIdx = s.i;
+        renderArr(null);
+        logEl.textContent = `Day ${s.i}: price ${ARR[s.i]} is a new low. New best buy day. Best profit so far: ${s.maxP}.`;
+      } else {
+        renderArr(s.i);
+        logEl.textContent = `Day ${s.i}: price ${ARR[s.i]} vs. best buy ${s.minPrice} → profit ${ARR[s.i] - s.minPrice}. Best profit so far: ${s.maxP}.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Scan done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1CharWindow(str, left, right) {
+    const chars = str.length ? str.split('') : [' '];
+    return `<div class="p0-arr-row" style="gap:6px">${chars.map((ch, i) => {
+      const inWindow = str.length && i >= left && i <= right;
+      const isRight = i === right;
+      const isLeft = i === left;
+      const bg = isRight ? '#3b82f6' : isLeft ? '#22c55e' : inWindow ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.08)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:${bg};border-radius:4px;font-size:13px;font-family:monospace">${ch === ' ' ? '␣' : escapeHtml(ch)}</div>
+        <div style="font-size:9px;color:var(--sublabel)">${i}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1LongestSubstring() {
+    return `
+    <div class="p0-section-title">Longest Substring Without Repeating Characters<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Sliding Window — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string. Find the length of the longest stretch of <strong>consecutive</strong> characters in it where no character repeats. You don't need to return the substring itself, just how long the longest one is.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "window" means here</h4>
+      <p>s = "pwwkew" — the longest run without a repeat is "wke", length 3 (not "pw" extended, because the second "w" repeats):</p>
+      ${renderP1CharWindow('pwwkew', 3, 5)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Green = left edge of the current window, blue = right edge (the character just added). Everything between them is the current candidate substring.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you tried every possible substring directly and checked each one for repeats, what's the time complexity?<br>
+      2. As you scan left to right adding one character at a time, how would you quickly tell if the new character already exists in your current window?<br>
+      3. When you find a repeat, do you need to shrink the window one step at a time, or can you jump the left edge straight past the earlier occurrence?<br>
+      4. What should you track as you scan, if not the substring itself, to still know the length of the current window?</p>
+    </div>
+
+    ${renderP1Workflow('slidingWindow-longestSubstringWithoutRepeating.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every substring</h4>
+        <p>Try every starting point, extend right as long as no repeat is found, and track the best length.</p>
+        <pre class="p0-code">function lengthOfLongestSubstring(s) {
+  let res = 0;
+  for (let i = 0; i &lt; s.length; i++) {
+    const seen = new Set();
+    for (let j = i; j &lt; s.length; j++) {
+      if (seen.has(s[j])) break;
+      seen.add(s[j]);
+      res = Math.max(res, j - i + 1);
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — every starting point rescans forward. Space: <strong>O(min(n, charset))</strong> — the seen set per start.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sliding window with a map of last-seen index</h4>
+        <p>Keep a window [left, right] with no repeats inside it, and a map from character → the last index it was seen at. Move right one step at a time. If the new character was already seen <strong>inside the current window</strong>, jump left to just past that earlier occurrence (never backwards). Update the map, then update the max window size.</p>
+        <pre class="p0-code">function lengthOfLongestSubstring(s) {
+  const lastSeen = new Map();
+  let left = 0, maxLen = 0;
+  for (let right = 0; right &lt; s.length; right++) {
+    const c = s[right];
+    if (lastSeen.has(c)) {
+      left = Math.max(lastSeen.get(c) + 1, left);
+    }
+    lastSeen.set(c, right);
+    maxLen = Math.max(maxLen, right - left + 1);
+  }
+  return maxLen;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — each character is visited by <code>right</code> exactly once. Space: <strong>O(min(n, charset))</strong> — the map holds at most one entry per distinct character.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "pwwkew"</div>
+        <div id="p1-ls-array" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-ls-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ls-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty string:</strong> no characters at all — length is 0.<br>
+        <strong>All identical characters ("bbbbb"):</strong> the window can never grow past 1 — left jumps to right on every step.<br>
+        <strong>A repeat whose earlier occurrence is already outside the window ("dvdf"):</strong> the jump target must never move <code>left</code> backwards — always take <code>Math.max(lastSeen + 1, left)</code>, or you'd wrongly re-include characters you already dropped.<br>
+        <strong>Single character or single space:</strong> length is 1 either way — a space is just another character.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (every substring)</td><td class="num">O(n²)</td><td class="num">O(min(n, charset))</td></tr>
+          <tr><td>Sliding window + last-seen map</td><td class="num">O(n)</td><td class="num">O(min(n, charset))</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1LongestSubstringStepper() {
+    const btn = document.getElementById('p1-ls-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-ls-array');
+    const logEl = document.getElementById('p1-ls-log');
+    const STR = 'pwwkew';
+
+    const steps = [];
+    {
+      const lastSeen = new Map();
+      let left = 0, maxLen = 0;
+      for (let right = 0; right < STR.length; right++) {
+        const c = STR[right];
+        let jumped = false;
+        if (lastSeen.has(c) && lastSeen.get(c) + 1 > left) {
+          left = lastSeen.get(c) + 1;
+          jumped = true;
+        }
+        lastSeen.set(c, right);
+        maxLen = Math.max(maxLen, right - left + 1);
+        steps.push({ right, left, c, jumped, maxLen });
+      }
+    }
+
+    let idx;
+
+    function renderArr(left, right) {
+      arrHost.innerHTML = renderP1CharWindow(STR, left, right);
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(0, -1);
+      logEl.textContent = 'left = 0. Scanning right one character at a time.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      renderArr(s.left, s.right);
+      const jumpNote = s.jumped ? ` "${s.c}" repeats inside the window — left jumps to ${s.left}.` : '';
+      logEl.textContent = `right=${s.right} ("${s.c}").${jumpNote} Window is now [${s.left}, ${s.right}]. Best length so far: ${s.maxLen}.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Scan done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1CharReplacement() {
+    return `
+    <div class="p0-section-title">Longest Repeating Character Replacement<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Sliding Window — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string of uppercase letters and a number k. You're allowed to change up to k characters in the string to any other letter. Find the length of the longest stretch of <strong>consecutive</strong> characters you can turn into all the same letter, using at most k changes.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "at most k changes" means for a window</h4>
+      <p>s = "AABDBBBC", k = 2 — the window "ABDBBB" (indices 1-6) has 4 B's and 2 other letters (A, D). Since we can change at most 2 characters, we can turn A and D into B, making the whole window "BBBBBB" — a valid window of length 6:</p>
+      ${renderP1CharWindow('AABDBBBC', 1, 6)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">A window is "valid" if (window size) − (count of its most frequent letter) ≤ k — that difference is exactly how many characters you'd need to change.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you tried every substring and, for each one, counted letters and checked if it needed ≤ k changes, what's the time complexity?<br>
+      2. As you expand a window one character at a time, what single number do you need to know to check if the window is still valid — do you need every letter's count, or just the count of the <em>most frequent</em> one?<br>
+      3. If adding a new character makes the window invalid (needs more than k changes), what should you do to the left side of the window?<br>
+      4. Here's the subtle part: if you track the best "max frequency" seen so far in the window and never let it decrease even after shrinking, does that ever cause you to accept an invalid window — or does it only affect whether the window's length can grow? (Think about what happens to <code>longest</code> if the window briefly stops growing.)</p>
+    </div>
+
+    ${renderP1Workflow('slidingWindow-longestRepeatingCharacterReplacement.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every substring</h4>
+        <p>Try every substring, count its letters, and check if (length − max count) ≤ k.</p>
+        <pre class="p0-code">function characterReplacement(s, k) {
+  let res = 0;
+  for (let i = 0; i &lt; s.length; i++) {
+    const count = new Map();
+    let maxFreq = 0;
+    for (let j = i; j &lt; s.length; j++) {
+      count.set(s[j], (count.get(s[j]) || 0) + 1);
+      maxFreq = Math.max(maxFreq, count.get(s[j]));
+      if ((j - i + 1) - maxFreq &lt;= k) {
+        res = Math.max(res, j - i + 1);
+      }
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — every start rescans forward. Space: <strong>O(1)</strong> — at most 26 letters tracked.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sliding window, track only the max frequency</h4>
+        <p>Expand the window with <code>right</code>, keeping a frequency count per letter and the highest frequency seen in the window so far (<code>maxFrequency</code>). If <code>(right - left + 1) - maxFrequency &gt; k</code>, the window needs too many changes — shrink from the left until it's valid again. The key trick: <code>maxFrequency</code> is allowed to go stale (not recomputed after shrinking) — it can only ever help the window look "more valid" than it truly is for a moment, and that never lets an invalid answer get recorded, it just occasionally delays recognizing the window could shrink further. It still finds the true longest length.</p>
+        <pre class="p0-code">function characterReplacement(s, k) {
+  const count = new Map();
+  let left = 0, maxFrequency = 0, longest = 0;
+  for (let right = 0; right &lt; s.length; right++) {
+    const c = s[right];
+    count.set(c, (count.get(c) || 0) + 1);
+    maxFrequency = Math.max(maxFrequency, count.get(c));
+    while ((right - left + 1) - maxFrequency &gt; k) {
+      const lc = s[left];
+      count.set(lc, count.get(lc) - 1);
+      left++;
+    }
+    longest = Math.max(longest, right - left + 1);
+  }
+  return longest;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — right moves forward n times, left moves forward at most n times total. Space: <strong>O(1)</strong> — the count map holds at most 26 uppercase letters.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "AABDBBBC", k = 2</div>
+        <div id="p1-cr-array" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-cr-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cr-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>k = 0:</strong> no changes allowed — the answer is just the longest run of one repeated letter already in the string.<br>
+        <strong>k ≥ string length:</strong> you can change everything — the whole string can become one letter.<br>
+        <strong>Empty string:</strong> nothing to scan — answer is 0.<br>
+        <strong>All one letter already:</strong> the window never needs to shrink — it grows to the full string length.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (every substring)</td><td class="num">O(n²)</td><td class="num">O(1)</td></tr>
+          <tr><td>Sliding window, running max frequency</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1CharReplacementStepper() {
+    const btn = document.getElementById('p1-cr-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-cr-array');
+    const logEl = document.getElementById('p1-cr-log');
+    const STR = 'AABDBBBC';
+    const K = 2;
+
+    const steps = [];
+    {
+      const count = new Map();
+      let left = 0, maxFrequency = 0, longest = 0;
+      for (let right = 0; right < STR.length; right++) {
+        const c = STR[right];
+        count.set(c, (count.get(c) || 0) + 1);
+        maxFrequency = Math.max(maxFrequency, count.get(c));
+        let shrunk = false;
+        while ((right - left + 1) - maxFrequency > K) {
+          const lc = STR[left];
+          count.set(lc, count.get(lc) - 1);
+          left++;
+          shrunk = true;
+        }
+        longest = Math.max(longest, right - left + 1);
+        steps.push({ right, left, c, maxFrequency, shrunk, longest });
+      }
+    }
+
+    let idx;
+
+    function renderArr(left, right) {
+      arrHost.innerHTML = renderP1CharWindow(STR, left, right);
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(0, -1);
+      logEl.textContent = 'left = 0. Expanding right one character at a time.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      renderArr(s.left, s.right);
+      const shrinkNote = s.shrunk ? ` Window needed too many changes — shrunk left to ${s.left}.` : '';
+      logEl.textContent = `right=${s.right} ("${s.c}"). Most frequent letter count so far: ${s.maxFrequency}.${shrinkNote} Window [${s.left}, ${s.right}]. Longest valid so far: ${s.longest}.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Scan done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1MinWindow() {
+    return `
+    <div class="p0-section-title">Minimum Window Substring<span class="p1-badge hard">Hard</span></div>
+    <div class="p0-section-sub">Sliding Window — problem 4</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get two strings, s and t. Find the <strong>shortest</strong> stretch of consecutive characters in s that contains every character of t — including repeats. For example if t has two "A"s, your window needs at least two "A"s in it too. If no such window exists, return an empty string.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "contains every character" means</h4>
+      <p>s = "DAOBECODEBANCDNK", t = "ABC" — the window "BANC" (indices 9-12) is the shortest stretch that contains an A, a B, and a C:</p>
+      ${renderP1CharWindow('DAOBECODEBANCDNK', 9, 12)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Order doesn't matter and extra characters are fine ("N" is in the window too) — the only requirement is that every character t needs (with the right count) is present somewhere in the window.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you checked every possible substring of s directly and, for each one, verified it contains all of t's characters, what's the time complexity?<br>
+      2. As you expand the window with a right pointer, how would you track "do I currently have enough of each required character," without rechecking every character in the window each time?<br>
+      3. Once your window contains everything t needs, is it ever helpful to keep expanding right before trying to shrink from the left? Why shrink immediately instead of continuing to expand first?<br>
+      4. When you shrink from the left and remove a character that t needs, at what exact point does the window stop being valid — and how do you detect that moment without recounting everything?</p>
+    </div>
+
+    ${renderP1Workflow('slidingWindow-minimumWindowSubstring.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — check every substring</h4>
+        <p>Try every substring of s, build its character counts, and check if it satisfies every requirement from t. Keep the shortest one that qualifies.</p>
+        <pre class="p0-code">function minWindow(s, t) {
+  if (t === "") return "";
+  const need = {};
+  for (const c of t) need[c] = (need[c] || 0) + 1;
+  let best = "";
+  for (let i = 0; i &lt; s.length; i++) {
+    const have = {};
+    for (let j = i; j &lt; s.length; j++) {
+      have[s[j]] = (have[s[j]] || 0) + 1;
+      const ok = Object.keys(need).every(c =&gt; (have[c] || 0) &gt;= need[c]);
+      if (ok) {
+        const candidate = s.slice(i, j + 1);
+        if (!best || candidate.length &lt; best.length) best = candidate;
+        break;
+      }
+    }
+  }
+  return best;
+}</pre>
+        <p>Time: <strong>O(n² · |t|)</strong> — every start rescans forward, each check scans t's unique characters. Space: <strong>O(|t|)</strong> — the requirement map.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sliding window with two frequency maps</h4>
+        <p>Build a frequency map <code>countT</code> for t, and note <code>need</code> = how many <em>distinct</em> characters t requires. Expand the window with <code>right</code>, tracking a <code>window</code> frequency map and a counter <code>have</code> = how many of those distinct characters currently meet their required count. The moment <code>have === need</code>, the window is valid — immediately try shrinking from the left (recording the window each time it's the smallest valid one seen) until removing the left character would drop <code>have</code> below <code>need</code>. Then go back to expanding.</p>
+        <pre class="p0-code">function minWindow(s, t) {
+  if (t === "") return "";
+  const countT = {};
+  for (const c of t) countT[c] = (countT[c] || 0) + 1;
+  const need = Object.keys(countT).length;
+  const window = {};
+  let have = 0, left = 0;
+  let result = [-1, -1], resultLen = Infinity;
+  for (let right = 0; right &lt; s.length; right++) {
+    const c = s[right];
+    window[c] = (window[c] || 0) + 1;
+    if (countT[c] &amp;&amp; window[c] === countT[c]) have++;
+    while (have === need) {
+      if (right - left + 1 &lt; resultLen) {
+        resultLen = right - left + 1;
+        result = [left, right];
+      }
+      const lc = s[left];
+      window[lc]--;
+      if (countT[lc] &amp;&amp; window[lc] &lt; countT[lc]) have--;
+      left++;
+    }
+  }
+  return resultLen === Infinity ? "" : s.slice(result[0], result[1] + 1);
+}</pre>
+        <p>Time: <strong>O(|s| + |t|)</strong> — building <code>countT</code> is O(|t|), and <code>right</code>/<code>left</code> each move forward across s at most once. Space: <strong>O(|s| + |t|)</strong> in the worst case for the two frequency maps (constant if the alphabet is fixed, e.g. ASCII).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "ADOBECODEBANC", t = "ABC"</div>
+        <div id="p1-mw-array" class="p0-arr-row" style="flex-wrap:wrap;row-gap:8px"></div>
+        <div class="p0-sim-log" id="p1-mw-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mw-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>t is longer than s, or needs more of a character than s has (e.g. s = "a", t = "aa"):</strong> no valid window exists — return "".<br>
+        <strong>t is an empty string:</strong> no characters are required — the answer is "" (any window, including none, trivially "contains" nothing).<br>
+        <strong>s is empty but t isn't:</strong> nothing to search — return "".<br>
+        <strong>Multiple valid windows of the same minimum length:</strong> any one of them is an acceptable answer (the problem guarantees a unique answer only when the shortest length itself is unique, not the substring's content).</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (every substring)</td><td class="num">O(n²·|t|)</td><td class="num">O(|t|)</td></tr>
+          <tr><td>Sliding window, two frequency maps</td><td class="num">O(|s| + |t|)</td><td class="num">O(|s| + |t|)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MinWindowStepper() {
+    const btn = document.getElementById('p1-mw-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-mw-array');
+    const logEl = document.getElementById('p1-mw-log');
+    const STR = 'ADOBECODEBANC';
+    const T = 'ABC';
+
+    const steps = [];
+    {
+      const countT = {};
+      for (const c of T) countT[c] = (countT[c] || 0) + 1;
+      const need = Object.keys(countT).length;
+      const window = {};
+      let have = 0, left = 0;
+      let result = [-1, -1], resultLen = Infinity;
+      for (let right = 0; right < STR.length; right++) {
+        const c = STR[right];
+        window[c] = (window[c] || 0) + 1;
+        if (countT[c] && window[c] === countT[c]) have++;
+        let shrunkTo = null;
+        while (have === need) {
+          if (right - left + 1 < resultLen) {
+            resultLen = right - left + 1;
+            result = [left, right];
+          }
+          const lc = STR[left];
+          window[lc]--;
+          if (countT[lc] && window[lc] < countT[lc]) have--;
+          left++;
+          shrunkTo = left;
+        }
+        steps.push({ right, left, c, have, need, shrunkTo, result: [...result], resultLen });
+      }
+    }
+
+    let idx;
+
+    function renderArr(left, right) {
+      arrHost.innerHTML = renderP1CharWindow(STR, left, right);
+    }
+
+    function reset() {
+      idx = 0;
+      renderArr(0, -1);
+      logEl.textContent = `left = 0. Need all of "${T}" in the window.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      renderArr(s.left, s.right);
+      const best = s.resultLen === Infinity ? 'none yet' : `"${STR.slice(s.result[0], s.result[1] + 1)}" (length ${s.resultLen})`;
+      const shrinkNote = s.shrunkTo !== null ? ` Valid — shrank left to ${s.shrunkTo}.` : '';
+      logEl.textContent = `right=${s.right} ("${s.c}"). Have ${s.have}/${s.need} required characters.${shrinkNote} Best window so far: ${best}.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Scan done.';
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
