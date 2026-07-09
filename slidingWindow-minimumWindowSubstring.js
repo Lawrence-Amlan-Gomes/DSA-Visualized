@@ -24,7 +24,52 @@ Space Complexity:
      * @return {string}
      */
     minWindow(s, t) {
+      // if (t === "") return "";
+      // const need = {};
+      // for (const c of t) need[c] = (need[c] || 0) + 1;
+      // let best = "";
+      // for (let i = 0; i < s.length; i++) {
+      //   const have = {};
+      //   for (let j = i; j < s.length; j++) {
+      //     have[s[j]] = (have[s[j]] || 0) + 1;
+      //     const ok = Object.keys(need).every((c) => (have[c] || 0) >= need[c]);
+      //     if (ok) {
+      //       const candidate = s.slice(i, j + 1);
+      //       if (!best || candidate.length < best.length) best = candidate;
+      //       break;
+      //     }
+      //   }
+      // }
+      // return best;
+      // Time: O(n² · |t|) — every start rescans forward, each check scans t's unique characters. Space: O(|t|) — the requirement map.
 
+      if (t === "") return "";
+      const countT = {};
+      for (const c of t) countT[c] = (countT[c] || 0) + 1;
+      const need = Object.keys(countT).length;
+      const window = {};
+      let have = 0,
+        left = 0;
+      let result = [-1, -1],
+        resultLen = Infinity;
+      for (let right = 0; right < s.length; right++) {
+        const c = s[right];
+        window[c] = (window[c] || 0) + 1;
+        if (countT[c] && window[c] === countT[c]) have++;
+        while (have === need) {
+          if (right - left + 1 < resultLen) {
+            resultLen = right - left + 1;
+            result = [left, right];
+          }
+          const lc = s[left];
+          window[lc]--;
+          if (countT[lc] && window[lc] < countT[lc]) have--;
+          left++;
+        }
+      }
+      return resultLen === Infinity ? "" : s.slice(result[0], result[1] + 1);
+
+      // Time: O(|s| + |t|) — building countT is O(|t|), and right/left each move forward across s at most once. Space: O(|s| + |t|) in the worst case for the two frequency maps (constant if the alphabet is fixed, e.g. ASCII).
     }
   }
 

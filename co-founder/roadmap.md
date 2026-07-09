@@ -5,10 +5,10 @@
 - [x] Arrays & Hashing — 10/10 solved live (containsDuplicate ✓, twoSum ✓, validAnagram ✓, groupAnagrams ✓, topKFrequent ✓, productExceptSelf ✓, longestConsecutiveSequence ✓, encodeAndDecodeStrings ✓, firstUniqChar ✓, reverseWords ✓)
 - [x] Two Pointers — 3/3 solved live (validPalindrome ✓, threeSum ✓, containerWithMostWater ✓)
 - [x] Sliding Window — 4/4 solved live (bestTimeToBuyAndSellStock ✓, longestSubstringWithoutRepeating ✓, longestRepeatingCharacterReplacement ✓, minimumWindowSubstring ✓)
-- [ ] Stack — 1 available (validParentheses)
-- [ ] Binary Search — 2 available (searchInRotatedSortedArray, findMinimumInRotatedSortedArray)
-- [ ] Linked List — 6 available (mergeKSortedLinkedLists, linkedListCycle, mergeTwoSortedLists, removeNthFromEnd, reorderLinkedList, reverseLinkedList)
-- [ ] Trees — 11 available (binaryTreeMaximumPathSum, binaryTreeLevelOrderTraversal, constructBinaryTreeFromPreorderAndInorderTraversal, invertBinaryTree, kthSmallestIntegerInBST, lowestCommonAncestorBST, maximumDepthOfBinaryTree, sameBinaryTree, serializeAndDeserializeBinaryTree, subtreeOfAnotherTree, validBinarySearchTree)
+- [x] Stack — 1/1 solved live (validParentheses ✓)
+- [x] Binary Search — 2/2 solved live (searchInRotatedSortedArray ✓, findMinimumInRotatedSortedArray ✓)
+- [x] Linked List — 6/6 solved live (reverseLinkedList ✓, linkedListCycle ✓, mergeTwoSortedLists ✓, removeNthFromEnd ✓, reorderLinkedList ✓, mergeKSortedLinkedLists ✓)
+- [ ] Trees — 1/11 solved live (invertBinaryTree ✓; maximumDepthOfBinaryTree assigned, not yet solved; 9 more available: binaryTreeMaximumPathSum, binaryTreeLevelOrderTraversal, constructBinaryTreeFromPreorderAndInorderTraversal, kthSmallestIntegerInBST, lowestCommonAncestorBST, sameBinaryTree, serializeAndDeserializeBinaryTree, subtreeOfAnotherTree, validBinarySearchTree)
 - [ ] Tries — 0 available, none imported yet
 - [ ] Heap / Priority Queue (standalone) — 0 available (mergeKSortedLinkedLists touches heap concepts but isn't standalone heap practice)
 - [ ] Backtracking — 0 available, none imported yet
@@ -20,4 +20,4 @@
 - [ ] Bit Manipulation — 0 available, none imported yet
 - [ ] Math & Geometry — 0 available, none imported yet
 
-47 total reference problems in LiveCoding, 17 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window). Phase 0, Arrays & Hashing, Two Pointers, and Sliding Window are all done. Next up: Stack (1 available).
+47 total reference problems in LiveCoding, 27 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 1 Trees). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, and Linked List are all done. Next up: Trees (1/11 solved, maximumDepthOfBinaryTree assigned).

@@ -1969,6 +1969,105 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1MinWindow,
       init: initP1MinWindowStepper,
     },
+    {
+      id: 'validParentheses',
+      pattern: 'Stack',
+      title: 'Valid Parentheses',
+      difficulty: 'easy',
+      file: 'stack-validParentheses.js',
+      render: renderP1ValidParentheses,
+      init: initP1ValidParenthesesStepper,
+    },
+    {
+      id: 'searchInRotatedSortedArray',
+      pattern: 'Binary Search',
+      title: 'Search in Rotated Sorted Array',
+      difficulty: 'medium',
+      file: 'searchInRotatedSortedArray.js',
+      render: renderP1SearchRotated,
+      init: initP1SearchRotatedStepper,
+    },
+    {
+      id: 'findMinimumInRotatedSortedArray',
+      pattern: 'Binary Search',
+      title: 'Find Minimum in Rotated Sorted Array',
+      difficulty: 'medium',
+      file: 'binarySearch-findMinimumInRotatedSortedArray.js',
+      render: renderP1FindMinRotated,
+      init: initP1FindMinRotatedStepper,
+    },
+    {
+      id: 'reverseLinkedList',
+      pattern: 'Linked List',
+      title: 'Reverse Linked List',
+      difficulty: 'easy',
+      file: 'linkedList-reverseLinkedList.js',
+      render: renderP1ReverseLinkedList,
+      init: initP1ReverseLinkedListStepper,
+    },
+    {
+      id: 'linkedListCycle',
+      pattern: 'Linked List',
+      title: 'Linked List Cycle',
+      difficulty: 'easy',
+      file: 'linkedList-linkedListCycle.js',
+      render: renderP1LinkedListCycle,
+      init: initP1LinkedListCycleStepper,
+    },
+    {
+      id: 'mergeTwoSortedLists',
+      pattern: 'Linked List',
+      title: 'Merge Two Sorted Lists',
+      difficulty: 'easy',
+      file: 'linkedList-mergeTwoSortedLists.js',
+      render: renderP1MergeTwoLists,
+      init: initP1MergeTwoListsStepper,
+    },
+    {
+      id: 'removeNthFromEnd',
+      pattern: 'Linked List',
+      title: 'Remove Nth Node From End of List',
+      difficulty: 'medium',
+      file: 'linkedList-removeNthFromEnd.js',
+      render: renderP1RemoveNthFromEnd,
+      init: initP1RemoveNthFromEndStepper,
+    },
+    {
+      id: 'reorderLinkedList',
+      pattern: 'Linked List',
+      title: 'Reorder List',
+      difficulty: 'medium',
+      file: 'linkedList-reorderLinkedList.js',
+      render: renderP1ReorderList,
+      init: initP1ReorderListStepper,
+    },
+    {
+      id: 'mergeKSortedLinkedLists',
+      pattern: 'Linked List',
+      title: 'Merge K Sorted Lists',
+      difficulty: 'hard',
+      file: 'mergeKSortedLinkedLists.js',
+      render: renderP1MergeKLists,
+      init: initP1MergeKListsStepper,
+    },
+    {
+      id: 'invertBinaryTree',
+      pattern: 'Trees',
+      title: 'Invert Binary Tree',
+      difficulty: 'easy',
+      file: 'trees-invertBinaryTree.js',
+      render: renderP1InvertBinaryTree,
+      init: initP1InvertBinaryTreeStepper,
+    },
+    {
+      id: 'maximumDepthOfBinaryTree',
+      pattern: 'Trees',
+      title: 'Maximum Depth of Binary Tree',
+      difficulty: 'easy',
+      file: 'trees-maximumDepthOfBinaryTree.js',
+      render: renderP1MaxDepth,
+      init: initP1MaxDepthStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -4934,6 +5033,1997 @@ function decode(str) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ' Scan done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Non-spoiler concept visual: colors each bracket by which partner it matches, computed
+  // just for display. Shows "last opened, first closed" without naming the stack technique.
+  function renderP1BracketPairs(str) {
+    const PALETTE = ['#3b82f6', '#a855f7', '#f97316', '#22c55e', '#06b6d4', '#eab308', '#ef4444'];
+    const openSet = new Set(['(', '[', '{']);
+    const closeSet = new Set([')', ']', '}']);
+    const matchOf = new Array(str.length).fill(null);
+    const colorOf = new Array(str.length).fill(null);
+    const pending = [];
+    let ci = 0;
+    for (let i = 0; i < str.length; i++) {
+      const c = str[i];
+      if (openSet.has(c)) {
+        pending.push(i);
+      } else if (closeSet.has(c) && pending.length) {
+        const openIdx = pending.pop();
+        const color = PALETTE[ci++ % PALETTE.length];
+        colorOf[openIdx] = color;
+        colorOf[i] = color;
+      }
+    }
+    const chars = str.length ? str.split('') : [' '];
+    return `<div class="p0-arr-row" style="gap:6px">${chars.map((ch, i) => {
+      const color = colorOf[i] || 'rgba(255,255,255,0.25)';
+      return `<div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:2px solid ${color};border-radius:6px;font-size:16px;font-family:monospace;font-weight:600">${ch === ' ' ? '␣' : escapeHtml(ch)}</div>`;
+    }).join('')}</div>`;
+  }
+
+  // Row of characters with the current scan position highlighted.
+  function renderP1CharRow(str, currentIdx) {
+    const chars = str.length ? str.split('') : [' '];
+    return `<div class="p0-arr-row" style="gap:6px">${chars.map((ch, i) => {
+      const isCurrent = i === currentIdx;
+      const bg = isCurrent ? '#3b82f6' : 'rgba(255,255,255,0.08)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:${bg};border-radius:4px;font-size:15px;font-family:monospace;font-weight:600">${ch === ' ' ? '␣' : escapeHtml(ch)}</div>
+        <div style="font-size:9px;color:var(--sublabel)">${i}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  // Vertical box stack — newest pushed item drawn on top.
+  function renderP1StackBoxes(stackArr) {
+    if (!stackArr.length) {
+      return `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty stack)</div>`;
+    }
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:center">${stackArr.slice().reverse().map(c =>
+      `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:rgba(59,130,246,0.35);border:2px solid #3b82f6;border-radius:6px;font-size:16px;font-family:monospace;font-weight:600">${escapeHtml(c)}</div>`
+    ).join('')}</div>`;
+  }
+
+  function renderP1ValidParentheses() {
+    return `
+    <div class="p0-section-title">Valid Parentheses<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Stack — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a string made only of <strong>(</strong> <strong>)</strong> <strong>[</strong> <strong>]</strong> <strong>{</strong> <strong>}</strong>. Say whether the brackets are "balanced" — every open bracket has a matching close bracket of the <strong>same type</strong>, closed in the <strong>right order</strong>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "matching" means here</h4>
+      <p>s = "{[()]}" — every bracket pairs up cleanly, so it's valid. Same color below means those two brackets match each other:</p>
+      ${renderP1BracketPairs('{[()]}')}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Notice the pairing is nested, not just "same count of each type." "([)]" has one of each bracket too, but it's still invalid — the order is wrong.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. When you hit a closing bracket, which open bracket is it allowed to match — any earlier one, or one specific one?<br>
+      2. What's special about the <em>most recent</em> open bracket you haven't closed yet?<br>
+      3. What data structure naturally hands you back "the most recent thing you added" first?<br>
+      4. If you reach the end of the string and there are still open brackets waiting to be closed, is that valid?<br>
+      5. What if you see a closing bracket but there's nothing open to match it against?</p>
+    </div>
+
+    ${renderP1Workflow('stack-validParentheses.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — repeatedly remove matched pairs</h4>
+        <p>Keep deleting any "()", "[]", or "{}" you find, anywhere in the string. If the string is truly balanced, this whittles it all the way down to empty. If nothing changes on a pass and the string isn't empty, it can never become valid.</p>
+        <pre class="p0-code">function isValid(s) {
+  let prevLength;
+  do {
+    prevLength = s.length;
+    s = s.replace('()', '').replace('[]', '').replace('{}', '');
+  } while (s.length !== prevLength);
+  return s.length === 0;
+}</pre>
+        <p>Time: <strong>O(n²)</strong> — each pass scans the string and up to n/2 passes may be needed. Space: <strong>O(n)</strong> — each <code>replace</code> builds a new string.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — one pass with a stack</h4>
+        <p>Scan left to right. Every time you see an open bracket, push it. Every time you see a closing bracket, check the top of the stack — it must be the matching open bracket, or the string is invalid right away. Pop it if it matches. At the end, the stack must be completely empty — no open brackets left waiting.</p>
+        <pre class="p0-code">function isValid(s) {
+  const stack = [];
+  const closeToOpen = { ')': '(', ']': '[', '}': '{' };
+  for (const c of s) {
+    if (closeToOpen[c]) {
+      if (stack.length && stack[stack.length - 1] === closeToOpen[c]) {
+        stack.pop();
+      } else {
+        return false;
+      }
+    } else {
+      stack.push(c);
+    }
+  }
+  return stack.length === 0;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass through the string. Space: <strong>O(n)</strong> — the stack, worst case all opens.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — s = "{[()]}"</div>
+        <div id="p1-vpar-chars" class="p0-arr-row"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Stack (top = most recently opened, unmatched bracket)</div>
+        <div id="p1-vpar-stack" style="min-height:120px"></div>
+        <div class="p0-sim-log" id="p1-vpar-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-vpar-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty string:</strong> nothing to mismatch — valid.<br>
+        <strong>Odd length:</strong> can never balance perfectly (not a required check — it falls out naturally, since one bracket is always left over).<br>
+        <strong>Closing bracket with nothing open:</strong> stack is empty when you need to pop — invalid immediately.<br>
+        <strong>Open brackets left at the end:</strong> stack isn't empty after the scan — invalid.<br>
+        <strong>Right bracket types, wrong order:</strong> e.g. "([)]" — the top of the stack won't match the closing bracket you're looking at, even though every type appears the right number of times.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (remove pairs repeatedly)</td><td class="num">O(n²)</td><td class="num">O(n)</td></tr>
+          <tr><td>Single-pass stack</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ValidParenthesesStepper() {
+    const btn = document.getElementById('p1-vpar-step-btn');
+    if (!btn) return;
+    const charsHost = document.getElementById('p1-vpar-chars');
+    const stackHost = document.getElementById('p1-vpar-stack');
+    const logEl = document.getElementById('p1-vpar-log');
+    const STR = '{[()]}';
+    const closeToOpen = { ')': '(', ']': '[', '}': '{' };
+
+    const steps = [];
+    {
+      const stack = [];
+      for (let i = 0; i < STR.length; i++) {
+        const c = STR[i];
+        if (closeToOpen[c]) {
+          const matched = stack.length > 0 && stack[stack.length - 1] === closeToOpen[c];
+          if (matched) stack.pop();
+          steps.push({ i, c, stack: [...stack], action: matched ? 'pop' : 'mismatch' });
+        } else {
+          stack.push(c);
+          steps.push({ i, c, stack: [...stack], action: 'push' });
+        }
+      }
+    }
+
+    let idx;
+
+    function render(i, stackArr) {
+      charsHost.innerHTML = renderP1CharRow(STR, i);
+      stackHost.innerHTML = renderP1StackBoxes(stackArr);
+    }
+
+    function reset() {
+      idx = 0;
+      render(-1, []);
+      logEl.textContent = 'Scanning left to right. Stack starts empty.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.i, s.stack);
+      if (s.action === 'push') {
+        logEl.textContent = `Index ${s.i}: "${s.c}" is an open bracket — push it.`;
+      } else if (s.action === 'pop') {
+        logEl.textContent = `Index ${s.i}: "${s.c}" matches the top of the stack — pop it.`;
+      } else {
+        logEl.textContent = `Index ${s.i}: "${s.c}" does not match the top of the stack — invalid.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        const finalValid = steps[steps.length - 1].action !== 'mismatch' && steps[steps.length - 1].stack.length === 0;
+        logEl.textContent += ` Scan done. Stack is ${finalValid ? 'empty → valid.' : 'not empty or a mismatch occurred → invalid.'}`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Non-spoiler concept visual: colors each number by which of the two ascending runs it
+  // belongs to (the array is "glued" from two sorted pieces at the rotation point).
+  function renderP1RotatedRuns(arr) {
+    const COLORS = ['#3b82f6', '#f97316'];
+    let runIdx = 0;
+    const colorOf = arr.map((v, i) => {
+      if (i > 0 && arr[i] < arr[i - 1]) runIdx = 1;
+      return COLORS[runIdx];
+    });
+    return `<div class="p0-arr-row" style="gap:6px">${arr.map((v, i) =>
+      `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid ${colorOf[i]};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">${i}</div>
+      </div>`
+    ).join('')}</div>`;
+  }
+
+  // l / mid / r pointer visual for the binary search stepper.
+  function renderP1BinarySearchPointers(arr, l, mid, r, foundIdx) {
+    return `<div class="p0-arr-row" style="gap:6px">${arr.map((v, i) => {
+      let bg = 'rgba(255,255,255,0.08)';
+      let label = String(i);
+      if (i === foundIdx) { bg = '#22c55e'; label = 'found'; }
+      else if (i === mid) { bg = '#3b82f6'; label = 'mid'; }
+      else if (i === l) { bg = '#a855f7'; label = 'l'; }
+      else if (i === r) { bg = '#f97316'; label = 'r'; }
+      else if (l !== null && r !== null && (i < l || i > r)) { bg = 'rgba(255,255,255,0.03)'; }
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:${bg};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">${label}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1SearchRotated() {
+    return `
+    <div class="p0-section-title">Search in Rotated Sorted Array<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Binary Search — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You have an array that used to be sorted in ascending order, but it got "rotated" — cut at some point and the front piece moved to the back. Find the index of a target value, or return -1 if it isn't there. It must run in <strong>O(log n)</strong> — a plain linear scan isn't good enough.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "rotated" looks like</h4>
+      <p>nums = [4, 5, 6, 7, 0, 1, 2] — it isn't sorted end to end, but it's really just two sorted pieces glued together:</p>
+      ${renderP1RotatedRuns([4, 5, 6, 7, 0, 1, 2])}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Blue = one ascending run, orange = the other. That's the whole array: [4,5,6,7] then [0,1,2], stuck together.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. A plain linear scan finds the target fine — what's its time complexity, and why doesn't it satisfy this problem's requirement?<br>
+      2. Pick any midpoint in this array. Is it possible for <strong>neither</strong> half (left of mid, right of mid) to be sorted?<br>
+      3. Given <code>nums[l]</code>, <code>nums[mid]</code>, and <code>nums[r]</code>, how could you tell — with just comparisons, no loops — which half is the sorted one?<br>
+      4. Once you know which half is sorted, how do you decide whether the target could be hiding in it, using just its two endpoint values?</p>
+    </div>
+
+    ${renderP1Workflow('searchInRotatedSortedArray.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — linear scan</h4>
+        <p>Check every element one at a time until you find the target.</p>
+        <pre class="p0-code">function search(nums, target) {
+  for (let i = 0; i &lt; nums.length; i++) {
+    if (nums[i] === target) return i;
+  }
+  return -1;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — worst case checks every element. Space: <strong>O(1)</strong>.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — modified binary search</h4>
+        <p>Same l/mid/r shrinking as normal binary search, but before deciding where to go, first work out which half is sorted. Whichever half is sorted, you can check its two endpoints directly to know if the target could be inside it — if not, discard that half and search the other one.</p>
+        <pre class="p0-code">function search(nums, target) {
+  let l = 0, r = nums.length - 1;
+  while (l &lt;= r) {
+    const mid = Math.floor((l + r) / 2);
+    if (nums[mid] === target) return mid;
+    if (nums[l] &lt;= nums[mid]) {
+      if (target &gt; nums[mid] || target &lt; nums[l]) {
+        l = mid + 1;
+      } else {
+        r = mid - 1;
+      }
+    } else {
+      if (target &lt; nums[mid] || target &gt; nums[r]) {
+        r = mid - 1;
+      } else {
+        l = mid + 1;
+      }
+    }
+  }
+  return -1;
+}</pre>
+        <p>Time: <strong>O(log n)</strong> — the search space halves every step, same as plain binary search. Space: <strong>O(1)</strong> — three integer pointers.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [4,5,6,7,0,1,2], target = 0</div>
+        <div id="p1-sr-array" class="p0-arr-row" style="align-items:flex-end"></div>
+        <div class="p0-sim-log" id="p1-sr-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-sr-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Not rotated at all:</strong> the whole array is one sorted run — this still works, since one "half" check just always passes.<br>
+        <strong>Single element:</strong> l === r === mid immediately — one comparison decides it.<br>
+        <strong>Target not present:</strong> l eventually crosses r and the loop ends — return -1.<br>
+        <strong>Target at the rotation point itself:</strong> no special case needed — it's just whichever half nums[mid] happens to land in.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (linear scan)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+          <tr><td>Modified binary search</td><td class="num">O(log n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1SearchRotatedStepper() {
+    const btn = document.getElementById('p1-sr-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-sr-array');
+    const logEl = document.getElementById('p1-sr-log');
+    const ARR = [4, 5, 6, 7, 0, 1, 2];
+    const TARGET = 0;
+
+    const steps = [];
+    {
+      let l = 0, r = ARR.length - 1;
+      while (l <= r) {
+        const mid = Math.floor((l + r) / 2);
+        if (ARR[mid] === TARGET) {
+          steps.push({ l, mid, r, found: mid });
+          break;
+        }
+        const leftSorted = ARR[l] <= ARR[mid];
+        let goLeft;
+        if (leftSorted) {
+          goLeft = !(TARGET > ARR[mid] || TARGET < ARR[l]);
+        } else {
+          goLeft = !(TARGET < ARR[mid] || TARGET > ARR[r]);
+        }
+        steps.push({ l, mid, r, leftSorted, goLeft, found: null });
+        if (leftSorted) {
+          if (goLeft) r = mid - 1; else l = mid + 1;
+        } else {
+          if (goLeft) r = mid - 1; else l = mid + 1;
+        }
+      }
+    }
+
+    let idx;
+
+    function render(l, mid, r, found) {
+      arrHost.innerHTML = renderP1BinarySearchPointers(ARR, l, mid, r, found);
+    }
+
+    function reset() {
+      idx = 0;
+      render(0, null, ARR.length - 1, null);
+      logEl.textContent = `l = 0, r = ${ARR.length - 1}. Looking for target ${TARGET}.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.found !== null) {
+        render(s.l, s.mid, s.r, s.found);
+        logEl.textContent = `mid = ${s.mid}. nums[mid] = ${ARR[s.mid]} — that's the target! Found at index ${s.found}.`;
+      } else {
+        render(s.l, s.mid, s.r, null);
+        const sortedHalf = s.leftSorted ? 'left' : 'right';
+        const decision = s.goLeft
+          ? `target could be in the sorted ${sortedHalf} half — search there`
+          : `target can't be in the sorted ${sortedHalf} half — search the other side`;
+        logEl.textContent = `mid = ${s.mid} (value ${ARR[s.mid]}). The ${sortedHalf} half is sorted. ${decision}.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Search done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1FindMinRotated() {
+    return `
+    <div class="p0-section-title">Find Minimum in Rotated Sorted Array<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Binary Search — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Same rotated-array setup as before, but now you just need the smallest value in the array — no target to search for. Must still run in <strong>O(log n)</strong>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Where the minimum sits</h4>
+      <p>nums = [3, 4, 5, 1, 2] — two sorted runs glued together, and the minimum is always the very first element of the second run:</p>
+      ${renderP1RotatedRuns([3, 4, 5, 1, 2])}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">The minimum sits right where the array "drops" from the end of the blue run to the start of the orange run.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. A linear scan for the smallest value works fine — what's its time complexity, and why isn't it enough here?<br>
+      2. Compare <code>nums[mid]</code> to <code>nums[r]</code> (the current rightmost value). If <code>nums[mid] &lt; nums[r]</code>, what does that tell you about whether the minimum is to the left of mid, or to the right?<br>
+      3. In that same case, could <code>nums[mid]</code> itself be the minimum — should it stay in the search space or get dropped?<br>
+      4. If instead <code>nums[mid] &gt;= nums[r]</code>, can <code>nums[mid]</code> possibly be the answer? What does that tell you about where to search next?</p>
+    </div>
+
+    ${renderP1Workflow('binarySearch-findMinimumInRotatedSortedArray.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — linear scan</h4>
+        <p>Walk the whole array, tracking the smallest value seen.</p>
+        <pre class="p0-code">function findMin(nums) {
+  let min = nums[0];
+  for (let i = 1; i &lt; nums.length; i++) {
+    min = Math.min(min, nums[i]);
+  }
+  return min;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — checks every element. Space: <strong>O(1)</strong>.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — binary search against the right endpoint</h4>
+        <p>Compare <code>nums[mid]</code> to <code>nums[r]</code>. If <code>nums[mid] &lt; nums[r]</code>, the right half is sorted and mid could still be the minimum, so keep it in the search space and move r down to mid. Otherwise, the minimum must be strictly to the right of mid, so move l to mid + 1. Stop when l === r — that index holds the minimum.</p>
+        <pre class="p0-code">function findMin(nums) {
+  let l = 0, r = nums.length - 1;
+  while (l &lt; r) {
+    const m = l + Math.floor((r - l) / 2);
+    if (nums[m] &lt; nums[r]) {
+      r = m;
+    } else {
+      l = m + 1;
+    }
+  }
+  return nums[l];
+}</pre>
+        <p>Time: <strong>O(log n)</strong> — the search space halves every step. Space: <strong>O(1)</strong> — two integer pointers.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [3, 4, 5, 1, 2]</div>
+        <div id="p1-fm-array" class="p0-arr-row" style="align-items:flex-end"></div>
+        <div class="p0-sim-log" id="p1-fm-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-fm-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Not rotated at all:</strong> nums[mid] is always less than nums[r], so r keeps shrinking down to index 0 — the correct answer.<br>
+        <strong>Single element:</strong> l === r immediately, loop never runs — return nums[0].<br>
+        <strong>Two elements:</strong> one comparison decides which of the two is smaller.<br>
+        <strong>Minimum at index 0 (rotation point is the last index):</strong> still falls out correctly — no special case needed.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (linear scan)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+          <tr><td>Binary search vs. right endpoint</td><td class="num">O(log n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1FindMinRotatedStepper() {
+    const btn = document.getElementById('p1-fm-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-fm-array');
+    const logEl = document.getElementById('p1-fm-log');
+    const ARR = [3, 4, 5, 1, 2];
+
+    const steps = [];
+    {
+      let l = 0, r = ARR.length - 1;
+      while (l < r) {
+        const m = l + Math.floor((r - l) / 2);
+        const goRight = ARR[m] < ARR[r];
+        steps.push({ l, m, r, goRight });
+        if (goRight) r = m; else l = m + 1;
+      }
+      steps.push({ l, r, done: true });
+    }
+
+    let idx;
+
+    function render(l, mid, r, found) {
+      arrHost.innerHTML = renderP1BinarySearchPointers(ARR, l, mid, r, found);
+    }
+
+    function reset() {
+      idx = 0;
+      render(0, null, ARR.length - 1, null);
+      logEl.textContent = `l = 0, r = ${ARR.length - 1}. Narrowing down to the minimum.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.done) {
+        render(s.l, null, s.l, s.l);
+        logEl.textContent = `l === r === ${s.l}. That's the minimum: nums[${s.l}] = ${ARR[s.l]}.`;
+      } else {
+        render(s.l, s.m, s.r, null);
+        logEl.textContent = s.goRight
+          ? `mid = ${s.m} (value ${ARR[s.m]}) < nums[r] = ${ARR[s.r]} — right half is sorted, mid could still be the min. r = mid.`
+          : `mid = ${s.m} (value ${ARR[s.m]}) >= nums[r] = ${ARR[s.r]} — minimum must be to the right. l = mid + 1.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Search done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Plain chain of boxes with right-pointing arrows — no pointer state, just shows a list's shape.
+  function renderP1LLChainSimple(values) {
+    return `<div class="p0-arr-row" style="gap:4px;align-items:center">${values.map((v, i) =>
+      `<div style="display:flex;align-items:center;gap:4px">
+        <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.25);border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+        <div style="font-size:14px;color:var(--sublabel)">${i < values.length - 1 ? '→' : '→ null'}</div>
+      </div>`
+    ).join('')}</div>`;
+  }
+
+  // Each box shows its current next-pointer target underneath — accurately reflects mid-reversal state.
+  function renderP1LLPointers(values, nextOf, prevIdx, currIdx) {
+    return `<div class="p0-arr-row" style="gap:14px;align-items:flex-start">${values.map((v, i) => {
+      let border = 'rgba(255,255,255,0.25)';
+      let roleLabel = '';
+      if (i === prevIdx) { border = '#a855f7'; roleLabel = 'prev'; }
+      if (i === currIdx) { border = '#3b82f6'; roleLabel = 'curr'; }
+      const target = nextOf[i];
+      const targetLabel = target === null ? '∅' : String(values[target]);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="font-size:9px;color:var(--sublabel);height:11px">${roleLabel}</div>
+        <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid ${border};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">next→${targetLabel}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1ReverseLinkedList() {
+    return `
+    <div class="p0-section-title">Reverse Linked List<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Linked List — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You're given the head of a singly linked list. Reverse the direction of every link and return the new head — the old tail becomes the new head, and every node's <code>next</code> pointer now points to what used to be before it.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "reversed" means here</h4>
+      <p>head = [1, 2, 3, 4, 5] becomes [5, 4, 3, 2, 1] — same nodes, every arrow flipped:</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+        <div><div class="p0-diagram-label">Original</div>${renderP1LLChainSimple([1, 2, 3, 4, 5])}</div>
+        <div><div class="p0-diagram-label">Reversed</div>${renderP1LLChainSimple([5, 4, 3, 2, 1])}</div>
+      </div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. You could walk the list and build a brand new one by prepending each value as you go — what's the time and space complexity of that approach?<br>
+      2. If instead you want to reuse the existing nodes and just flip their <code>next</code> pointers in place, what do you need to save <strong>before</strong> you overwrite a node's <code>next</code>, so you don't lose the rest of the list?<br>
+      3. What three pointers do you need to track as you walk forward, and what should each one point to right before you take a step?<br>
+      4. What should the original head's <code>next</code> pointer become once it's reversed — and what does that tell you about your starting value for "the node before the first one"?</p>
+    </div>
+
+    ${renderP1Workflow('linkedList-reverseLinkedList.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — collect values, build a new reversed list</h4>
+        <p>Walk the original list, collect every value into an array, reverse the array, then build a brand new linked list from it.</p>
+        <pre class="p0-code">function reverseList(head) {
+  const vals = [];
+  let node = head;
+  while (node) { vals.push(node.val); node = node.next; }
+  vals.reverse();
+  const dummy = new ListNode();
+  let tail = dummy;
+  for (const v of vals) {
+    tail.next = new ListNode(v);
+    tail = tail.next;
+  }
+  return dummy.next;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — two passes over the list. Space: <strong>O(n)</strong> — the array plus a whole new set of nodes.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — reverse pointers in place</h4>
+        <p>Walk the original nodes once. At each node, save its <code>next</code> before overwriting it, point it back at <code>prev</code>, then slide both <code>prev</code> and <code>curr</code> forward one step. <code>prev</code> starts at <code>null</code>, since the new tail (old head) must end up pointing at nothing.</p>
+        <pre class="p0-code">function reverseList(head) {
+  let prev = null;
+  let curr = head;
+  while (curr !== null) {
+    const temp = curr.next;
+    curr.next = prev;
+    prev = curr;
+    curr = temp;
+  }
+  return prev;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass. Space: <strong>O(1)</strong> — just three pointers, no new nodes.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — head = [1, 2, 3, 4, 5]</div>
+        <div id="p1-rl-array" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-rl-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-rl-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty list:</strong> head is null — return null immediately, the loop never runs.<br>
+        <strong>Single node:</strong> its next was already null, becomes prev = that node, curr = null — loop ends after one step, correct.<br>
+        <strong>Two nodes:</strong> confirms the pointer juggling order matters — save next before overwriting, or you lose the rest of the list.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (collect + rebuild)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>In-place pointer reversal</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ReverseLinkedListStepper() {
+    const btn = document.getElementById('p1-rl-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-rl-array');
+    const logEl = document.getElementById('p1-rl-log');
+    const VALUES = [1, 2, 3, 4, 5];
+    const n = VALUES.length;
+
+    const initialNextOf = VALUES.map((_, i) => (i < n - 1 ? i + 1 : null));
+    const steps = [];
+    {
+      const nextOf = [...initialNextOf];
+      let prevIdx = null;
+      for (let c = 0; c < n; c++) {
+        const prevBefore = prevIdx;
+        const tempNext = nextOf[c];
+        nextOf[c] = prevBefore;
+        prevIdx = c;
+        steps.push({ processedIdx: c, prevBefore, newCurr: tempNext, nextOfSnapshot: [...nextOf] });
+      }
+    }
+
+    let idx;
+
+    function render(nextOf, prevIdx, currIdx) {
+      arrHost.innerHTML = renderP1LLPointers(VALUES, nextOf, prevIdx, currIdx);
+    }
+
+    function reset() {
+      idx = 0;
+      render(initialNextOf, null, 0);
+      logEl.textContent = 'prev = null, curr = head (node 1). Nothing reversed yet.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.nextOfSnapshot, s.processedIdx, s.newCurr);
+      const prevLabel = s.prevBefore === null ? 'null' : VALUES[s.prevBefore];
+      const currLabel = s.newCurr === null ? 'null' : VALUES[s.newCurr];
+      logEl.textContent = `Node ${VALUES[s.processedIdx]}: point its next pointer back to ${prevLabel}. prev now = ${VALUES[s.processedIdx]}, curr moves to ${currLabel}.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` curr is null — reversal complete. New head is node ${VALUES[n - 1]}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // slow/fast pointer visual — a box can carry both labels at once (that's the "they met" moment).
+  function renderP1CyclePointers(values, nextOf, slowIdx, fastIdx) {
+    return `<div class="p0-arr-row" style="gap:14px;align-items:flex-start">${values.map((v, i) => {
+      let border = 'rgba(255,255,255,0.25)';
+      let roleLabel = '';
+      const isSlow = i === slowIdx, isFast = i === fastIdx;
+      if (isSlow && isFast) { border = '#22c55e'; roleLabel = 'slow, fast'; }
+      else if (isSlow) { border = '#a855f7'; roleLabel = 'slow'; }
+      else if (isFast) { border = '#3b82f6'; roleLabel = 'fast'; }
+      const target = nextOf[i];
+      const targetLabel = target === null ? '∅' : String(values[target]);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="font-size:9px;color:var(--sublabel);height:11px">${roleLabel}</div>
+        <div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid ${border};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">next→${targetLabel}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1LinkedListCycle() {
+    return `
+    <div class="p0-section-title">Linked List Cycle<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Linked List — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the head of a linked list. Somewhere in it, the last node's <code>next</code> pointer might loop back to an earlier node instead of ending at <code>null</code>. Return <code>true</code> if there's a loop like that anywhere, <code>false</code> if the list just ends normally.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a cycle looks like</h4>
+      <p>head = [3, 2, 0, -4], and the tail (-4) loops back to index 1 (value 2) instead of pointing to null:</p>
+      ${renderP1CyclePointers([3, 2, 0, -4], [1, 2, 3, 1], null, null)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Notice the last node's "next→" doesn't say ∅ — it points back into the list. Walking forward from here, you'd never reach the end; you'd just keep looping 2 → 0 → -4 → 2 → 0 → -4 forever.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you kept a Set of every node you've already visited and checked each new node against it, what's the time and space complexity? Does it correctly catch a cycle?<br>
+      2. Can you detect a cycle using just two pointers and no extra data structure — one moving one step at a time, the other moving two steps at a time? What happens to the gap between them, loop after loop, if there <strong>is</strong> a cycle?<br>
+      3. If there's <strong>no</strong> cycle, what should stop your loop before you run off the end of the list?<br>
+      4. Could the faster pointer ever "jump over" the slower one and skip past it, missing the meeting point entirely?</p>
+    </div>
+
+    ${renderP1Workflow('linkedList-linkedListCycle.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — track visited nodes in a Set</h4>
+        <p>Walk the list one node at a time. Before moving on, check if you've already seen this exact node. If you have, there's a cycle. If you reach null first, there isn't.</p>
+        <pre class="p0-code">function hasCycle(head) {
+  const seen = new Set();
+  let node = head;
+  while (node) {
+    if (seen.has(node)) return true;
+    seen.add(node);
+    node = node.next;
+  }
+  return false;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — each node visited once. Space: <strong>O(n)</strong> — the Set can hold every node.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — Floyd's slow &amp; fast pointers</h4>
+        <p>Move <code>slow</code> one step and <code>fast</code> two steps, every iteration. If there's no cycle, <code>fast</code> reaches the end first and the loop stops. If there is a cycle, <code>fast</code> is gaining on <code>slow</code> by one extra step every loop — it's guaranteed to eventually land on the exact same node as <code>slow</code>.</p>
+        <pre class="p0-code">function hasCycle(head) {
+  let slow = head;
+  let fast = head;
+  while (fast !== null && fast.next !== null) {
+    fast = fast.next.next;
+    slow = slow.next;
+    if (fast === slow) return true;
+  }
+  return false;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — fast catches up within one full loop of the cycle. Space: <strong>O(1)</strong> — just two pointers.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — [3, 2, 0, -4], tail loops back to value 2</div>
+        <div id="p1-lc-array" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-lc-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-lc-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty list:</strong> head is null — the while condition fails immediately, return false.<br>
+        <strong>Single node, no self-loop:</strong> fast.next is null right away — no cycle.<br>
+        <strong>Single node that points to itself:</strong> fast and slow both land back on that same node — cycle detected.<br>
+        <strong>Cycle at the very end vs. cycle including the head:</strong> doesn't matter where the loop starts — slow and fast still meet inside it either way.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (visited Set)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Floyd's slow &amp; fast pointers</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1LinkedListCycleStepper() {
+    const btn = document.getElementById('p1-lc-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-lc-array');
+    const logEl = document.getElementById('p1-lc-log');
+    const VALUES = [3, 2, 0, -4];
+    const NEXT_OF = [1, 2, 3, 1]; // tail (index 3) loops back to index 1
+
+    const steps = [];
+    {
+      let slow = 0, fast = 0;
+      while (fast !== null && NEXT_OF[fast] !== null) {
+        fast = NEXT_OF[NEXT_OF[fast]];
+        slow = NEXT_OF[slow];
+        steps.push({ slow, fast, met: fast === slow });
+        if (fast === slow) break;
+      }
+    }
+
+    let idx;
+
+    function render(slowIdx, fastIdx) {
+      arrHost.innerHTML = renderP1CyclePointers(VALUES, NEXT_OF, slowIdx, fastIdx);
+    }
+
+    function reset() {
+      idx = 0;
+      render(0, 0);
+      logEl.textContent = 'slow = fast = head (value 3). Start moving slow ×1, fast ×2.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.slow, s.fast);
+      logEl.textContent = s.met
+        ? `slow lands on value ${VALUES[s.slow]}, fast lands on value ${VALUES[s.fast]} — they match! Cycle confirmed.`
+        : `slow moves to value ${VALUES[s.slow]}, fast moves to value ${VALUES[s.fast]} — not equal yet, keep going.`;
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // A labeled row of boxes with an optional highlighted pointer index.
+  function renderP1MergeRow(label, arr, ptr, resultStyle) {
+    const boxes = arr.length
+      ? arr.map((v, i) => {
+          const isPtr = i === ptr;
+          const bg = resultStyle ? 'rgba(34,197,94,0.2)' : (isPtr ? '#3b82f6' : 'rgba(255,255,255,0.08)');
+          const border = resultStyle ? '#22c55e' : (isPtr ? '#3b82f6' : 'rgba(255,255,255,0.25)');
+          return `<div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${border};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>`;
+        }).join('')
+      : `<div style="font-size:12px;color:var(--muted)">(empty)</div>`;
+    return `<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--sublabel);margin-bottom:4px">${escapeHtml(label)}</div><div class="p0-arr-row" style="gap:6px">${boxes}</div></div>`;
+  }
+
+  function renderP1MergeState(list1, list2, i, j, merged, label1, label2) {
+    return renderP1MergeRow(label1 || 'list1', list1, i, false)
+      + renderP1MergeRow(label2 || 'list2', list2, j, false)
+      + renderP1MergeRow('Merged so far', merged, null, true);
+  }
+
+  function renderP1MergeTwoLists() {
+    return `
+    <div class="p0-section-title">Merge Two Sorted Lists<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Linked List — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get two linked lists, each already sorted in ascending order. Merge them into a single sorted list, reusing the existing nodes (don't build brand new ones), and return the head.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "merge" means here</h4>
+      <p>list1 = [1, 2, 4], list2 = [1, 3, 4] → merged = [1, 1, 2, 3, 4, 4]:</p>
+      ${renderP1LLChainSimple([1, 2, 4])}
+      ${renderP1LLChainSimple([1, 3, 4])}
+      <p style="margin-top:6px;font-size:12.5px;color:var(--sublabel)">Every value from both lists appears in the result, in sorted order — nothing added, nothing dropped, nothing left out.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you dumped every value from both lists into one array and sorted it, what's the time complexity? Does it use the fact that both lists were already sorted?<br>
+      2. Since both lists are already sorted, at any moment, where could the next-smallest overall value possibly be — anywhere in either list, or only at the very front of each?<br>
+      3. What happens once one list runs out before the other? Do you need to keep comparing, or is there a shortcut?<br>
+      4. Would using a "dummy" placeholder head node before you start make it easier to always have something to attach the next node to?</p>
+    </div>
+
+    ${renderP1Workflow('linkedList-mergeTwoSortedLists.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — collect all values, sort, rebuild</h4>
+        <p>Walk both lists, dump every value into one array, sort it, then build a new list from the sorted array.</p>
+        <pre class="p0-code">function mergeTwoLists(list1, list2) {
+  const vals = [];
+  for (let n = list1; n; n = n.next) vals.push(n.val);
+  for (let n = list2; n; n = n.next) vals.push(n.val);
+  vals.sort((a, b) => a - b);
+  const dummy = new ListNode();
+  let tail = dummy;
+  for (const v of vals) {
+    tail.next = new ListNode(v);
+    tail = tail.next;
+  }
+  return dummy.next;
+}</pre>
+        <p>Time: <strong>O((n+m) log(n+m))</strong> — the sort dominates, and it ignores that both lists were already sorted. Space: <strong>O(n+m)</strong> — the array plus a whole new set of nodes.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — splice nodes with two pointers</h4>
+        <p>Use a dummy head so there's always something to attach to. Compare the front of each list, splice the smaller node onto the result, and advance only that list's pointer. Once one list runs out, the other is already sorted — just attach the rest of it directly.</p>
+        <pre class="p0-code">function mergeTwoLists(list1, list2) {
+  const dummy = { val: 0, next: null };
+  let node = dummy;
+  while (list1 && list2) {
+    if (list1.val < list2.val) {
+      node.next = list1;
+      list1 = list1.next;
+    } else {
+      node.next = list2;
+      list2 = list2.next;
+    }
+    node = node.next;
+  }
+  node.next = list1 ? list1 : list2;
+  return dummy.next;
+}</pre>
+        <p>Time: <strong>O(n + m)</strong> — one pass through both lists combined. Space: <strong>O(1)</strong> — reuses existing nodes, only the dummy is extra.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — list1 = [1,2,4], list2 = [1,3,4]</div>
+        <div id="p1-mg-state"></div>
+        <div class="p0-sim-log" id="p1-mg-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mg-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Both lists empty:</strong> the while loop never runs, and both pointers are null — return null.<br>
+        <strong>One list empty:</strong> the while loop never runs — the non-empty list gets attached whole, unchanged.<br>
+        <strong>Equal values at the front of both lists:</strong> the comparison's tie-break (using <code>&lt;</code>, not <code>&lt;=</code>) decides which one goes first — either order is valid since the values are equal.<br>
+        <strong>One list fully drained mid-merge:</strong> no need to keep comparing — attach whatever's left of the other list directly, it's already sorted.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (collect + sort + rebuild)</td><td class="num">O((n+m) log(n+m))</td><td class="num">O(n+m)</td></tr>
+          <tr><td>Two-pointer splice</td><td class="num">O(n+m)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MergeTwoListsStepper() {
+    const btn = document.getElementById('p1-mg-step-btn');
+    if (!btn) return;
+    const stateHost = document.getElementById('p1-mg-state');
+    const logEl = document.getElementById('p1-mg-log');
+    const LIST1 = [1, 2, 4];
+    const LIST2 = [1, 3, 4];
+
+    const steps = [];
+    {
+      let i = 0, j = 0;
+      const merged = [];
+      while (i < LIST1.length && j < LIST2.length) {
+        if (LIST1[i] < LIST2[j]) {
+          merged.push(LIST1[i]);
+          i++;
+        } else {
+          merged.push(LIST2[j]);
+          j++;
+        }
+        steps.push({ i, j, merged: [...merged], done: false });
+      }
+      while (i < LIST1.length) { merged.push(LIST1[i]); i++; steps.push({ i, j, merged: [...merged], done: false }); }
+      while (j < LIST2.length) { merged.push(LIST2[j]); j++; steps.push({ i, j, merged: [...merged], done: false }); }
+      steps.push({ i, j, merged: [...merged], done: true });
+    }
+
+    let idx;
+
+    function render(i, j, merged) {
+      stateHost.innerHTML = renderP1MergeState(LIST1, LIST2, i < LIST1.length ? i : null, j < LIST2.length ? j : null, merged);
+    }
+
+    function reset() {
+      idx = 0;
+      render(0, 0, []);
+      logEl.textContent = 'i = 0, j = 0. Compare the fronts of both lists.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.i, s.j, s.merged);
+      if (s.done) {
+        logEl.textContent = `Merge complete: [${s.merged.join(', ')}].`;
+      } else {
+        const justAdded = s.merged[s.merged.length - 1];
+        logEl.textContent = `Attach ${justAdded} to the merged list. i = ${s.i}, j = ${s.j}.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Non-spoiler concept visual: just highlights which node "n-th from the end" refers to.
+  function renderP1NthFromEndHighlight(values, n) {
+    const targetIdx = values.length - n;
+    const label = n === 1 ? 'last node' : `${n}th from end`;
+    return `<div class="p0-arr-row" style="gap:4px;align-items:flex-start">${values.map((v, i) => {
+      const isTarget = i === targetIdx;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="font-size:9px;color:#ef4444;visibility:${isTarget ? 'visible' : 'hidden'}">${label}</div>
+        <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid ${isTarget ? '#ef4444' : 'rgba(255,255,255,0.25)'};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  // left/right pointer visual with a dummy "D" node at the front, and an optional removed-node highlight.
+  function renderP1RemoveNthPointers(display, leftIdx, rightIdx, removedIdx) {
+    return `<div class="p0-arr-row" style="gap:10px;align-items:flex-start">${display.map((v, i) => {
+      let border = 'rgba(255,255,255,0.25)';
+      let bg = 'rgba(255,255,255,0.08)';
+      let label = '';
+      if (i === removedIdx) { border = '#ef4444'; bg = 'rgba(239,68,68,0.15)'; label = 'remove'; }
+      if (i === leftIdx) { border = '#a855f7'; label = label ? label + ', left' : 'left'; }
+      if (i === rightIdx) { border = '#3b82f6'; label = label ? label + ', right' : 'right'; }
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-size:9px;color:var(--sublabel);height:11px">${label}</div>
+        <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:${bg};border:2px solid ${border};border-radius:6px;font-size:14px;font-family:monospace;font-weight:600">${v}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderP1RemoveNthFromEnd() {
+    return `
+    <div class="p0-section-title">Remove Nth Node From End of List<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Linked List — problem 4</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the head of a linked list and a number <code>n</code>. Remove the node that sits <code>n</code> positions from the <strong>end</strong> of the list (not the front), and return the (possibly new) head. You don't know the list's length ahead of time.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "nth from the end" means here</h4>
+      <p>head = [1, 2, 3, 4, 5], n = 2 — counting from the end, node 4 is the 2nd one, so it gets removed, leaving [1, 2, 3, 5]:</p>
+      ${renderP1NthFromEndHighlight([1, 2, 3, 4, 5], 2)}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Counting from the end is easy once you know the length. The trick is doing it without knowing the length up front, or without walking the list twice.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you first walked the whole list once to count its length, then walked again to the right spot, what's the time complexity? How many total passes is that?<br>
+      2. Could you find "n-th from the end" in a single pass, using two pointers with a fixed gap of <code>n</code> nodes between them?<br>
+      3. If one pointer starts <code>n</code> steps ahead of the other and they move together, what's true about the trailing pointer the moment the leading one falls off the end?<br>
+      4. What could go wrong if you need to remove the <strong>head</strong> itself — why might a dummy node placed before the head make that case simpler?</p>
+    </div>
+
+    ${renderP1Workflow('linkedList-removeNthFromEnd.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — count the length first, two passes</h4>
+        <p>Walk the list once to count its total length. Then walk again to the node right before the target (position <code>length − n − 1</code>), and skip over the target.</p>
+        <pre class="p0-code">function removeNthFromEnd(head, n) {
+  let length = 0;
+  for (let node = head; node; node = node.next) length++;
+  const dummy = new ListNode(0, head);
+  let curr = dummy;
+  for (let i = 0; i < length - n; i++) curr = curr.next;
+  curr.next = curr.next.next;
+  return dummy.next;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — still linear, but it's <em>two full passes</em> over the list instead of one. Space: <strong>O(1)</strong>. Not a worse Big-O than the optimal version — just less elegant, and it needs the length known before the second pass can even start.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — one pass, two pointers with a fixed gap</h4>
+        <p>Use a dummy node before the head so removing the actual head is no different from removing any other node. Move <code>right</code> forward <code>n</code> steps first, opening up a gap of exactly <code>n</code> nodes. Then move <code>left</code> and <code>right</code> forward together. When <code>right</code> falls off the end (becomes null), <code>left</code> is sitting exactly one node before the target — skip it.</p>
+        <pre class="p0-code">function removeNthFromEnd(head, n) {
+  const dummy = new ListNode(0, head);
+  let left = dummy;
+  let right = head;
+  while (n > 0) {
+    right = right.next;
+    n--;
+  }
+  while (right !== null) {
+    left = left.next;
+    right = right.next;
+  }
+  left.next = left.next.next;
+  return dummy.next;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass, right pointer touches each node once. Space: <strong>O(1)</strong> — two pointers plus the dummy.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — head = [1,2,3,4,5], n = 2 (D = dummy node)</div>
+        <div id="p1-rn-array" class="p0-arr-row"></div>
+        <div class="p0-sim-log" id="p1-rn-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-rn-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Removing the head (n === length):</strong> the gap-building phase pushes <code>right</code> all the way past the list, so the together-phase never moves <code>left</code> off the dummy — it stays there and correctly skips the real head.<br>
+        <strong>Single-node list, n = 1:</strong> right becomes null immediately after the gap phase, left stays at dummy, dummy.next.next becomes null — list is empty.<br>
+        <strong>n equals the list length exactly:</strong> covered by the head-removal case above, no special handling needed.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (count length, two passes)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+          <tr><td>Two-pointer gap, one pass</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1RemoveNthFromEndStepper() {
+    const btn = document.getElementById('p1-rn-step-btn');
+    if (!btn) return;
+    const arrHost = document.getElementById('p1-rn-array');
+    const logEl = document.getElementById('p1-rn-log');
+    const VALUES = [1, 2, 3, 4, 5];
+    const N = 2;
+    const DISPLAY = ['D', ...VALUES]; // index 0 = dummy, index i = VALUES[i-1]
+
+    const steps = [];
+    {
+      let leftIdx = 0, rightIdx = 1;
+      for (let k = 0; k < N; k++) {
+        rightIdx++;
+        steps.push({ phase: 'gap', leftIdx, rightIdx });
+      }
+      while (rightIdx <= DISPLAY.length - 1) {
+        leftIdx++;
+        rightIdx++;
+        steps.push({ phase: 'together', leftIdx, rightIdx: rightIdx <= DISPLAY.length - 1 ? rightIdx : null });
+      }
+      const removedIdx = leftIdx + 1;
+      steps.push({ phase: 'remove', leftIdx, rightIdx: null, removedIdx });
+    }
+
+    let idx;
+
+    function render(leftIdx, rightIdx, removedIdx) {
+      arrHost.innerHTML = renderP1RemoveNthPointers(DISPLAY, leftIdx, rightIdx, removedIdx);
+    }
+
+    function reset() {
+      idx = 0;
+      render(0, 1, null);
+      logEl.textContent = `left = D (dummy), right = head (${VALUES[0]}). Build a gap of ${N} nodes first.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.leftIdx, s.rightIdx, s.removedIdx);
+      if (s.phase === 'gap') {
+        logEl.textContent = `Move right forward to build the gap. right now at ${DISPLAY[s.rightIdx]}.`;
+      } else if (s.phase === 'together') {
+        const rightLabel = s.rightIdx === null ? 'null' : DISPLAY[s.rightIdx];
+        logEl.textContent = `Move both pointers one step. left now at ${DISPLAY[s.leftIdx]}, right now at ${rightLabel}.`;
+      } else {
+        logEl.textContent = `right is null — left (${DISPLAY[s.leftIdx]}) is right before the target. Skip node ${DISPLAY[s.removedIdx]}: left.next = left.next.next.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ReorderList() {
+    return `
+    <div class="p0-section-title">Reorder List<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Linked List — problem 5</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the head of a linked list L0 → L1 → … → Ln. Rearrange it in place into L0 → Ln → L1 → Ln-1 → L2 → Ln-2 → … — alternating one node from the front, one from the back, working inward. You can't change the values, only re-link the nodes.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What the reordering looks like</h4>
+      <p>head = [1, 2, 3, 4, 5] → reordered = [1, 5, 2, 4, 3] — front and back, alternating, folding toward the middle:</p>
+      ${renderP1LLChainSimple([1, 2, 3, 4, 5])}
+      ${renderP1LLChainSimple([1, 5, 2, 4, 3])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you collected every node into an array first, then rebuilt the list by alternating from the front and back of that array, what's the time and space complexity?<br>
+      2. The final order keeps grabbing "the next node from the back half." What would make grabbing from the back just as easy as grabbing from the front — instead of having to walk backward each time?<br>
+      3. If you split the list at its middle and reversed only the second half, would both halves then be walkable in the same direction (forward)?<br>
+      4. How do you find the middle of a singly linked list in a single pass, without knowing its length ahead of time?</p>
+    </div>
+
+    ${renderP1Workflow('linkedList-reorderLinkedList.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — collect into an array, relink by index</h4>
+        <p>Walk the list once, storing every node reference in an array. Then walk the array with one pointer from the front and one from the back, relinking <code>next</code> pointers as you alternate between them.</p>
+        <pre class="p0-code">function reorderList(head) {
+  const nodes = [];
+  for (let n = head; n; n = n.next) nodes.push(n);
+  let i = 0, j = nodes.length - 1;
+  while (i < j) {
+    nodes[i].next = nodes[j];
+    i++;
+    if (i === j) break;
+    nodes[j].next = nodes[i];
+    j--;
+  }
+  nodes[i].next = null;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass to collect, one pass to relink. Space: <strong>O(n)</strong> — the array holds a reference to every node.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — find middle, reverse second half, merge alternately</h4>
+        <p>Three in-place steps: (1) use slow/fast pointers to find the middle and split the list into two halves; (2) reverse the second half, so it can now be walked forward from what used to be the tail; (3) merge the two halves by alternately splicing one node from each.</p>
+        <pre class="p0-code">function reorderList(head) {
+  let slow = head, fast = head.next;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  let second = slow.next;
+  slow.next = null;
+  let prev = null;
+  while (second) {
+    const tmp = second.next;
+    second.next = prev;
+    prev = second;
+    second = tmp;
+  }
+  let first = head;
+  second = prev;
+  while (second) {
+    const t1 = first.next, t2 = second.next;
+    first.next = second;
+    second.next = t1;
+    first = t1;
+    second = t2;
+  }
+}</pre>
+        <p>Time: <strong>O(n)</strong> — each of the three steps is a single pass. Space: <strong>O(1)</strong> — everything is re-linked in place, no extra storage.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — head = [1, 2, 3, 4, 5]</div>
+        <div id="p1-ro-state"></div>
+        <div class="p0-sim-log" id="p1-ro-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ro-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Single node:</strong> nothing to reorder — it's already its own answer.<br>
+        <strong>Two nodes:</strong> the middle-finding stops immediately, the "second half" is just the one tail node, reversing a single node does nothing, and merging attaches it right back where it was.<br>
+        <strong>Odd-length list:</strong> the first half ends up one node longer than the (reversed) second half — that extra middle node naturally ends up last, since its own <code>next</code> was already set to null when the list was split.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (collect into array)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Find middle + reverse + merge, in place</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ReorderListStepper() {
+    const btn = document.getElementById('p1-ro-step-btn');
+    if (!btn) return;
+    const stateHost = document.getElementById('p1-ro-state');
+    const logEl = document.getElementById('p1-ro-log');
+    const VALUES = [1, 2, 3, 4, 5];
+    const n = VALUES.length;
+
+    // Phase 1: find the middle (same slow/fast shape as Linked List Cycle, non-cyclic here)
+    const forwardNextOf = VALUES.map((_, i) => (i < n - 1 ? i + 1 : null));
+    const phase1Steps = [];
+    {
+      let slow = 0, fast = 1;
+      while (fast !== null && forwardNextOf[fast] !== null) {
+        slow = forwardNextOf[slow];
+        fast = forwardNextOf[forwardNextOf[fast]];
+        phase1Steps.push({ phase: 'findMiddle', slow, fast });
+      }
+    }
+    const middleIdx = phase1Steps.length ? phase1Steps[phase1Steps.length - 1].slow : 0;
+    const firstHalf = VALUES.slice(0, middleIdx + 1);
+    const secondHalf = VALUES.slice(middleIdx + 1);
+
+    // Phase 2: reverse the second half (same shape as Reverse Linked List)
+    const m = secondHalf.length;
+    const phase2Steps = [];
+    let reversedSecondHalf = [];
+    {
+      const initialNextOf = secondHalf.map((_, i) => (i < m - 1 ? i + 1 : null));
+      const nextOf = [...initialNextOf];
+      let prevIdx = null;
+      for (let c = 0; c < m; c++) {
+        const tempNext = nextOf[c];
+        nextOf[c] = prevIdx;
+        prevIdx = c;
+        phase2Steps.push({ phase: 'reverseSecond', processedIdx: c, newCurr: tempNext, nextOfSnapshot: [...nextOf] });
+      }
+      let cur = m > 0 ? prevIdx : null;
+      const finalNextOf = phase2Steps.length ? phase2Steps[phase2Steps.length - 1].nextOfSnapshot : [];
+      while (cur !== null) { reversedSecondHalf.push(secondHalf[cur]); cur = finalNextOf[cur]; }
+    }
+
+    // Phase 3: merge the two halves alternately (same shape as Merge Two Sorted Lists)
+    const phase3Steps = [];
+    {
+      const merged = [];
+      const lim = Math.min(firstHalf.length, reversedSecondHalf.length);
+      for (let k = 0; k < lim; k++) {
+        merged.push(firstHalf[k]);
+        merged.push(reversedSecondHalf[k]);
+        phase3Steps.push({ phase: 'merge', type: 'pair', i: k + 1, j: k + 1, merged: [...merged] });
+      }
+      if (firstHalf.length > reversedSecondHalf.length) {
+        merged.push(...firstHalf.slice(reversedSecondHalf.length));
+        phase3Steps.push({ phase: 'merge', type: 'leftover', i: firstHalf.length, j: reversedSecondHalf.length, merged: [...merged] });
+      }
+    }
+
+    const steps = [...phase1Steps, ...phase2Steps, ...phase3Steps];
+    let idx;
+
+    function render() {
+      if (idx === 0) {
+        stateHost.innerHTML = renderP1CyclePointers(VALUES, forwardNextOf, 0, 1);
+        return;
+      }
+      const s = steps[idx - 1];
+      if (s.phase === 'findMiddle') {
+        stateHost.innerHTML = renderP1CyclePointers(VALUES, forwardNextOf, s.slow, s.fast);
+      } else if (s.phase === 'reverseSecond') {
+        stateHost.innerHTML = renderP1LLPointers(secondHalf, s.nextOfSnapshot, s.processedIdx, s.newCurr);
+      } else {
+        stateHost.innerHTML = renderP1MergeState(
+          firstHalf, reversedSecondHalf,
+          s.i < firstHalf.length ? s.i : null,
+          s.j < reversedSecondHalf.length ? s.j : null,
+          s.merged, 'First half', 'Second half (reversed)'
+        );
+      }
+    }
+
+    function reset() {
+      idx = 0;
+      render();
+      logEl.textContent = 'Phase 1 — find the middle: slow = head, fast = head.next.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      idx++;
+      render();
+      if (s.phase === 'findMiddle') {
+        const fastLabel = s.fast === null ? 'null' : VALUES[s.fast];
+        logEl.textContent = `slow moves to ${VALUES[s.slow]}, fast moves to ${fastLabel}.`
+          + (idx === phase1Steps.length ? ` Middle found: ${VALUES[middleIdx]}. Split into [${firstHalf.join(', ')}] and [${secondHalf.join(', ')}].` : '');
+      } else if (s.phase === 'reverseSecond') {
+        const label = secondHalf[s.processedIdx];
+        logEl.textContent = `Phase 2 — reversing second half: node ${label} now points backward.`
+          + (s.newCurr === null ? ` Second half fully reversed: [${reversedSecondHalf.join(', ')}].` : '');
+      } else if (s.type === 'pair') {
+        const addedPair = s.merged.slice(-2);
+        logEl.textContent = `Phase 3 — splice in ${addedPair[0]} then ${addedPair[1]}, one from each half.`;
+      } else {
+        logEl.textContent = `The first half has one extra node — it attaches automatically. Final: [${s.merged.join(', ')}].`;
+      }
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // A round's worth of lists, each rendered as its own labeled chain.
+  function renderP1MergeKRound(listsArr) {
+    return listsArr.map((l, i) =>
+      `<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--sublabel);margin-bottom:3px">List ${i}</div>${renderP1LLChainSimple(l)}</div>`
+    ).join('');
+  }
+
+  function renderP1MergeKLists() {
+    return `
+    <div class="p0-section-title">Merge K Sorted Lists<span class="p1-badge hard">Hard</span></div>
+    <div class="p0-section-sub">Linked List — problem 6</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get an array of <code>k</code> linked lists, each already sorted in ascending order. Merge all of them into one single sorted linked list.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "merge k lists" looks like</h4>
+      <p>lists = [1→4→5, 1→3→4, 2→6] → one sorted list: [1,1,2,3,4,4,5,6]:</p>
+      ${renderP1MergeKRound([[1, 4, 5], [1, 3, 4], [2, 6]])}
+      <p style="margin-top:6px;font-size:12.5px;color:var(--sublabel)">You already solved "Merge Two Sorted Lists" — the question here is how to scale that up to <code>k</code> lists without doing far more work than necessary.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you merged the lists <strong>sequentially</strong> — merge list0 into a running result, then merge list1 into that result, then list2, and so on — how many total merges is that, and what does the running result's size grow to? What's the total time complexity in terms of total nodes N and list count K?<br>
+      2. Instead, what if you paired up the lists — merge list0 with list1, list2 with list3, and so on, all in one "round" — and then repeated that on the results? How many lists are you left with after one round? After two?<br>
+      3. How many rounds of halving does it take to go from K lists down to a single list?<br>
+      4. Does pairing-and-halving ever do more total work than merging one at a time, or strictly less? What's actually different between the two approaches?</p>
+    </div>
+
+    ${renderP1Workflow('mergeKSortedLinkedLists.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — merge one list into the result at a time</h4>
+        <p>Start with an empty result. Merge list0 into it, then merge list1 into the (growing) result, then list2, and so on.</p>
+        <pre class="p0-code">function mergeKLists(lists) {
+  let result = null;
+  for (const list of lists) {
+    result = mergeTwoLists(result, list);
+  }
+  return result;
+}</pre>
+        <p>Time: <strong>O(N·K)</strong> — the result list grows toward N nodes, and you do K merges, each potentially touching most of the growing result. Space: <strong>O(1)</strong> extra (nodes are reused).</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — divide and conquer, merge pairs in rounds</h4>
+        <p>Instead of folding lists in one at a time, pair them up and merge each pair — list0+list1, list2+list3, etc. That's one round, and it roughly halves the number of lists. Repeat on the results until only one list remains.</p>
+        <pre class="p0-code">function mergeKLists(lists) {
+  if (!lists || lists.length === 0) return null;
+  while (lists.length > 1) {
+    const merged = [];
+    for (let i = 0; i < lists.length; i += 2) {
+      const l1 = lists[i];
+      const l2 = i + 1 < lists.length ? lists[i + 1] : null;
+      merged.push(mergeTwoLists(l1, l2));
+    }
+    lists = merged;
+  }
+  return lists[0];
+}</pre>
+        <p>Time: <strong>O(N log K)</strong> — each of the log K rounds does O(N) total work across all its merges, since every node is touched exactly once per round. Space: <strong>O(K)</strong> — the temporary array of merged lists each round.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — lists = [1→4→5, 1→3→4, 2→6]</div>
+        <div id="p1-mk-round"></div>
+        <div class="p0-sim-log" id="p1-mk-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mk-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty array of lists:</strong> nothing to merge — return null immediately.<br>
+        <strong>All lists empty:</strong> merging empties together just produces another empty list — final result is null.<br>
+        <strong>Single list:</strong> the while loop never runs (length is already 1) — return it as-is.<br>
+        <strong>Odd number of lists in a round:</strong> the last unpaired list merges with <code>null</code>, which just passes it through unchanged to the next round.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (sequential merge)</td><td class="num">O(N·K)</td><td class="num">O(1)</td></tr>
+          <tr><td>Divide &amp; conquer (pairwise rounds)</td><td class="num">O(N log K)</td><td class="num">O(K)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MergeKListsStepper() {
+    const btn = document.getElementById('p1-mk-step-btn');
+    if (!btn) return;
+    const roundHost = document.getElementById('p1-mk-round');
+    const logEl = document.getElementById('p1-mk-log');
+
+    function mergeTwoSortedArrays(a, b) {
+      const result = [];
+      let i = 0, j = 0;
+      while (i < a.length && j < b.length) {
+        if (a[i] <= b[j]) result.push(a[i++]); else result.push(b[j++]);
+      }
+      while (i < a.length) result.push(a[i++]);
+      while (j < b.length) result.push(b[j++]);
+      return result;
+    }
+
+    const INITIAL_LISTS = [[1, 4, 5], [1, 3, 4], [2, 6]];
+    const rounds = [INITIAL_LISTS];
+    {
+      let current = INITIAL_LISTS;
+      while (current.length > 1) {
+        const merged = [];
+        const pairLogs = [];
+        for (let i = 0; i < current.length; i += 2) {
+          const l1 = current[i];
+          const l2 = i + 1 < current.length ? current[i + 1] : [];
+          const m = mergeTwoSortedArrays(l1, l2);
+          merged.push(m);
+          pairLogs.push(i + 1 < current.length
+            ? `merge List ${i} + List ${i + 1} → [${m.join(', ')}]`
+            : `List ${i} has no partner this round, carries over unchanged: [${m.join(', ')}]`);
+        }
+        rounds.push(merged);
+        current = merged;
+        rounds[rounds.length - 1].__log = pairLogs;
+      }
+    }
+
+    let idx;
+
+    function render(lists) {
+      roundHost.innerHTML = renderP1MergeKRound(lists);
+    }
+
+    function reset() {
+      idx = 0;
+      render(rounds[0]);
+      logEl.textContent = `Start: ${rounds[0].length} lists. Pair them up and merge each pair.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= rounds.length - 1) return;
+      idx++;
+      const roundResult = rounds[idx];
+      render(roundResult);
+      const roundNum = idx;
+      const logLines = roundResult.__log.join(' · ');
+      const doneNote = roundResult.length === 1 ? ' Only one list left — done.' : ` ${roundResult.length} lists remain — repeat.`;
+      logEl.textContent = `Round ${roundNum}: ${logLines}.${doneNote}`;
+      if (idx >= rounds.length - 1) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // ── Shared binary-tree visual helpers, reused across every Trees problem in Phase 1. ──
+
+  // Builds a node-object tree ({val,left,right}) from a level-order array with null gaps —
+  // same BFS-with-queue shape every tree solution file's own buildTree() test helper uses.
+  function buildP1TreeFromArray(levelArr) {
+    if (!levelArr || !levelArr.length) return null;
+    const makeNode = v => ({ val: v, left: null, right: null });
+    const root = makeNode(levelArr[0]);
+    const queue = [root];
+    let i = 1;
+    while (i < levelArr.length && queue.length) {
+      const current = queue.shift();
+      if (i < levelArr.length && levelArr[i] !== null) { current.left = makeNode(levelArr[i]); queue.push(current.left); }
+      i++;
+      if (i < levelArr.length && levelArr[i] !== null) { current.right = makeNode(levelArr[i]); queue.push(current.right); }
+      i++;
+    }
+    return root;
+  }
+
+  function cloneP1TreeNode(node) {
+    if (!node) return null;
+    return { val: node.val, left: cloneP1TreeNode(node.left), right: cloneP1TreeNode(node.right) };
+  }
+
+  // Recursive x-splitting layout (same technique as Phase 0's recursion-tree diagrams):
+  // each node's x is the midpoint of the horizontal range handed to it; children split that range.
+  function layoutP1TreeNodes(root) {
+    const nodes = [], edges = [];
+    let maxDepth = 0;
+    (function gen(node, level, xMin, xMax, parentIdx) {
+      if (!node) return;
+      maxDepth = Math.max(maxDepth, level);
+      const x = (xMin + xMax) / 2;
+      const idx = nodes.length;
+      nodes.push({ x, y: level, val: node.val });
+      if (parentIdx !== null) edges.push([parentIdx, idx]);
+      const mid = (xMin + xMax) / 2;
+      gen(node.left, level + 1, xMin, mid, idx);
+      gen(node.right, level + 1, mid, xMax, idx);
+    })(root, 0, 0, 1, null);
+    return { nodes, edges, maxDepth };
+  }
+
+  // Renders a node-object tree as an SVG diagram. opts.highlightVals: Set of values to highlight.
+  function renderP1TreeFromRoot(root, opts) {
+    opts = opts || {};
+    if (!root) return `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty tree)</div>`;
+    const { nodes, edges, maxDepth } = layoutP1TreeNodes(root);
+    const W = Math.max(220, nodes.length * 48), H = 56 + maxDepth * 58, PAD = 30;
+    const xFor = x => PAD + x * (W - PAD * 2);
+    const yFor = y => 28 + y * ((H - 56) / Math.max(1, maxDepth));
+    const edgeLines = edges.map(([a, c]) =>
+      `<line x1="${xFor(nodes[a].x).toFixed(1)}" y1="${yFor(nodes[a].y).toFixed(1)}" x2="${xFor(nodes[c].x).toFixed(1)}" y2="${yFor(nodes[c].y).toFixed(1)}" stroke="rgba(255,255,255,0.2)" stroke-width="1.4"/>`
+    ).join('');
+    const circles = nodes.map(nd => {
+      const isHighlight = opts.highlightVals && opts.highlightVals.has(nd.val);
+      const fill = isHighlight ? '#3b82f6' : 'rgba(255,255,255,0.08)';
+      const stroke = isHighlight ? '#3b82f6' : 'rgba(255,255,255,0.35)';
+      const textFill = isHighlight ? '#fff' : 'var(--body-text)';
+      const label = opts.nodeLabels && opts.nodeLabels.has(nd.val) ? opts.nodeLabels.get(nd.val) : null;
+      const labelSvg = label !== null
+        ? `<text x="${xFor(nd.x).toFixed(1)}" y="${(yFor(nd.y) - 22).toFixed(1)}" text-anchor="middle" font-size="11" font-family="monospace" font-weight="700" fill="#22c55e">${label}</text>`
+        : '';
+      return `<circle cx="${xFor(nd.x).toFixed(1)}" cy="${yFor(nd.y).toFixed(1)}" r="16" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`
+        + `<text x="${xFor(nd.x).toFixed(1)}" y="${(yFor(nd.y) + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-family="monospace" font-weight="600" fill="${textFill}">${nd.val}</text>`
+        + labelSvg;
+    }).join('');
+    return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg></div>`;
+  }
+
+  // Convenience wrapper for static (non-spoiler) concept visuals built directly from a level-order array.
+  function renderP1TreeSVG(levelArr, highlightVals) {
+    return renderP1TreeFromRoot(buildP1TreeFromArray(levelArr), { highlightVals });
+  }
+
+  function renderP1InvertBinaryTree() {
+    return `
+    <div class="p0-section-title">Invert Binary Tree<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Trees — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the root of a binary tree. Invert it — mirror it left-to-right — so every node's left and right children are swapped, all the way down. Return the (same) root.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "inverted" means here</h4>
+      <p>root = [4,2,7,1,3,6,9] becomes [4,7,2,9,6,3,1] — a left-right mirror image:</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div><div class="p0-diagram-label">Original</div>${renderP1TreeSVG([4, 2, 7, 1, 3, 6, 9])}</div>
+        <div><div class="p0-diagram-label">Inverted</div>${renderP1TreeSVG([4, 7, 2, 9, 6, 3, 1])}</div>
+      </div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you visited the tree level by level with a queue (BFS), swapping each node's two children as you dequeue it, would the whole tree end up correctly inverted? What's the time and space complexity?<br>
+      2. Can this be solved with a simple recursive rule: "swap this node's children, then do the same thing to each child"? What's the base case that stops the recursion?<br>
+      3. Does it matter whether you swap a node's children <strong>before</strong> or <strong>after</strong> recursing into them?<br>
+      4. The recursive approach's space cost is usually described in terms of the tree's <strong>height</strong>, not its total node count — why, and when would that differ a lot from the iterative (queue-based) version's space usage?</p>
+    </div>
+
+    ${renderP1Workflow('trees-invertBinaryTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — iterative BFS with a queue</h4>
+        <p>Visit nodes level by level using a queue. For each node you dequeue, swap its left and right children, then enqueue both children so they get the same treatment.</p>
+        <pre class="p0-code">function invertTree(root) {
+  if (!root) return null;
+  const queue = [root];
+  while (queue.length) {
+    const node = queue.shift();
+    [node.left, node.right] = [node.right, node.left];
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return root;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — visits every node once. Space: <strong>O(n)</strong> worst case — a wide, bushy tree can have up to roughly n/2 nodes sitting in the queue at its widest level.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — recursive DFS, swap then recurse</h4>
+        <p>At every node: swap its left and right children immediately, then recursively do the same to the (now-swapped) left and right subtrees. Because the swap happens before the recursive calls, the whole tree ends up mirrored.</p>
+        <pre class="p0-code">function invertTree(root) {
+  if (!root) return null;
+  [root.left, root.right] = [root.right, root.left];
+  invertTree(root.left);
+  invertTree(root.right);
+  return root;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — same as BFS, every node visited once. Space: <strong>O(h)</strong> — the recursion call stack, where h is the tree's height. That's O(log n) for a balanced tree (much better than the queue's worst case), but O(n) for a completely skewed tree — not strictly better in every case, just usually better and more idiomatic.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [4,2,7,1,3,6,9]</div>
+        <div id="p1-iv-tree"></div>
+        <div class="p0-sim-log" id="p1-iv-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-iv-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty tree:</strong> root is null — return null immediately, nothing to do.<br>
+        <strong>Single node:</strong> it has no children to swap — the swap is a no-op, but it's still visited.<br>
+        <strong>Leaf nodes anywhere in the tree:</strong> swapping <code>null</code> and <code>null</code> does nothing — the recursion still visits them, it just has no visible effect.<br>
+        <strong>Skewed (linked-list-like) tree:</strong> every node has only one child — inverting still works, it just flips which side that child sits on at every level.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (iterative BFS)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Optimal (recursive DFS)</td><td class="num">O(n)</td><td class="num">O(h)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1InvertBinaryTreeStepper() {
+    const btn = document.getElementById('p1-iv-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-iv-tree');
+    const logEl = document.getElementById('p1-iv-log');
+
+    const root = buildP1TreeFromArray([4, 2, 7, 1, 3, 6, 9]);
+    const initialSnapshot = cloneP1TreeNode(root);
+
+    const steps = [];
+    (function simulateInvert(node) {
+      if (!node) return;
+      const hadChildren = !!(node.left || node.right);
+      [node.left, node.right] = [node.right, node.left];
+      steps.push({ val: node.val, hadChildren, snapshot: cloneP1TreeNode(root) });
+      simulateInvert(node.left);
+      simulateInvert(node.right);
+    })(root);
+
+    let idx;
+
+    function render(snapshot, highlightVal) {
+      treeHost.innerHTML = renderP1TreeFromRoot(snapshot, { highlightVals: highlightVal === undefined ? null : new Set([highlightVal]) });
+    }
+
+    function reset() {
+      idx = 0;
+      render(initialSnapshot, null);
+      logEl.textContent = 'Visit the root first. Swap its children, then recurse into each side.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.snapshot, s.val);
+      logEl.textContent = s.hadChildren
+        ? `Visit node ${s.val}: swap its left and right children.`
+        : `Visit node ${s.val}: it's a leaf — swapping its (null) children does nothing.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' All nodes visited — the tree is fully inverted.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1MaxDepth() {
+    return `
+    <div class="p0-section-title">Maximum Depth of Binary Tree<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Trees — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the root of a binary tree. Return its maximum depth — the number of nodes along the longest path from the root down to the farthest leaf.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "depth" means here</h4>
+      <p>root = [3, 9, 20, null, null, 15, 7] — the longest path is 3 → 20 → 7 (or 3 → 20 → 15), 3 nodes deep:</p>
+      ${renderP1TreeSVG([3, 9, 20, null, null, 15, 7], new Set([3, 20, 7]))}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Highlighted: one longest root-to-leaf path. The branch through node 9 is only 2 nodes deep, so it doesn't set the maximum.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you did a level-by-level BFS and counted how many levels you passed through before the queue emptied, would that give you the max depth? What's the time and space complexity?<br>
+      2. For any single node, if you already knew the max depth of its left subtree and the max depth of its right subtree, how would you combine those two numbers into this node's own depth?<br>
+      3. What should an empty (null) subtree's depth be, so that "1 + max(left, right)" gives the right answer even at the very bottom of the tree?<br>
+      4. Does it matter which subtree — left or right — you compute first?</p>
+    </div>
+
+    ${renderP1Workflow('trees-maximumDepthOfBinaryTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — iterative BFS, count the levels</h4>
+        <p>Walk the tree level by level with a queue, counting how many full levels you process before the queue runs out.</p>
+        <pre class="p0-code">function maxDepth(root) {
+  if (!root) return 0;
+  let depth = 0;
+  let queue = [root];
+  while (queue.length) {
+    depth++;
+    const next = [];
+    for (const node of queue) {
+      if (node.left) next.push(node.left);
+      if (node.right) next.push(node.right);
+    }
+    queue = next;
+  }
+  return depth;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — every node visited once. Space: <strong>O(n)</strong> worst case — a wide tree's queue can hold up to roughly n/2 nodes at its widest level.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — recursive DFS, bubble depth up from the leaves</h4>
+        <p>An empty subtree has depth 0. Any other node's depth is 1 (for itself) plus whichever of its two subtrees is deeper. The recursion naturally computes leaves first, then combines those results going back up toward the root.</p>
+        <pre class="p0-code">function maxDepth(root) {
+  if (root === null) return 0;
+  return 1 + Math.max(
+    maxDepth(root.left),
+    maxDepth(root.right)
+  );
+}</pre>
+        <p>Time: <strong>O(n)</strong> — every node visited once. Space: <strong>O(h)</strong> — the recursion call stack, where h is the tree's height.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [3,9,20,null,null,15,7]</div>
+        <div id="p1-md-tree"></div>
+        <div class="p0-sim-log" id="p1-md-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-md-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty tree:</strong> root is null — depth is 0.<br>
+        <strong>Single node:</strong> both children are null (depth 0 each), so this node's depth is 1.<br>
+        <strong>Completely skewed tree:</strong> every node has exactly one child — depth equals the total number of nodes.<br>
+        <strong>Unbalanced tree:</strong> the formula naturally ignores the shorter branch — it only cares about the deeper of the two subtrees.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (iterative BFS)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Optimal (recursive DFS)</td><td class="num">O(n)</td><td class="num">O(h)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MaxDepthStepper() {
+    const btn = document.getElementById('p1-md-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-md-tree');
+    const logEl = document.getElementById('p1-md-log');
+
+    const root = buildP1TreeFromArray([3, 9, 20, null, null, 15, 7]);
+
+    const steps = [];
+    (function computeDepth(node) {
+      if (!node) return 0;
+      const leftDepth = computeDepth(node.left);
+      const rightDepth = computeDepth(node.right);
+      const depth = 1 + Math.max(leftDepth, rightDepth);
+      steps.push({ val: node.val, leftDepth, rightDepth, depth });
+      return depth;
+    })(root);
+
+    let idx;
+    const labels = new Map();
+
+    function render(currentVal) {
+      treeHost.innerHTML = renderP1TreeFromRoot(root, {
+        nodeLabels: labels,
+        highlightVals: currentVal === undefined ? null : new Set([currentVal]),
+      });
+    }
+
+    function reset() {
+      idx = 0;
+      labels.clear();
+      render(null);
+      logEl.textContent = 'Recursion dives to the leaves first — depth bubbles back up from there.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      labels.set(s.val, `depth=${s.depth}`);
+      render(s.val);
+      logEl.textContent = `Node ${s.val}: left subtree depth ${s.leftDepth}, right subtree depth ${s.rightDepth} → 1 + max(${s.leftDepth}, ${s.rightDepth}) = ${s.depth}.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Root finished — maximum depth is ${steps[steps.length - 1].depth}.`;
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }

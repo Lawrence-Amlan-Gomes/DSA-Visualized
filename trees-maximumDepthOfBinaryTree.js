@@ -21,11 +21,8 @@ Output: 3
 
 Explanation: The longest path is 3 → 20 → 7 (or 3 → 20 → 15), which has 3 nodes.
 
-Time Complexity : O(N)     [We visit every node exactly once]
-Space Complexity: O(H)     [H = height of the tree due to recursion stack.
-                                Worst case O(N) for skewed tree, O(log N) for balanced tree]
-
-This is the cleanest recursive DFS solution (NeetCode / LeetCode standard).
+Time Complexity :
+Space Complexity:
 
 */
 
@@ -44,14 +41,7 @@ class Solution {
      */
 
     maxDepth(root) {
-        if (root === null) { // Base case: empty tree has depth 0
-            return 0;
-        }
-        // current node's depth = 1 + max depth of left or right subtree
-        return 1 + Math.max(
-            this.maxDepth(root.left),
-            this.maxDepth(root.right)
-        );
+
     }
 
 }
@@ -124,17 +114,5 @@ console.log("Test 6:", solution.maxDepth(tree6));
 const tree7 = buildTree([1, 2, 3, 4, 5, null, null, 6]);
 console.log("Test 7:", solution.maxDepth(tree7));
 // Expected: 4
-
-/*
-
-This is a beautiful recursive DFS solution.
-For any node:
-- If the node is null → return 0 (no depth)
-- Otherwise → the depth of this subtree is 1 (for the current node) 
-  plus the maximum depth of its left or right child.
-We keep going down until we hit null nodes, then bubble up the maximum values.
-
-
-*/
 
 }

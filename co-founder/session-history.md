@@ -2,6 +2,18 @@
 
 *(Newest first. On every `End Today`, the outgoing "Last Session" block from `state.md` gets prepended here before `state.md` is overwritten with the new one. Append-only — never rewrite past entries.)*
 
+## 2026-07-10 — Stack, Binary Search, Linked List all complete; Trees started (1/11, one assigned)
+
+Huge session — cleared three full patterns and opened a fourth. **Stack (1/1)**: Valid Parentheses, clean stack push/pop, correct first try, all 12 test cases matched. **Binary Search (2/2)**: Search in Rotated Sorted Array (modified binary search comparing against sorted-half endpoints, O(log n)/O(1)) and Find Minimum in Rotated Sorted Array (binary search vs. right endpoint, O(log n)/O(1)) — both correct first try. **Linked List (6/6)**: Reverse Linked List, Linked List Cycle (Floyd's), Merge Two Sorted Lists, Remove Nth From End (two-pointer gap), Reorder List (find-middle + reverse-second-half + merge), and Merge K Sorted Lists (divide & conquer, pairwise rounds) — all solved, closing the pattern out completely.
+
+Two real bugs this session, both the *same* root cause: calling a class method without `this.` — Merge K Sorted Lists' `mergeKLists` called its own `mergeTwoLists` helper as a bare function (`mergeTwoLists(l1, l2)` instead of `this.mergeTwoLists(l1, l2)`), and later Invert Binary Tree's `invertTree` called *itself* recursively the same bare way. Both threw `ReferenceError` immediately when run — caught by actually executing the file, not by inspection — and both fixed on the first correction. Recorded as a pattern in `notes.md` since it happened twice in one session across two different files.
+
+Started **Trees**: **Invert Binary Tree** solved (after the `this.` fix above) and **Maximum Depth of Binary Tree** assigned — file stubbed, Phase 1 module built and verified live, but End Today landed before Lawrence submitted an attempt, so it's not yet solved. Trees stands at 1/11.
+
+Two bad test-file annotations caught and fixed (not code bugs): Merge Two Sorted Lists' Test 1 comment claimed `[1,1,2,3,4,4]` for inputs `[1,2,3,4]`/`[1,5,9]`, but the correct merge is `[1,1,2,3,4,5,9]` — the algorithm itself was already right. Reorder List's Test 2 comment said "Odd length" for a 10-element (even) array — a harmless mislabel, fixed for clarity.
+
+Built the first shared Phase 1 infrastructure since the original Phase 0/1 base: a reusable SVG binary-tree renderer (`buildP1TreeFromArray`, `layoutP1TreeNodes`, `renderP1TreeFromRoot`, `renderP1TreeSVG`) in `index.html`, using the same recursive x-splitting layout technique as Phase 0's recursion-tree diagrams. This will serve all 9 remaining Tree problems. Every new module (13 total across the session) was verified live in headless Chrome via Playwright (puppeteer wasn't installed; Playwright was found cached in `~/.npm/_npx` and used instead) — real category/problem pill clicks, full step-through of every simulation, zero console errors, and a check that each newly-added module didn't break the previously-built ones. That cross-check caught one real bug: Valid Parentheses' stepper reused DOM element IDs (`p1-vp-*`) already claimed by Valid Palindrome's stepper, which crashed Valid Palindrome's `init()` on every category switch since `bindPhase1Handlers` runs every problem's `init()` unconditionally. Fixed by renaming to a unique `p1-vpar-*` prefix.
+
 ## 2026-07-08 — Two Pointers complete (3/3); Sliding Window complete (4/4)
 
 Picked up mid-attempt on **Container With Most Water** (medium) from the prior session — Lawrence's submitted greedy inward two-pointer solution verified correct against all 8 test cases (49, 1, 2, 16, 64, 0, 0, 0), O(n)/O(1), brute force kept commented above. That closes out **Two Pointers at 3/3**.

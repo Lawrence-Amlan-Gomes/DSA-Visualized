@@ -20,10 +20,8 @@ Example 3:
 Input: list1 = [], list2 = [0]
 Output: [0]
 
-Time Complexity : O(N + M)     [where N and M are lengths of both lists]
-Space Complexity: O(1)         [we reuse existing nodes, only dummy node extra]
-
-This is the optimal iterative two-pointer solution (NeetCode standard).
+Time Complexity :
+Space Complexity:
 */
 
   class ListNode {
@@ -54,27 +52,35 @@ This is the optimal iterative two-pointer solution (NeetCode standard).
      */
 
     mergeTwoLists(list1, list2) {
-      const dummy = { val: 0, next: null }; // declare dummy head node for merged list
-      let node = dummy; // keep track of the current node in the merged list
-      while (list1 && list2) { // loop until either list1 or list2 is null
-        if (list1.val < list2.val) { // find out the smaller node
-          node.next = list1; // attach the smaller node to the merged list
-          list1 = list1.next; // move the pointer of that list forward
-        } else {
-          node.next = list2; // else, attach the another list's smaller node to the merged list
-          list2 = list2.next; // move the pointer of that list forward
-        }
-        node = node.next; // move the merged list pointer forward as well
-      }
-      if (list1) { /* After the loop, at least one of the lists is null. 
-        Attach the non-null list to the merged list. */
-        node.next = list1; // If list1 is not null, attach it to the merged list
-      } else {
-        node.next = list2; // If list2 is not null, attach it to the merged list
-      }
-      return dummy.next; // Return dummy.next as the head of the merged list (skip the dummy node)
-    }
+      // const vals = [];
+      // for (let n = list1; n; n = n.next) vals.push(n.val);
+      // for (let n = list2; n; n = n.next) vals.push(n.val);
+      // vals.sort((a, b) => a - b);
+      // const dummy = new ListNode();
+      // let tail = dummy;
+      // for (const v of vals) {
+      //   tail.next = new ListNode(v);
+      //   tail = tail.next;
+      // }
+      // return dummy.next;
+      // Time: O((n+m) log(n+m)) — the sort dominates, and it ignores that both lists were already sorted. Space: O(n+m) — the array plus a whole new set of nodes.
 
+      const dummy = { val: 0, next: null };
+      let node = dummy;
+      while (list1 && list2) {
+        if (list1.val < list2.val) {
+          node.next = list1;
+          list1 = list1.next;
+        } else {
+          node.next = list2;
+          list2 = list2.next;
+        }
+        node = node.next;
+      }
+      node.next = list1 ? list1 : list2;
+      return dummy.next;
+      // Time: O(n + m) — one pass through both lists combined. Space: O(1) — reuses existing nodes, only the dummy is extra.
+    }
   }
 
   // Helper function to create a linked list from array
@@ -109,7 +115,7 @@ This is the optimal iterative two-pointer solution (NeetCode standard).
   let list1 = createLinkedList([1, 2, 3, 4]);
   let list2 = createLinkedList([1, 5, 9]);
   console.log(linkedListToArray(solution.mergeTwoLists(list1, list2)));
-  // Expected: [1,1,2,3,4,4]
+  // Expected: [1,1,2,3,4,5,9]
 
   // Test 2: One empty list
   list1 = createLinkedList([]);
@@ -134,16 +140,4 @@ This is the optimal iterative two-pointer solution (NeetCode standard).
   list2 = createLinkedList([1, 2, 3]);
   console.log(linkedListToArray(solution.mergeTwoLists(list1, list2)));
   // Expected: [1,2,2,2,2,3]
-
-  /*
-
-
-Creat a dummy head node of the merged list. Run a while loop until either list1 or list2 is null.
-Compare the current nodes of both lists, attach the smaller one to the merged list, and 
-move the pointer of that list forward. Move the merged list pointer forward as well.
-After the loop, at least one of the lists is null. Attach the non-null list to the merged list.
-Return dummy.next as the head of the merged list.   
-
-
-*/
 }
