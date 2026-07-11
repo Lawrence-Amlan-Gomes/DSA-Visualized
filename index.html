@@ -2068,6 +2068,33 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1MaxDepth,
       init: initP1MaxDepthStepper,
     },
+    {
+      id: 'sameBinaryTree',
+      pattern: 'Trees',
+      title: 'Same Binary Tree',
+      difficulty: 'easy',
+      file: 'trees-sameBinaryTree.js',
+      render: renderP1SameBinaryTree,
+      init: initP1SameBinaryTreeStepper,
+    },
+    {
+      id: 'subtreeOfAnotherTree',
+      pattern: 'Trees',
+      title: 'Subtree of Another Tree',
+      difficulty: 'easy',
+      file: 'trees-subtreeOfAnotherTree.js',
+      render: renderP1SubtreeOfAnotherTree,
+      init: initP1SubtreeOfAnotherTreeStepper,
+    },
+    {
+      id: 'lowestCommonAncestorBST',
+      pattern: 'Trees',
+      title: 'Lowest Common Ancestor of a BST',
+      difficulty: 'medium',
+      file: 'trees-lowestCommonAncestorBST.js',
+      render: renderP1LCABST,
+      init: initP1LCABSTStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -7024,6 +7051,477 @@ function decode(str) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ` Root finished — maximum depth is ${steps[steps.length - 1].depth}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1SameBinaryTree() {
+    return `
+    <div class="p0-section-title">Same Binary Tree<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Trees — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the roots of two binary trees, p and q. Check whether they're the same — same shape, and the same value sitting at every matching position. Return true or false.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>"Same" means both shape and values match</h4>
+      <p>p = [1,2,3], q = [1,2,3] — identical shape, identical values → <strong>true</strong>:</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:160px"><div class="p0-diagram-label">p</div>${renderP1TreeSVG([1, 2, 3])}</div>
+        <div style="flex:1;min-width:160px"><div class="p0-diagram-label">q</div>${renderP1TreeSVG([1, 2, 3])}</div>
+      </div>
+      <p>p = [1,2], q = [1,null,2] — same two values (1 and 2) exist in both, but 2 sits on a different side → <strong>false</strong>:</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px"><div class="p0-diagram-label">p</div>${renderP1TreeSVG([1, 2])}</div>
+        <div style="flex:1;min-width:160px"><div class="p0-diagram-label">q</div>${renderP1TreeSVG([1, null, 2])}</div>
+      </div>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you compare two trees node by node with recursion, what should happen when both current nodes are null?<br>
+      2. What should happen when exactly one of the two current nodes is null (and the other isn't)?<br>
+      3. What should happen when both nodes exist but hold different values?<br>
+      4. If the left subtrees already matched, do you still need to separately check the right subtrees? Does the order — left first, then right — change the final true/false answer, or only which mismatch you'd notice first?</p>
+    </div>
+
+    ${renderP1Workflow('trees-sameBinaryTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — serialize both trees, then compare</h4>
+        <p>Flatten each tree into a single array or string using a fixed traversal order (e.g. preorder), making sure to record <code>null</code> for every missing child so different shapes can't accidentally produce the same serialization. Then just compare the two serializations directly.</p>
+        <pre class="p0-code">function serialize(node, out) {
+  if (!node) { out.push(null); return; }
+  out.push(node.val);
+  serialize(node.left, out);
+  serialize(node.right, out);
+}
+function isSameTree(p, q) {
+  const a = [], b = [];
+  serialize(p, a);
+  serialize(q, b);
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}</pre>
+        <p>Time: <strong>O(n)</strong> — every node visited once during serialization, plus a linear comparison. Space: <strong>O(n)</strong> — two full extra arrays are built before any comparing happens, on top of the recursion stack.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — direct recursive comparison, no extra structure</h4>
+        <p>Compare p and q node by node as you go, with no serialized copy needed: both null is a match, exactly one null (or a value mismatch) is an immediate false, otherwise recurse into both children and require both sides to agree.</p>
+        <pre class="p0-code">function isSameTree(p, q) {
+  if (!p && !q) return true;
+  if (!p || !q || p.val !== q.val) return false;
+  return isSameTree(p.left, q.left)
+      && isSameTree(p.right, q.right);
+}</pre>
+        <p>Time: <strong>O(n)</strong> — where n is the number of nodes in the smaller tree; the <code>&amp;&amp;</code> can short-circuit and skip whole subtrees once a mismatch is found. Space: <strong>O(h)</strong> — just the recursion call stack, no extra arrays.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — p = [1,2,3,4,5], q = [1,2,3,4,6]</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px"><div class="p0-diagram-label">p</div><div id="p1-st-tree-p"></div></div>
+          <div style="flex:1;min-width:160px"><div class="p0-diagram-label">q</div><div id="p1-st-tree-q"></div></div>
+        </div>
+        <div class="p0-sim-log" id="p1-st-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-st-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Both trees empty:</strong> root is null for both — true immediately, nothing to compare.<br>
+        <strong>One empty, one not:</strong> false right away — no need to look any deeper.<br>
+        <strong>Same values, different shape:</strong> e.g. [1,2] vs [1,null,2] — false, because a value being in the tree "somewhere" isn't enough, it has to be in the matching position.<br>
+        <strong>Same shape, different values:</strong> e.g. [1,2,1] vs [1,1,2] — false at the first node where the values disagree.<br>
+        <strong>Large identical trees:</strong> every node matches all the way down — true.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (serialize + compare)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Optimal (direct recursive compare)</td><td class="num">O(n)</td><td class="num">O(h)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1SameBinaryTreeStepper() {
+    const btn = document.getElementById('p1-st-step-btn');
+    if (!btn) return;
+    const treeHostP = document.getElementById('p1-st-tree-p');
+    const treeHostQ = document.getElementById('p1-st-tree-q');
+    const logEl = document.getElementById('p1-st-log');
+
+    const rootP = buildP1TreeFromArray([1, 2, 3, 4, 5]);
+    const rootQ = buildP1TreeFromArray([1, 2, 3, 4, 6]);
+
+    const steps = [];
+    (function simulate(p, q) {
+      if (!p && !q) return true;
+      if (!p || !q || p.val !== q.val) {
+        steps.push({
+          pVal: p ? p.val : null,
+          qVal: q ? q.val : null,
+          msg: (!p || !q)
+            ? `One side is missing a node here (p=${p ? p.val : 'null'}, q=${q ? q.val : 'null'}) — false.`
+            : `Values differ: p=${p.val} vs q=${q.val} — false, return immediately.`,
+        });
+        return false;
+      }
+      steps.push({ pVal: p.val, qVal: q.val, msg: `Compare node: p=${p.val}, q=${q.val} → values match. Recurse into left subtree.` });
+      const leftOk = simulate(p.left, q.left);
+      if (!leftOk) {
+        steps.push({ pVal: p.val, qVal: q.val, msg: `Node ${p.val}'s left subtree returned false → the && short-circuits: right subtree is never checked. Node ${p.val} returns false.` });
+        return false;
+      }
+      steps.push({ pVal: p.val, qVal: q.val, msg: `Node ${p.val}'s left subtree matched. Recurse into right subtree.` });
+      const rightOk = simulate(p.right, q.right);
+      steps.push({
+        pVal: p.val, qVal: q.val,
+        msg: rightOk
+          ? `Node ${p.val}'s right subtree matched too — node ${p.val} returns true.`
+          : `Node ${p.val}'s right subtree returned false — node ${p.val} returns false.`,
+      });
+      return rightOk;
+    })(rootP, rootQ);
+
+    let idx;
+
+    function render(pVal, qVal) {
+      treeHostP.innerHTML = renderP1TreeFromRoot(rootP, { highlightVals: pVal === null || pVal === undefined ? null : new Set([pVal]) });
+      treeHostQ.innerHTML = renderP1TreeFromRoot(rootQ, { highlightVals: qVal === null || qVal === undefined ? null : new Set([qVal]) });
+    }
+
+    function reset() {
+      idx = 0;
+      render(null, null);
+      logEl.textContent = 'Compare the roots first, then recurse left before right — same as the code does.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.pVal, s.qVal);
+      logEl.textContent = s.msg;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Final result: false. (Node 3 on both trees was never even visited — short-circuited away.)';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1SubtreeOfAnotherTree() {
+    return `
+    <div class="p0-section-title">Subtree of Another Tree<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Trees — problem 4</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get two trees, root and subRoot. Check whether subRoot shows up <em>anywhere</em> inside root — meaning some node in root, together with all of its descendants, is exactly the same tree as subRoot (same shape, same values). root counts as a subtree of itself too.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "found as a subtree" means</h4>
+      <p>root = [3,4,5,1,2], subRoot = [4,1,2] — the piece of root starting at node 4 (highlighted) is exactly subRoot → <strong>true</strong>:</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="flex:1;min-width:180px"><div class="p0-diagram-label">root</div>${renderP1TreeSVG([3, 4, 5, 1, 2], new Set([4, 1, 2]))}</div>
+        <div style="flex:1;min-width:160px"><div class="p0-diagram-label">subRoot</div>${renderP1TreeSVG([4, 1, 2])}</div>
+      </div>
+      <p>root = [3,4,5,1,2,null,null,null,null,0], subRoot = [4,1,2] — node 4's piece of root <em>looks</em> close, but node 2 there has an extra child (0) that subRoot doesn't have → <strong>false</strong>. Close isn't enough — every node and every missing child has to line up exactly.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. You already built a helper that checks whether two trees are <em>exactly</em> identical (Same Binary Tree). Where would you call that helper from here, and on what?<br>
+      2. Do you need to test every single node in root as a possible starting point, or can you stop the moment you find one match?<br>
+      3. What should the answer be if subRoot is empty (null)? Is an empty tree always "present" inside any root, including an empty one?<br>
+      4. What should the answer be if root is empty but subRoot isn't?</p>
+    </div>
+
+    ${renderP1Workflow('trees-subtreeOfAnotherTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Standard approach — try the "same tree" check at every node</h4>
+        <p>Reuse the "are these two trees identical" check from Same Binary Tree as a helper. Walk root node by node: at each node, ask "is the tree starting here identical to subRoot?" If yes, done. If no, try the same question starting from that node's left child, or its right child.</p>
+        <pre class="p0-code">function sameTree(a, b) {
+  if (!a && !b) return true;
+  if (!a || !b || a.val !== b.val) return false;
+  return sameTree(a.left, b.left)
+      && sameTree(a.right, b.right);
+}
+function isSubtree(root, subRoot) {
+  if (!subRoot) return true;
+  if (!root) return false;
+  if (sameTree(root, subRoot)) return true;
+  return isSubtree(root.left, subRoot)
+      || isSubtree(root.right, subRoot);
+}</pre>
+        <p>Time: <strong>O(M · N)</strong> — M = nodes in root, N = nodes in subRoot; in the worst case you attempt the sameTree check at every one of root's M nodes, and each check can walk up to N nodes deep before failing. Space: <strong>O(H)</strong> — the recursion stack, H = root's height.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>A further optimization — serialize to strings, then substring search</h4>
+        <p>Flatten both trees to strings using a fixed traversal that marks every missing child (so shape differences can't hide), then check whether subRoot's string is a substring of root's string using a linear-time string-matching algorithm (like KMP) instead of a naive nested check.</p>
+        <p>Time: <strong>O(M + N)</strong> — linear in both trees' sizes, avoiding the M·N blowup. Space: <strong>O(M + N)</strong> — for the two serialized strings. This is a nice trick to know exists, but the recursive "sameTree at every node" version above is the one expected in most interviews.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [3,4,5,1,2], subRoot = [4,1,2]</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px"><div class="p0-diagram-label">root</div><div id="p1-so-tree-root"></div></div>
+          <div style="flex:1;min-width:160px"><div class="p0-diagram-label">subRoot</div>${renderP1TreeSVG([4, 1, 2])}</div>
+        </div>
+        <div class="p0-sim-log" id="p1-so-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-so-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>subRoot is empty:</strong> an empty tree is trivially found everywhere — true immediately.<br>
+        <strong>root is empty, subRoot isn't:</strong> nothing to search in — false.<br>
+        <strong>Same values, wrong shape:</strong> e.g. an extra child hiding deep inside the candidate subtree — sameTree catches it and rejects, even though the top-level values matched.<br>
+        <strong>subRoot equals the whole root:</strong> the very first sameTree check (at the root) succeeds — true, no need to search further down.<br>
+        <strong>subRoot never appears:</strong> every node in root gets tried as a candidate and every one fails — false.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Standard (sameTree at every node)</td><td class="num">O(M·N)</td><td class="num">O(H)</td></tr>
+          <tr><td>Further optimization (serialize + KMP substring search)</td><td class="num">O(M+N)</td><td class="num">O(M+N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1SubtreeOfAnotherTreeStepper() {
+    const btn = document.getElementById('p1-so-step-btn');
+    if (!btn) return;
+    const treeHostRoot = document.getElementById('p1-so-tree-root');
+    const logEl = document.getElementById('p1-so-log');
+
+    const root = buildP1TreeFromArray([3, 4, 5, 1, 2]);
+    const subRoot = buildP1TreeFromArray([4, 1, 2]);
+
+    function sameTree(a, b) {
+      if (!a && !b) return true;
+      if (!a || !b || a.val !== b.val) return false;
+      return sameTree(a.left, b.left) && sameTree(a.right, b.right);
+    }
+
+    const steps = [];
+    (function simulate(node) {
+      if (!node) return false;
+      const matched = sameTree(node, subRoot);
+      steps.push({
+        val: node.val,
+        matched,
+        msg: matched
+          ? `Try node ${node.val} as a candidate: sameTree(node ${node.val}, subRoot) → true! Match found — stop searching, return true.`
+          : `Try node ${node.val} as a candidate: sameTree(node ${node.val}, subRoot) → false. Move on to its children.`,
+      });
+      if (matched) return true;
+      return simulate(node.left) || simulate(node.right);
+    })(root);
+
+    let idx;
+
+    function render(val) {
+      treeHostRoot.innerHTML = renderP1TreeFromRoot(root, { highlightVals: val === null || val === undefined ? null : new Set([val]) });
+    }
+
+    function reset() {
+      idx = 0;
+      render(null);
+      logEl.textContent = 'Try the root first as a candidate, then work down — same as the code does.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.val);
+      logEl.textContent = s.msg;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += " Node 5 (root's right child) was never even tried — the search stopped as soon as node 4 matched.";
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1LCABST() {
+    return `
+    <div class="p0-section-title">Lowest Common Ancestor of a BST<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Trees — problem 5</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a <strong>binary search tree</strong> (left child &lt; node &lt; right child, everywhere in the tree) and two of its nodes, p and q. Find their lowest common ancestor — the deepest node that has both p and q somewhere in its subtree (a node counts as its own descendant, so if p is q's ancestor, the answer is p itself).</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "lowest common ancestor" means here</h4>
+      <p>root = [6,2,8,0,4,7,9,null,null,3,5]. p=2, q=8 sit on opposite sides of the root — their lowest common ancestor is the root itself, node 6:</p>
+      ${renderP1TreeSVG([6, 2, 8, 0, 4, 7, 9, null, null, 3, 5], new Set([6, 2, 8]))}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">p=2 and q=4 sit on the same side (both under node 2) — their lowest common ancestor is node 2 itself, not the root, because 2 is already an ancestor of 4.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. This tree is specifically a BST. If p's value and q's value are both greater than the current node's value, what does that tell you about which side their LCA must be on?<br>
+      2. What if both are smaller than the current node's value?<br>
+      3. What does it mean, in terms of "which side," if p's value is smaller than the current node's and q's value is larger (or the other way around)?<br>
+      4. What if the current node's value is exactly equal to p's value or q's value — does that change anything?</p>
+    </div>
+
+    ${renderP1Workflow('trees-lowestCommonAncestorBST.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — find both root-to-node paths, compare them</h4>
+        <p>Walk from the root down to p, recording every node visited along the way — that's one path. Do the same for q. Then walk both recorded paths together from the start and find the last node where they still agree; that's the LCA.</p>
+        <pre class="p0-code">function pathTo(root, target) {
+  const path = [];
+  let cur = root;
+  while (cur) {
+    path.push(cur);
+    if (target.val === cur.val) break;
+    cur = target.val < cur.val ? cur.left : cur.right;
+  }
+  return path;
+}
+function lowestCommonAncestor(root, p, q) {
+  const pathP = pathTo(root, p);
+  const pathQ = pathTo(root, q);
+  let lca = root;
+  for (let i = 0; i < pathP.length && i < pathQ.length; i++) {
+    if (pathP[i].val === pathQ[i].val) lca = pathP[i];
+    else break;
+  }
+  return lca;
+}</pre>
+        <p>Time: <strong>O(H)</strong> — H = tree height, one walk down for each of p and q. Space: <strong>O(H)</strong> — both full paths are stored as arrays before comparing.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — one walk down, using the BST property directly</h4>
+        <p>You don't need to store either path. Start at the root and look at where p and q sit relative to the current node's value: if both are greater, the LCA must be further right, so move right. If both are smaller, move left. The moment they're no longer both on the same side — one is smaller, one is larger, or the current node's value matches one of them — the current node is the LCA, because this is exactly where their paths would diverge.</p>
+        <pre class="p0-code">function lowestCommonAncestor(root, p, q) {
+  let cur = root;
+  while (cur) {
+    if (p.val > cur.val && q.val > cur.val) {
+      cur = cur.right;
+    } else if (p.val < cur.val && q.val < cur.val) {
+      cur = cur.left;
+    } else {
+      return cur;
+    }
+  }
+  return null;
+}</pre>
+        <p>Time: <strong>O(H)</strong> — same single walk down, at most one node per level. Space: <strong>O(1)</strong> — no stored paths, no recursion stack (it's iterative).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [6,2,8,0,4,7,9,null,null,3,5], p=3, q=5</div>
+        <div id="p1-lca-tree"></div>
+        <div class="p0-sim-log" id="p1-lca-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-lca-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>p and q on opposite sides of the root:</strong> the root itself is the LCA — found on the very first check.<br>
+        <strong>One of p/q is an ancestor of the other:</strong> the walk stops exactly at that ancestor, since the current node's value will equal one of them.<br>
+        <strong>p and q are the same node:</strong> the walk stops the moment it reaches that node.<br>
+        <strong>Single-node tree:</strong> root is p, q, and the LCA, all at once.<br>
+        <strong>Fully skewed (linked-list-like) BST:</strong> still works — the walk just moves one direction the whole way down until it lands on the shallower of the two nodes.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (two stored paths)</td><td class="num">O(H)</td><td class="num">O(H)</td></tr>
+          <tr><td>Optimal (single iterative walk)</td><td class="num">O(H)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1LCABSTStepper() {
+    const btn = document.getElementById('p1-lca-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-lca-tree');
+    const logEl = document.getElementById('p1-lca-log');
+
+    const root = buildP1TreeFromArray([6, 2, 8, 0, 4, 7, 9, null, null, 3, 5]);
+    const pVal = 3, qVal = 5;
+
+    const steps = [];
+    (function simulate(cur) {
+      if (!cur) return;
+      if (pVal > cur.val && qVal > cur.val) {
+        steps.push({ val: cur.val, msg: `At node ${cur.val}: both p=${pVal} and q=${qVal} are greater → LCA must be further right. Move right.` });
+        simulate(cur.right);
+      } else if (pVal < cur.val && qVal < cur.val) {
+        steps.push({ val: cur.val, msg: `At node ${cur.val}: both p=${pVal} and q=${qVal} are smaller → LCA must be further left. Move left.` });
+        simulate(cur.left);
+      } else {
+        steps.push({ val: cur.val, msg: `At node ${cur.val}: p=${pVal} and q=${qVal} are no longer on the same side — this is where their paths diverge. Node ${cur.val} is the LCA.` });
+      }
+    })(root);
+
+    let idx;
+
+    function render(val) {
+      treeHost.innerHTML = renderP1TreeFromRoot(root, { highlightVals: val === null || val === undefined ? null : new Set([val]) });
+    }
+
+    function reset() {
+      idx = 0;
+      render(null);
+      logEl.textContent = `Start at the root and compare p=${pVal}, q=${qVal} against each node's value.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.val);
+      logEl.textContent = s.msg;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done — no need to visit the rest of the tree.';
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
