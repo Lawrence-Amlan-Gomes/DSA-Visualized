@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>DSA Visualized</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%233b82f6' d='M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C7.58 2 4 5.58 4 10c0 2.92 1.56 5.44 3.88 6.83.42.25.62.71.62 1.17H15.5c0-.46.2-.92.62-1.17C18.44 15.44 20 12.92 20 10c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2094,6 +2095,60 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       file: 'trees-lowestCommonAncestorBST.js',
       render: renderP1LCABST,
       init: initP1LCABSTStepper,
+    },
+    {
+      id: 'binaryTreeLevelOrderTraversal',
+      pattern: 'Trees',
+      title: 'Binary Tree Level Order Traversal',
+      difficulty: 'medium',
+      file: 'trees-binaryTreeLevelOrderTraversal.js',
+      render: renderP1LevelOrder,
+      init: initP1LevelOrderStepper,
+    },
+    {
+      id: 'validBinarySearchTree',
+      pattern: 'Trees',
+      title: 'Valid Binary Search Tree',
+      difficulty: 'medium',
+      file: 'trees-validBinarySearchTree.js',
+      render: renderP1ValidBST,
+      init: initP1ValidBSTStepper,
+    },
+    {
+      id: 'kthSmallestIntegerInBST',
+      pattern: 'Trees',
+      title: 'Kth Smallest Integer in a BST',
+      difficulty: 'medium',
+      file: 'trees-kthSmallestIntegerInBST.js',
+      render: renderP1KthSmallest,
+      init: initP1KthSmallestStepper,
+    },
+    {
+      id: 'constructBinaryTreeFromPreorderAndInorderTraversal',
+      pattern: 'Trees',
+      title: 'Construct Binary Tree from Preorder and Inorder Traversal',
+      difficulty: 'medium',
+      file: 'trees-constructBinaryTreeFromPreorderAndInorderTraversal.js',
+      render: renderP1ConstructTree,
+      init: initP1ConstructTreeStepper,
+    },
+    {
+      id: 'binaryTreeMaximumPathSum',
+      pattern: 'Trees',
+      title: 'Binary Tree Maximum Path Sum',
+      difficulty: 'hard',
+      file: 'binaryTreeMaximumPathSum.js',
+      render: renderP1MaxPathSum,
+      init: initP1MaxPathSumStepper,
+    },
+    {
+      id: 'serializeAndDeserializeBinaryTree',
+      pattern: 'Trees',
+      title: 'Serialize and Deserialize Binary Tree',
+      difficulty: 'hard',
+      file: 'trees-serializeAndDeserializeBinaryTree.js',
+      render: renderP1SerDe,
+      init: initP1SerDeStepper,
     },
   ];
 
@@ -7522,6 +7577,1068 @@ function lowestCommonAncestor(root, p, q) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ' Done — no need to visit the rest of the tree.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1LevelOrder() {
+    return `
+    <div class="p0-section-title">Binary Tree Level Order Traversal<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Trees — problem 6</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the root of a binary tree. Return its node values grouped level by level, top to bottom, left to right within each level — one array per level, all wrapped in an outer array.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "level by level" means</h4>
+      <p>root = [3, 9, 20, null, null, 15, 7] has three levels. Each one becomes its own array in the output, in top-to-bottom order:</p>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+        <div><div class="p0-diagram-label">Level 0 → [3]</div>${renderP1TreeSVG([3, 9, 20, null, null, 15, 7], new Set([3]))}</div>
+        <div><div class="p0-diagram-label">Level 1 → [9, 20]</div>${renderP1TreeSVG([3, 9, 20, null, null, 15, 7], new Set([9, 20]))}</div>
+        <div><div class="p0-diagram-label">Level 2 → [15, 7]</div>${renderP1TreeSVG([3, 9, 20, null, null, 15, 7], new Set([15, 7]))}</div>
+      </div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Output: [[3], [9, 20], [15, 7]].</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you keep a running list of "nodes I still need to visit," and you always take from the front and add new ones to the back, what does that behave like?<br>
+      2. Using a list like that, how do you know exactly when one level has finished and the next one starts, if everything is sitting in one flat list?<br>
+      3. Could you solve this with DFS instead, recursing all the way down one branch before the next? What extra piece of information would you need to pass along so values still land in the right level's array?<br>
+      4. What should the output be for an empty tree?</p>
+    </div>
+
+    ${renderP1Workflow('trees-binaryTreeLevelOrderTraversal.js')}
+
+    <details class="p0-reveal">
+      <summary>Two valid approaches — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Approach 1 — BFS with a queue (matches the problem directly)</h4>
+        <p>Start a queue with just the root. Each round, the number of nodes <em>already</em> in the queue is exactly the size of the current level — so grab that many, collect their values into this level's array, and push each one's children onto the back of the queue for the next round.</p>
+        <pre class="p0-code">function levelOrder(root) {
+  if (!root) return [];
+  const res = [];
+  const queue = [root];
+  while (queue.length) {
+    const levelSize = queue.length;
+    const level = [];
+    for (let i = 0; i < levelSize; i++) {
+      const node = queue.shift();
+      level.push(node.val);
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+    res.push(level);
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node dequeued and enqueued exactly once. Space: <strong>O(N)</strong> — the widest level of the tree can hold up to roughly N/2 nodes in the queue at once, plus the result array itself holds all N values.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Approach 2 — DFS with a depth counter (also valid, same complexity)</h4>
+        <p>Recurse depth-first, but carry the current depth along. The first time you reach a given depth, create a new array for it in the result. Every node adds its value to its own depth's array, then recurses into left, then right — since left is always visited before right, order within a level still comes out correct.</p>
+        <pre class="p0-code">function levelOrder(root) {
+  const res = [];
+  function dfs(node, depth) {
+    if (!node) return;
+    if (res.length === depth) res.push([]);
+    res[depth].push(node.val);
+    dfs(node.left, depth + 1);
+    dfs(node.right, depth + 1);
+  }
+  dfs(root, 0);
+  return res;
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node visited once. Space: <strong>O(N)</strong> for the result array; the recursion stack itself only goes as deep as O(H).</p>
+        <p style="margin-top:8px;font-size:12.5px;color:var(--sublabel)">Neither approach is asymptotically better here — this is one of those cases where the choice is about which mental model fits the problem, not about Big-O. BFS mirrors "go level by level" directly; DFS gets the same grouping with an extra depth-tracking trick.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — BFS with a queue, root = [3,9,20,null,null,15,7]</div>
+        <div id="p1-lot-tree"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Queue (front → back)</div>
+        <div class="p0-arr-row" id="p1-lot-queue"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Result so far</div>
+        <div class="p0-code" id="p1-lot-result"></div>
+        <div class="p0-sim-log" id="p1-lot-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-lot-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty tree:</strong> root is null — return [] immediately, no levels at all.<br>
+        <strong>Single node:</strong> one level, containing just that value: [[val]].<br>
+        <strong>Fully skewed tree (only left or only right children the whole way down):</strong> every level has exactly one node — the output is a column of single-element arrays.<br>
+        <strong>Uneven levels:</strong> level sizes can differ wildly (a wide level 1, a narrow level 2) — the queue's length at the start of each round adapts automatically, so nothing needs to be hardcoded.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>BFS with a queue</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+          <tr><td>DFS with a depth counter</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1LevelOrderStepper() {
+    const btn = document.getElementById('p1-lot-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-lot-tree');
+    const queueHost = document.getElementById('p1-lot-queue');
+    const resultHost = document.getElementById('p1-lot-result');
+    const logEl = document.getElementById('p1-lot-log');
+
+    const root = buildP1TreeFromArray([3, 9, 20, null, null, 15, 7]);
+
+    const steps = [];
+    {
+      let queue = [root];
+      let level = 0;
+      while (queue.length) {
+        const levelSize = queue.length;
+        const levelVals = [];
+        for (let i = 0; i < levelSize; i++) {
+          const node = queue.shift();
+          levelVals.push(node.val);
+          const enqueuedVals = [];
+          if (node.left) { queue.push(node.left); enqueuedVals.push(node.left.val); }
+          if (node.right) { queue.push(node.right); enqueuedVals.push(node.right.val); }
+          steps.push({ type: 'dequeue', val: node.val, level, levelVals: [...levelVals], queueAfter: queue.map(n => n.val), enqueuedVals });
+        }
+        steps.push({ type: 'levelDone', level, levelVals: [...levelVals] });
+        level++;
+      }
+    }
+
+    let idx;
+    const labels = new Map();
+    const finishedLevels = [];
+
+    function renderResult(inProgress) {
+      const parts = finishedLevels.map(l => `[${l.join(', ')}]`);
+      if (inProgress && inProgress.length) parts.push(`[${inProgress.join(', ')}]  ← filling`);
+      resultHost.textContent = parts.length ? parts.join('  ') : '(empty so far)';
+    }
+
+    function reset() {
+      idx = 0;
+      labels.clear();
+      finishedLevels.length = 0;
+      treeHost.innerHTML = renderP1TreeFromRoot(root, { nodeLabels: labels, highlightVals: null });
+      queueHost.innerHTML = renderP1ArrayRow([root.val]);
+      renderResult([]);
+      logEl.textContent = 'Queue starts with just the root. We process nodes in the order they were added — first in, first out.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'dequeue') {
+        labels.set(s.val, `L${s.level}`);
+        treeHost.innerHTML = renderP1TreeFromRoot(root, { nodeLabels: labels, highlightVals: new Set([s.val]) });
+        queueHost.innerHTML = renderP1ArrayRow(s.queueAfter);
+        renderResult(s.levelVals);
+        logEl.textContent = s.enqueuedVals.length
+          ? `Dequeue ${s.val} (level ${s.level}), add it to this level's array, then enqueue its children: ${s.enqueuedVals.join(', ')}.`
+          : `Dequeue ${s.val} (level ${s.level}), add it to this level's array. No children to enqueue.`;
+      } else {
+        finishedLevels.push(s.levelVals);
+        renderResult([]);
+        logEl.textContent = `Level ${s.level} is done — every node that was in the queue at the start of this round has been processed. Push [${s.levelVals.join(', ')}] onto the result.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Queue is empty — traversal complete.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ValidBST() {
+    return `
+    <div class="p0-section-title">Valid Binary Search Tree<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Trees — problem 7</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the root of a binary tree. Return true if it's a valid binary search tree (BST): every node's value must be strictly greater than <em>every</em> value in its left subtree and strictly less than <em>every</em> value in its right subtree — not just its immediate children.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What makes a BST valid</h4>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+        <div><div class="p0-diagram-label">Valid — [2,1,3]</div>${renderP1TreeSVG([2, 1, 3])}</div>
+        <div><div class="p0-diagram-label">Invalid — [5,1,4,null,null,3,6]</div>${renderP1TreeSVG([5, 1, 4, null, null, 3, 6], new Set([4]))}</div>
+      </div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Highlighted: node 4 sits in the root's right subtree, so it must be greater than 5 — it isn't. The same kind of violation can also happen much deeper in a tree, several levels below the ancestor whose rule got broken, which is why the check has to carry a constraint down from every ancestor above a node, not just its immediate parent.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you only checked each node against its immediate parent, would that always be enough to catch every kind of violation? Can you imagine a tree where a node looks fine next to its parent but still breaks the BST rule?<br>
+      2. As you move into a node's left subtree, which of the two bounds (lower or upper) should tighten, and to what value?<br>
+      3. Same question moving into the right subtree — which bound tightens, and to what?<br>
+      4. What are the very first lower and upper bounds, before you've looked at any node at all?</p>
+    </div>
+
+    ${renderP1Workflow('trees-validBinarySearchTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — inorder traversal into an array, then check it's strictly increasing</h4>
+        <p>A BST's inorder traversal (left, node, right) visits values in strictly increasing order if and only if the tree is valid. So walk the whole tree inorder, collect every value into an array, then do a second pass checking that each value is strictly greater than the one before it.</p>
+        <pre class="p0-code">function isValidBST(root) {
+  const values = [];
+  function inorder(node) {
+    if (!node) return;
+    inorder(node.left);
+    values.push(node.val);
+    inorder(node.right);
+  }
+  inorder(root);
+  for (let i = 1; i < values.length; i++) {
+    if (values[i] <= values[i - 1]) return false;
+  }
+  return true;
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node visited once, plus one linear pass over the array. Space: <strong>O(N)</strong> — the values array holds every node's value, on top of the O(H) recursion stack.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — range bounds, no extra array</h4>
+        <p>Pass a valid (low, high) range down through the recursion instead of storing anything. The root can be anything, so it starts at (-∞, ∞). Going left tightens the upper bound to the current node's value; going right tightens the lower bound. Each node just checks whether it fits inside the range it inherited from every ancestor above it.</p>
+        <pre class="p0-code">function isValidBST(root) {
+  function valid(node, low, high) {
+    if (!node) return true;
+    if (!(node.val > low && node.val < high)) return false;
+    return valid(node.left, low, node.val)
+        && valid(node.right, node.val, high);
+  }
+  return valid(root, -Infinity, Infinity);
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node visited once. Space: <strong>O(H)</strong> — just the recursion stack, no extra array of values.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [5,1,4,null,null,3,6]</div>
+        <div id="p1-vbst-tree"></div>
+        <div class="p0-sim-log" id="p1-vbst-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-vbst-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty tree:</strong> valid by definition — true immediately, no nodes to violate anything.<br>
+        <strong>Single node:</strong> no children to break the rule — always true.<br>
+        <strong>Duplicate values:</strong> the BST rule here is strict (&gt; and &lt;, not &ge;/&le;) — a node equal to an ancestor's value is invalid, so the range check must use strict inequalities.<br>
+        <strong>Deeply skewed tree (a long chain of only-left or only-right children):</strong> one bound keeps tightening every step while the other stays at ±∞ — still handled correctly since each recursive call only updates one side.<br>
+        <strong>A node that looks fine next to its own parent but violates a rule from a higher ancestor:</strong> exactly what the range check is built to catch — a single parent comparison would miss it.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (inorder array + check)</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+          <tr><td>Optimal (range bounds)</td><td class="num">O(N)</td><td class="num">O(H)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ValidBSTStepper() {
+    const btn = document.getElementById('p1-vbst-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-vbst-tree');
+    const logEl = document.getElementById('p1-vbst-log');
+
+    const root = buildP1TreeFromArray([5, 1, 4, null, null, 3, 6]);
+
+    function fmtBound(v) { return v === -Infinity ? '-∞' : v === Infinity ? '∞' : String(v); }
+
+    const steps = [];
+    let overallValid = true;
+    (function walk(node, low, high, dir, parentVal) {
+      if (!node || !overallValid) return;
+      const ok = node.val > low && node.val < high;
+      steps.push({ val: node.val, low, high, ok, dir, parentVal });
+      if (!ok) { overallValid = false; return; }
+      walk(node.left, low, node.val, 'left', node.val);
+      if (!overallValid) return;
+      walk(node.right, node.val, high, 'right', node.val);
+    })(root, -Infinity, Infinity, 'start', null);
+
+    let idx;
+    const labels = new Map();
+
+    function render(val) {
+      treeHost.innerHTML = renderP1TreeFromRoot(root, {
+        nodeLabels: labels,
+        highlightVals: val === undefined ? null : new Set([val]),
+      });
+    }
+
+    function reset() {
+      idx = 0;
+      labels.clear();
+      render(null);
+      logEl.textContent = 'Start at the root with no constraints yet — range is (-∞, ∞).';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      labels.set(s.val, `(${fmtBound(s.low)}, ${fmtBound(s.high)})`);
+      render(s.val);
+      let msg;
+      if (s.dir === 'start') {
+        msg = `Root, range (${fmtBound(s.low)}, ${fmtBound(s.high)}). `;
+      } else if (s.dir === 'left') {
+        msg = `Went left from ${s.parentVal}, so the upper bound tightens to ${s.parentVal}: range (${fmtBound(s.low)}, ${fmtBound(s.high)}). `;
+      } else {
+        msg = `Went right from ${s.parentVal}, so the lower bound tightens to ${s.parentVal}: range (${fmtBound(s.low)}, ${fmtBound(s.high)}). `;
+      }
+      msg += s.ok
+        ? `Node ${s.val} fits inside this range — keep going.`
+        : `Node ${s.val} does NOT fit inside this range — invalid BST, stop here.`;
+      logEl.textContent = msg;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += overallValid ? ' Every node checked out — valid BST.' : ' Traversal stopped early — tree is invalid.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1KthSmallest() {
+    return `
+    <div class="p0-section-title">Kth Smallest Integer in a BST<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Trees — problem 8</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get the root of a binary search tree and an integer k. Return the kth smallest value among all the node values (1-indexed — k=1 means the smallest value in the whole tree).</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>A neat BST fact worth knowing first</h4>
+      <p>Walking a BST <strong>inorder</strong> (left subtree, then the node, then right subtree) visits every value in strictly increasing order. root = [5,3,6,2,4,null,null,1] — the leftmost node is where that walk starts:</p>
+      ${renderP1TreeSVG([5, 3, 6, 2, 4, null, null, 1], new Set([1]))}
+      <p style="margin-top:10px;font-size:12.5px">An inorder walk of this tree visits: 1, 2, 3, 4, 5, 6 — already sorted. So "find the kth smallest value" is the same question as "what's the kth value an inorder walk visits?"</p>
+      <div class="p0-arr-row" style="margin-top:8px">${[1, 2, 3, 4, 5, 6].map((v, i) => `<div class="p0-arr-cell" style="border-color:${i === 2 ? '#3b82f6' : 'rgba(255,255,255,0.25)'}">${v}</div>`).join('')}</div>
+      <p style="margin-top:6px;font-size:12.5px;color:var(--sublabel)">k=3 → the 3rd value visited is 3.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you count nodes as you visit them inorder, what should that count equal at the exact moment you've found the answer?<br>
+      2. Do you need to walk the entire tree and build the full sorted list first, or can you stop the instant you've counted k nodes?<br>
+      3. If you wrote this recursively with a shared counter, and one deeply nested call finds the answer and returns early — does that automatically stop every call still waiting above it in the call stack, or only that one call?<br>
+      4. The problem guarantees k is always a valid index (1 ≤ k ≤ number of nodes) — does your solution need to handle k being too large?</p>
+    </div>
+
+    ${renderP1Workflow('trees-kthSmallestIntegerInBST.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — full inorder traversal into an array, then index in</h4>
+        <p>Walk the whole tree inorder, collecting every value into an array in sorted order. Once you have it, the answer is just the value at index k-1.</p>
+        <pre class="p0-code">function kthSmallest(root, k) {
+  const values = [];
+  function inorder(node) {
+    if (!node) return;
+    inorder(node.left);
+    values.push(node.val);
+    inorder(node.right);
+  }
+  inorder(root);
+  return values[k - 1];
+}</pre>
+        <p>Time: <strong>O(N)</strong> — visits every node, even if k is small and the answer shows up early. Space: <strong>O(N)</strong> — the values array holds every node's value, on top of the O(H) recursion stack.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — iterative inorder with an explicit stack, stop the moment k hits 0</h4>
+        <p>Simulate the inorder walk yourself with a stack instead of recursion. Push every left child on the way down. When you run out of left children, pop one node — that's the next value in sorted order — decrement k, and check if you've arrived. If not, move into that node's right subtree and keep going. Because it's one flat loop, stopping the moment k reaches 0 genuinely stops everything, no leftover pending calls anywhere.</p>
+        <pre class="p0-code">function kthSmallest(root, k) {
+  const stack = [];
+  let node = root;
+  while (node || stack.length) {
+    while (node) {
+      stack.push(node);
+      node = node.left;
+    }
+    node = stack.pop();
+    k--;
+    if (k === 0) return node.val;
+    node = node.right;
+  }
+}</pre>
+        <p>Time: <strong>O(H + K)</strong> — walk down to the leftmost node once (O(H)), then only pop/advance K times. Space: <strong>O(H)</strong> — the stack only ever holds one root-to-node path.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [5,3,6,2,4,null,null,1], k = 3</div>
+        <div id="p1-ks-tree"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Stack (bottom → top)</div>
+        <div class="p0-arr-row" id="p1-ks-stack"></div>
+        <div class="p0-sim-log" id="p1-ks-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ks-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>k = 1:</strong> answer is the tree's minimum — the leftmost node, found almost immediately.<br>
+        <strong>k = total number of nodes:</strong> answer is the tree's maximum — the walk ends up visiting every node before it stops.<br>
+        <strong>Single node:</strong> k must be 1, and the root is the answer.<br>
+        <strong>A tempting bug in a recursive version:</strong> if you decrement a shared counter during a recursive inorder walk and return early once it hits 0, that early return only exits <em>that one</em> recursive call. Every ancestor call that already started its own left-subtree recursion will still run its own leftover steps afterward, unless it also explicitly checks a shared "found it" flag before doing anything else. The iterative stack version above sidesteps this entirely — there's just one loop to break out of.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (full inorder array)</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+          <tr><td>Optimal (iterative stack, early stop)</td><td class="num">O(H + K)</td><td class="num">O(H)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1KthSmallestStepper() {
+    const btn = document.getElementById('p1-ks-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-ks-tree');
+    const stackHost = document.getElementById('p1-ks-stack');
+    const logEl = document.getElementById('p1-ks-log');
+
+    const root = buildP1TreeFromArray([5, 3, 6, 2, 4, null, null, 1]);
+    const K = 3;
+
+    const steps = [];
+    {
+      const stack = [];
+      let node = root;
+      let k = K;
+      while (node || stack.length) {
+        while (node) {
+          stack.push(node);
+          steps.push({ type: 'push', val: node.val, stackAfter: stack.map(n => n.val) });
+          node = node.left;
+        }
+        node = stack.pop();
+        k--;
+        const found = k === 0;
+        steps.push({ type: 'pop', val: node.val, remainingK: k, stackAfter: stack.map(n => n.val), found });
+        if (found) break;
+        node = node.right;
+      }
+    }
+
+    let idx;
+
+    function render(val) {
+      treeHost.innerHTML = renderP1TreeFromRoot(root, { highlightVals: val === undefined ? null : new Set([val]) });
+    }
+
+    function reset() {
+      idx = 0;
+      render(null);
+      stackHost.innerHTML = renderP1ArrayRow([]);
+      logEl.textContent = `k = ${K}. Walk down the left spine, pushing every node onto the stack.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      render(s.val);
+      stackHost.innerHTML = renderP1ArrayRow(s.stackAfter);
+      if (s.type === 'push') {
+        logEl.textContent = `Push ${s.val} onto the stack, keep going left.`;
+      } else {
+        logEl.textContent = s.found
+          ? `Pop ${s.val} — this is the smallest value not yet counted. k reaches 0 here: ${s.val} is the answer. Stop.`
+          : `Pop ${s.val} — this is the next smallest value not yet counted. k is now ${s.remainingK}, not 0 yet — move into ${s.val}'s right subtree.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ConstructTree() {
+    return `
+    <div class="p0-section-title">Construct Binary Tree from Preorder and Inorder Traversal<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Trees — problem 9</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get two arrays: a <strong>preorder</strong> traversal (root, then left subtree, then right subtree) and an <strong>inorder</strong> traversal (left subtree, then root, then right subtree) of the same binary tree. All values are unique. Rebuild and return the actual tree.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What the two arrays tell you</h4>
+      <p>preorder = [3, 9, 20, 15, 7], inorder = [9, 3, 15, 20, 7] both describe this same tree:</p>
+      ${renderP1TreeSVG([3, 9, 20, null, null, 15, 7])}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Preorder always visits a subtree's root first. Inorder always visits a subtree's root strictly between its left subtree's values and its right subtree's values.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. In a preorder traversal, which position always holds the root of whatever subtree you're currently rebuilding?<br>
+      2. Once you know a subtree's root value, how does the inorder array tell you exactly which values belong to its left subtree and which belong to its right subtree?<br>
+      3. Once you know how many values landed in the left subtree, how does that tell you where the <em>next</em> root (the left child's root) sits in the preorder array?<br>
+      4. Why does the problem's guarantee that all values are unique matter for using inorder to split the tree unambiguously?</p>
+    </div>
+
+    ${renderP1Workflow('trees-constructBinaryTreeFromPreorderAndInorderTraversal.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — linear search + slicing new arrays every call</h4>
+        <p>Take the first element of preorder as the root. Linearly search inorder for that value to find the split point. Slice out the left and right portions of both arrays and recurse on those slices.</p>
+        <pre class="p0-code">function buildTree(preorder, inorder) {
+  if (!preorder.length) return null;
+  const rootVal = preorder[0];
+  const root = new TreeNode(rootVal);
+  const mid = inorder.indexOf(rootVal);
+  root.left = buildTree(preorder.slice(1, mid + 1), inorder.slice(0, mid));
+  root.right = buildTree(preorder.slice(mid + 1), inorder.slice(mid + 1));
+  return root;
+}</pre>
+        <p>Time: <strong>O(N&sup2;)</strong> — <code>indexOf</code> is O(N) per call, and slicing copies elements every level, across O(N) calls. Space: <strong>O(N&sup2;)</strong> worst case — every call allocates new sliced arrays (a fully skewed tree makes this add up fast).</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — hashmap for O(1) lookup, index ranges instead of slicing</h4>
+        <p>Precompute a map from value → its index in inorder, so finding the split point is instant. Instead of slicing new arrays, pass along index ranges [left, right] into the original inorder array. Track one shared pointer into preorder that always points at the next unused value — every recursive call consumes exactly one.</p>
+        <pre class="p0-code">function buildTree(preorder, inorder) {
+  const inorderMap = new Map();
+  inorder.forEach((v, i) => inorderMap.set(v, i));
+  let preIndex = 0;
+  function build(left, right) {
+    if (left > right) return null;
+    const rootVal = preorder[preIndex++];
+    const root = new TreeNode(rootVal);
+    const mid = inorderMap.get(rootVal);
+    root.left = build(left, mid - 1);
+    root.right = build(mid + 1, right);
+    return root;
+  }
+  return build(0, inorder.length - 1);
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node created once, every lookup O(1). Space: <strong>O(N)</strong> — the hashmap, plus O(H) recursion stack.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]</div>
+        <div id="p1-cbt-tree"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Preorder (blue = value just consumed)</div>
+        <div id="p1-cbt-preorder"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Inorder (purple = current subtree's range, blue = the root found inside it)</div>
+        <div id="p1-cbt-inorder"></div>
+        <div class="p0-sim-log" id="p1-cbt-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cbt-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Single node:</strong> preorder = [v], inorder = [v] — one node, recursion bottoms out immediately on both sides.<br>
+        <strong>Fully left-skewed tree (every node has only a left child):</strong> the inorder array turns out to be the exact reverse of preorder.<br>
+        <strong>Fully right-skewed tree (every node has only a right child):</strong> the inorder array turns out to be identical to preorder.<br>
+        <strong>Duplicate values:</strong> not possible here — the problem guarantees every value is unique, which is exactly what makes "find this value's index in inorder" an unambiguous way to split the tree.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (indexOf + slicing)</td><td class="num">O(N&sup2;)</td><td class="num">O(N&sup2;)</td></tr>
+          <tr><td>Optimal (hashmap + index ranges)</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ConstructTreeStepper() {
+    const btn = document.getElementById('p1-cbt-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-cbt-tree');
+    const preorderHost = document.getElementById('p1-cbt-preorder');
+    const inorderHost = document.getElementById('p1-cbt-inorder');
+    const logEl = document.getElementById('p1-cbt-log');
+
+    const preorder = [3, 9, 20, 15, 7];
+    const inorder = [9, 3, 15, 20, 7];
+    const inorderMap = new Map();
+    inorder.forEach((v, i) => inorderMap.set(v, i));
+
+    const steps = [];
+    {
+      let preIndex = 0;
+      (function build(left, right, parentVal, side) {
+        if (left > right) return;
+        const rootVal = preorder[preIndex];
+        const mid = inorderMap.get(rootVal);
+        steps.push({ val: rootVal, left, right, mid, preIndexUsed: preIndex, parentVal, side });
+        preIndex++;
+        build(left, mid - 1, rootVal, 'left');
+        build(mid + 1, right, rootVal, 'right');
+      })(0, inorder.length - 1, null, null);
+    }
+
+    function renderRangeRow(arr, left, right, mid) {
+      return `<div class="p0-arr-row">${arr.map((v, i) => {
+        let border = 'rgba(255,255,255,0.15)';
+        if (i === mid) border = '#3b82f6';
+        else if (left !== undefined && i >= left && i <= right) border = '#a855f7';
+        return `<div class="p0-arr-cell" style="border-color:${border}">${v}</div>`;
+      }).join('')}</div>`;
+    }
+
+    function renderPointerRow(arr, pointerIdx) {
+      return `<div class="p0-arr-row">${arr.map((v, i) => `<div class="p0-arr-cell" style="border-color:${i === pointerIdx ? '#3b82f6' : 'rgba(255,255,255,0.15)'}">${v}</div>`).join('')}</div>`;
+    }
+
+    let idx;
+    let builtRoot;
+
+    function findNode(node, val) {
+      if (!node) return null;
+      if (node.val === val) return node;
+      return findNode(node.left, val) || findNode(node.right, val);
+    }
+
+    function reset() {
+      idx = 0;
+      builtRoot = null;
+      treeHost.innerHTML = renderP1TreeFromRoot(null);
+      preorderHost.innerHTML = renderPointerRow(preorder, null);
+      inorderHost.innerHTML = renderRangeRow(inorder, undefined, undefined, null);
+      logEl.textContent = 'Preorder’s first value is always the root of the whole tree. Range to search in inorder: the full array.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      const node = { val: s.val, left: null, right: null };
+      if (s.parentVal === null) {
+        builtRoot = node;
+      } else {
+        const parent = findNode(builtRoot, s.parentVal);
+        if (s.side === 'left') parent.left = node; else parent.right = node;
+      }
+      treeHost.innerHTML = renderP1TreeFromRoot(builtRoot, { highlightVals: new Set([s.val]) });
+      preorderHost.innerHTML = renderPointerRow(preorder, s.preIndexUsed);
+      inorderHost.innerHTML = renderRangeRow(inorder, s.left, s.right, s.mid);
+      const rangeDesc = s.parentVal === null
+        ? 'whole tree'
+        : `${s.side} subtree of ${s.parentVal}`;
+      logEl.textContent = `Next preorder value: ${s.val} → root of the ${rangeDesc} (inorder range [${s.left}, ${s.right}]). Found at inorder index ${s.mid} — everything left of it is the left subtree's range, everything right of it is the right subtree's range.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' All nodes placed — tree fully built.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1MaxPathSum() {
+    return `
+    <div class="p0-section-title">Binary Tree Maximum Path Sum<span class="p1-badge hard">Hard</span></div>
+    <div class="p0-section-sub">Trees — problem 10</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>A "path" is any sequence of nodes where each adjacent pair is connected by an edge, and no node is used twice. The path does <strong>not</strong> have to pass through the root, and it does <strong>not</strong> have to end at a leaf. Given the root of a binary tree, return the largest possible sum of values along any such path.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a "path" can look like</h4>
+      <p>root = [-10, 9, 20, null, null, 15, 7]. The best path here is 15 → 20 → 7 — it doesn't touch the root at all, and it "bends" once at node 20, using both of node 20's children:</p>
+      ${renderP1TreeSVG([-10, 9, 20, null, null, 15, 7], new Set([15, 20, 7]))}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">15 + 20 + 7 = 42. Note that a path can bend at exactly one node (going up from one child, through that node, back down the other child) — it can't bend a second time anywhere else, since that would mean revisiting a node or leaving a gap with no edge.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Since a path can bend at most once, why can't it bend at two different nodes?<br>
+      2. If you're standing at some node and need to report "the best path sum starting here, that my parent could extend upward," can that reported value include contributions from <em>both</em> your left child and right child? Why or why not?<br>
+      3. Separately from what gets reported upward — what's the best path sum that's allowed to bend <em>right at this node</em>, using both children at once?<br>
+      4. If a child's best contribution turns out to be negative, would including it in a path ever help? What should you use instead?</p>
+    </div>
+
+    ${renderP1Workflow('binaryTreeMaximumPathSum.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — treat every node as a possible "bend point," recompute from scratch each time</h4>
+        <p>For every node in the tree, ask "what's the best path that bends here?" To answer that, you need the best straight-line (single-direction) sum going down into the left child, and the same for the right child — each computed with its own fresh recursive call.</p>
+        <pre class="p0-code">function maxDownward(node) {
+  if (!node) return 0;
+  const left = Math.max(maxDownward(node.left), 0);
+  const right = Math.max(maxDownward(node.right), 0);
+  return node.val + Math.max(left, right);
+}
+function maxPathSum(root) {
+  let best = -Infinity;
+  function visit(node) {
+    if (!node) return;
+    const left = Math.max(maxDownward(node.left), 0);
+    const right = Math.max(maxDownward(node.right), 0);
+    best = Math.max(best, node.val + left + right);
+    visit(node.left);
+    visit(node.right);
+  }
+  visit(root);
+  return best;
+}</pre>
+        <p>Time: <strong>O(N&sup2;)</strong> worst case — every one of the N nodes triggers its own fresh O(N) downward recursion. Space: <strong>O(H)</strong> — recursion depth at any one moment, though total work is quadratic.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — one combined post-order pass</h4>
+        <p>Notice that <code>maxDownward</code> and <code>visit</code> above are walking the same tree, computing overlapping information twice. Merge them: a single post-order DFS that, at each node, computes the best downward-only contribution from each child (clamped to 0 if negative), uses <em>both</em> to check whether bending here beats the best path found so far, and returns just the better of the two single-direction options up to its own parent (since a path handed upward can't bend twice).</p>
+        <pre class="p0-code">function maxPathSum(root) {
+  let best = -Infinity;
+  function dfs(node) {
+    if (!node) return 0;
+    const left = Math.max(dfs(node.left), 0);
+    const right = Math.max(dfs(node.right), 0);
+    best = Math.max(best, node.val + left + right);
+    return node.val + Math.max(left, right);
+  }
+  dfs(root);
+  return best;
+}</pre>
+        <p>Time: <strong>O(N)</strong> — every node visited exactly once. Space: <strong>O(H)</strong> — just the recursion stack.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [-10,9,20,null,null,15,7]</div>
+        <div id="p1-mps-tree"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Best path sum found so far</div>
+        <div class="p0-code" id="p1-mps-best"></div>
+        <div class="p0-sim-log" id="p1-mps-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mps-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>A child's downward contribution is negative:</strong> clamp it to 0 before adding it in — a negative contribution would only shrink the sum, so it's better to not extend the path into that child at all.<br>
+        <strong>Single node:</strong> no children to bend into — the answer is just that node's own value, even if it's negative.<br>
+        <strong>Every value in the tree is negative:</strong> clamping a child's contribution to 0 only affects whether you extend <em>into</em> that child — the final answer itself has no floor at 0, since a path must contain at least one real node, and the best available node might still be negative.<br>
+        <strong>A node with only one child:</strong> the "bend" at that node naturally degrades into a straight chain through the one existing child, since the missing child's clamped contribution is exactly 0.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (fresh downward call per node)</td><td class="num">O(N&sup2;)</td><td class="num">O(H)</td></tr>
+          <tr><td>Optimal (single combined pass)</td><td class="num">O(N)</td><td class="num">O(H)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MaxPathSumStepper() {
+    const btn = document.getElementById('p1-mps-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-mps-tree');
+    const bestHost = document.getElementById('p1-mps-best');
+    const logEl = document.getElementById('p1-mps-log');
+
+    const root = buildP1TreeFromArray([-10, 9, 20, null, null, 15, 7]);
+
+    const steps = [];
+    let best = -Infinity;
+    (function dfs(node) {
+      if (!node) return 0;
+      const leftRaw = dfs(node.left);
+      const rightRaw = dfs(node.right);
+      const left = Math.max(leftRaw, 0);
+      const right = Math.max(rightRaw, 0);
+      const bendSum = node.val + left + right;
+      const prevBest = best;
+      best = Math.max(best, bendSum);
+      const upward = node.val + Math.max(left, right);
+      steps.push({ val: node.val, left, right, bendSum, prevBest, newBest: best, upward, updated: best !== prevBest });
+      return upward;
+    })(root);
+
+    let idx;
+    const labels = new Map();
+
+    function render(val) {
+      treeHost.innerHTML = renderP1TreeFromRoot(root, { nodeLabels: labels, highlightVals: val === undefined ? null : new Set([val]) });
+    }
+
+    function fmtBest(v) { return v === -Infinity ? '(none yet)' : String(v); }
+
+    function reset() {
+      idx = 0;
+      labels.clear();
+      best = -Infinity;
+      render(null);
+      bestHost.textContent = fmtBest(-Infinity);
+      logEl.textContent = 'Post-order DFS: process both children fully before this node. Starts at the deepest leaves.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      labels.set(s.val, `up:${s.upward}`);
+      render(s.val);
+      bestHost.textContent = fmtBest(s.newBest);
+      logEl.textContent = `Node ${s.val}: left contributes ${s.left}, right contributes ${s.right} (negatives clamped to 0). Bending here: ${s.val} + ${s.left} + ${s.right} = ${s.bendSum}.` +
+        (s.updated ? ` New best! (was ${fmtBest(s.prevBest)})` : ` Not better than the current best (${fmtBest(s.prevBest)}).`) +
+        ` Reports ${s.upward} upward (its own value + the better single side).`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — maximum path sum is ${s.newBest}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1SerDe() {
+    return `
+    <div class="p0-section-title">Serialize and Deserialize Binary Tree<span class="p1-badge hard">Hard</span></div>
+    <div class="p0-section-sub">Trees — problem 11</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Design two functions: <strong>serialize(root)</strong>, which turns a binary tree into a string, and <strong>deserialize(data)</strong>, which turns that string back into a tree with the exact same shape and values. There's no required format — you just have to be able to round-trip any tree through your own encoding.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a round trip needs to preserve</h4>
+      <p>root = [1,2,3,null,null,4,5] can become the string "1,2,N,N,3,4,N,N,5,N,N" — every null child gets its own placeholder ('N') so the tree's exact <em>shape</em> survives, not just its values:</p>
+      ${renderP1TreeSVG([1, 2, 3, null, null, 4, 5])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you wrote down each node's value in some traversal order but skipped null children entirely, could two different-shaped trees end up producing the exact same string? Why does that break the round trip?<br>
+      2. Preorder (root, then left, then right) has a handy property: the very first token is always the root of whatever subtree you're currently rebuilding. Why does that make deserializing easier than starting from an inorder string?<br>
+      3. If serialize walks the tree in a specific order, what does deserialize need to do to line back up with that exact same order?<br>
+      4. What should serialize output for a completely empty tree? What should deserialize do when it reads that back?</p>
+    </div>
+
+    ${renderP1Workflow('trees-serializeAndDeserializeBinaryTree.js')}
+
+    <details class="p0-reveal">
+      <summary>Two valid approaches — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Approach 1 — Preorder DFS with null markers (recommended)</h4>
+        <p>Walk the tree preorder. At every node — including null ones — push a token: the value as a string, or 'N' for null. Join with commas. To deserialize, split back into tokens and walk them with a shared pointer: read the next token; if it's 'N', consume it and return null; otherwise create a node, consume the token, then recursively rebuild its left and right children from the <em>same</em> pointer.</p>
+        <pre class="p0-code">function serialize(root) {
+  const res = [];
+  function dfs(node) {
+    if (!node) { res.push('N'); return; }
+    res.push(String(node.val));
+    dfs(node.left);
+    dfs(node.right);
+  }
+  dfs(root);
+  return res.join(',');
+}
+function deserialize(data) {
+  const vals = data.split(',');
+  let i = 0;
+  function build() {
+    const token = vals[i++];
+    if (token === 'N') return null;
+    const node = new TreeNode(Number(token));
+    node.left = build();
+    node.right = build();
+    return node;
+  }
+  return build();
+}</pre>
+        <p>Time: <strong>O(N)</strong> both ways — every real node and every null child produces exactly one token. Space: <strong>O(N)</strong> — the token string/array, plus O(H) recursion stack.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — root = [1,2,3,null,null,4,5]</div>
+        <div class="p0-diagram-label">Original tree (serialize walks this)</div>
+        <div id="p1-serde-tree"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Token string (blue = current position)</div>
+        <div id="p1-serde-tokens"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Reconstructed tree (deserialize builds this)</div>
+        <div id="p1-serde-rebuilt"></div>
+        <div class="p0-sim-log" id="p1-serde-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-serde-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Approach 2 — Level-order BFS with null markers</h4>
+        <p>Same idea, different traversal: use a queue, and for every real node dequeued, push its value then enqueue both children (pushing 'N' placeholders for missing ones instead of enqueuing them). This is the format LeetCode itself displays trees in — it's the same style every <code>buildTree(arr)</code> test helper you've been using all session already uses, just written out as an explicit string instead of a JS array.</p>
+        <p style="margin-top:8px;font-size:12.5px;color:var(--sublabel)">Same complexity as Approach 1 — O(N) time, O(N) space. Neither traversal is "more correct"; the problem explicitly says there's no required format, so either is a fully valid design choice.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty tree:</strong> serialize should output just a single 'N' token, and deserialize on that string should immediately return null without creating any node.<br>
+        <strong>Every node has zero, one, or two children, mixed throughout the tree:</strong> the null-marker format handles all of it uniformly — every node, real or null, contributes exactly one token, so there's never a special case to add.<br>
+        <strong>Negative values:</strong> splitting on a plain comma and parsing with <code>Number(...)</code> works fine as long as the delimiter itself never appears inside a value — true for plain integers, including negative ones.<br>
+        <strong>Large trees:</strong> the string grows to roughly 2N+1 tokens (N real values, up to N+1 null markers) — still linear in the number of nodes.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Preorder DFS with null markers</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+          <tr><td>Level-order BFS with null markers</td><td class="num">O(N)</td><td class="num">O(N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1SerDeStepper() {
+    const btn = document.getElementById('p1-serde-step-btn');
+    if (!btn) return;
+    const treeHost = document.getElementById('p1-serde-tree');
+    const tokensHost = document.getElementById('p1-serde-tokens');
+    const rebuiltHost = document.getElementById('p1-serde-rebuilt');
+    const logEl = document.getElementById('p1-serde-log');
+
+    const root = buildP1TreeFromArray([1, 2, 3, null, null, 4, 5]);
+
+    const tokens = [];
+    const steps = [];
+    (function dfs(node) {
+      if (!node) {
+        tokens.push('N');
+        steps.push({ phase: 'serialize', token: 'N', val: null, tokensSoFar: [...tokens] });
+        return;
+      }
+      tokens.push(String(node.val));
+      steps.push({ phase: 'serialize', token: String(node.val), val: node.val, tokensSoFar: [...tokens] });
+      dfs(node.left);
+      dfs(node.right);
+    })(root);
+
+    {
+      let i = 0;
+      (function build(parentVal, side) {
+        const token = tokens[i];
+        const consumedIdx = i;
+        i++;
+        if (token === 'N') {
+          steps.push({ phase: 'deserialize', token, val: null, consumedIdx, parentVal, side });
+          return;
+        }
+        const val = Number(token);
+        steps.push({ phase: 'deserialize', token, val, consumedIdx, parentVal, side });
+        build(val, 'left');
+        build(val, 'right');
+      })(null, null);
+    }
+
+    function renderTokenRow(highlightIdx, upTo) {
+      const shown = upTo === undefined ? tokens : tokens.slice(0, upTo);
+      return `<div class="p0-arr-row">${shown.map((t, i) => `<div class="p0-arr-cell" style="border-color:${i === highlightIdx ? '#3b82f6' : 'rgba(255,255,255,0.2)'}">${t}</div>`).join('')}</div>`;
+    }
+
+    function findNode(node, val) {
+      if (!node) return null;
+      if (node.val === val) return node;
+      return findNode(node.left, val) || findNode(node.right, val);
+    }
+
+    const serializeCount = steps.filter(x => x.phase === 'serialize').length;
+    let idx;
+    let rebuiltRoot;
+
+    function reset() {
+      idx = 0;
+      rebuiltRoot = null;
+      treeHost.innerHTML = renderP1TreeFromRoot(root);
+      tokensHost.innerHTML = renderTokenRow(null, 0);
+      rebuiltHost.innerHTML = renderP1TreeFromRoot(null);
+      logEl.textContent = 'Phase 1: serialize. Walk the original tree preorder, writing one token per node (including nulls).';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.phase === 'serialize') {
+        treeHost.innerHTML = renderP1TreeFromRoot(root, { highlightVals: s.val === null ? null : new Set([s.val]) });
+        tokensHost.innerHTML = renderTokenRow(s.tokensSoFar.length - 1, s.tokensSoFar.length);
+        logEl.textContent = s.val === null
+          ? `Null child → write 'N'.`
+          : `Node ${s.val} → write "${s.val}".`;
+      } else {
+        if (s.token !== 'N') {
+          const node = { val: s.val, left: null, right: null };
+          if (s.parentVal === null) {
+            rebuiltRoot = node;
+          } else {
+            const parent = findNode(rebuiltRoot, s.parentVal);
+            if (s.side === 'left') parent.left = node; else parent.right = node;
+          }
+        }
+        tokensHost.innerHTML = renderTokenRow(s.consumedIdx);
+        rebuiltHost.innerHTML = renderP1TreeFromRoot(rebuiltRoot, { highlightVals: s.val === null ? null : new Set([s.val]) });
+        const prefix = idx === serializeCount ? 'Phase 2: deserialize. Read the token string back, in the same order it was written. ' : '';
+        logEl.textContent = prefix + (s.token === 'N'
+          ? `Read 'N' → null. This branch ends here.`
+          : `Read "${s.val}" → create node ${s.val}${s.parentVal === null ? ' (the root)' : ` as ${s.side} child of ${s.parentVal}`}.`);
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done — reconstructed tree matches the original exactly.';
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }

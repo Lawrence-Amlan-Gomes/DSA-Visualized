@@ -8,7 +8,7 @@
 - [x] Stack — 1/1 solved live (validParentheses ✓)
 - [x] Binary Search — 2/2 solved live (searchInRotatedSortedArray ✓, findMinimumInRotatedSortedArray ✓)
 - [x] Linked List — 6/6 solved live (reverseLinkedList ✓, linkedListCycle ✓, mergeTwoSortedLists ✓, removeNthFromEnd ✓, reorderLinkedList ✓, mergeKSortedLinkedLists ✓)
-- [ ] Trees — 5/11 solved live (invertBinaryTree ✓, maximumDepthOfBinaryTree ✓, sameBinaryTree ✓, subtreeOfAnotherTree ✓, lowestCommonAncestorBST ✓; 6 more available: binaryTreeLevelOrderTraversal, validBinarySearchTree, kthSmallestIntegerInBST, constructBinaryTreeFromPreorderAndInorderTraversal, binaryTreeMaximumPathSum, serializeAndDeserializeBinaryTree)
+- [x] Trees — 11/11 solved live (invertBinaryTree ✓, maximumDepthOfBinaryTree ✓, sameBinaryTree ✓, subtreeOfAnotherTree ✓, lowestCommonAncestorBST ✓, binaryTreeLevelOrderTraversal ✓, validBinarySearchTree ✓, kthSmallestIntegerInBST ✓, constructBinaryTreeFromPreorderAndInorderTraversal ✓, binaryTreeMaximumPathSum ✓, serializeAndDeserializeBinaryTree ✓)
 - [ ] Tries — 0 available, none imported yet
 - [ ] Heap / Priority Queue (standalone) — 0 available (mergeKSortedLinkedLists touches heap concepts but isn't standalone heap practice)
 - [ ] Backtracking — 0 available, none imported yet
@@ -20,4 +20,4 @@
 - [ ] Bit Manipulation — 0 available, none imported yet
 - [ ] Math & Geometry — 0 available, none imported yet
 
-47 total reference problems in LiveCoding, 31 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 5 Trees). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, and Linked List are all done. Next up: Trees (5/11 solved, binaryTreeLevelOrderTraversal to be stubbed and assigned next).
+47 total reference problems in LiveCoding, 37 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 11 Trees). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, and Trees are all done. Next up: Graphs (0/3 solved, numberOfIslands to be stubbed and assigned next).

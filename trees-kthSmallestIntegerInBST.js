@@ -1,11 +1,10 @@
 // kthSmallestIntegerInBST.js
 export default function run() {
-
-/*
+  /*
 
 Kth Smallest Integer in a BST (kthSmallest)
 
-Given the root of a binary search tree, and an integer k, return the kth smallest value (1-indexed) 
+Given the root of a binary search tree, and an integer k, return the kth smallest value (1-indexed)
 of all the values of the nodes in the tree.
 
 Example:
@@ -18,19 +17,17 @@ Output: 3
 Time Complexity : O(H + K)     [H = height of tree. In balanced BST ≈ O(log N + K)]
 Space Complexity: O(H)         [Recursion stack]
 
-This is the clean Inorder DFS solution (NeetCode optimized style) using early termination.
-
 */
 
-class TreeNode {
+  class TreeNode {
     constructor(val = 0, left = null, right = null) {
-        this.val = val;
-        this.left = left;
-        this.right = right;
+      this.val = val;
+      this.left = left;
+      this.right = right;
     }
-}
+  }
 
-class Solution {
+  class Solution {
     /**
      * @param {TreeNode} root
      * @param {number} k
@@ -38,35 +35,39 @@ class Solution {
      */
 
     kthSmallest(root, k) {
-        // We use an array to simulate mutable reference (since JS passes primitives by value)
-        const tmp = new Int32Array(2);  // tmp[0] = remaining k, tmp[1] = result
-        tmp[0] = k;
-        this.dfs(root, tmp);
-        return tmp[1];
-    }
-    dfs(node, tmp) {
-        // Category: Binary Search Tree + Inorder Traversal
-        if (!node) return;
-        // Step 1: Visit left subtree first (smaller values)
-        this.dfs(node.left, tmp);
-        // Step 2: Process current node
-        tmp[0]--;                    // decrement remaining count
-        if (tmp[0] === 0) {
-            tmp[1] = node.val;       // found the kth smallest
-            return;                  // early exit - no need to traverse further
+      //   const values = [];
+      //   function inorder(node) {
+      //     if (!node) return;
+      //     inorder(node.left);
+      //     values.push(node.val);
+      //     inorder(node.right);
+      //   }
+      //   inorder(root);
+      //   return values[k - 1];
+      // Time: O(N) — visits every node, even if k is small and the answer shows up early. Space: O(N) — the values array holds every node's value, on top of the O(H) recursion stack.
+
+      const stack = [];
+      let node = root;
+      while (node || stack.length) {
+        while (node) {
+          stack.push(node);
+          node = node.left;
         }
-        // Step 3: Visit right subtree (larger values)
-        this.dfs(node.right, tmp);
+        node = stack.pop();
+        k--;
+        if (k === 0) return node.val;
+        node = node.right;
+      }
+      // Time: O(H + K) — walk down to the leftmost node once (O(H)), then only pop/advance K times. Space: O(H) — the stack only ever holds one root-to-node path.
     }
+  }
 
-}
+  // ==================== TEST CASES ====================
 
-// ==================== TEST CASES ====================
+  const solution = new Solution();
 
-const solution = new Solution();
-
-// Helper: Build BST from level-order array
-function buildTree(arr) {
+  // Helper: Build BST from level-order array
+  function buildTree(arr) {
     if (!arr || arr.length === 0) return null;
 
     const root = new TreeNode(arr[0]);
@@ -74,81 +75,58 @@ function buildTree(arr) {
     let i = 1;
 
     while (i < arr.length) {
-        const current = queue.shift();
+      const current = queue.shift();
 
-        // Left child
-        if (i < arr.length && arr[i] !== null) {
-            current.left = new TreeNode(arr[i]);
-            queue.push(current.left);
-        }
-        i++;
+      // Left child
+      if (i < arr.length && arr[i] !== null) {
+        current.left = new TreeNode(arr[i]);
+        queue.push(current.left);
+      }
+      i++;
 
-        // Right child
-        if (i < arr.length && arr[i] !== null) {
-            current.right = new TreeNode(arr[i]);
-            queue.push(current.right);
-        }
-        i++;
+      // Right child
+      if (i < arr.length && arr[i] !== null) {
+        current.right = new TreeNode(arr[i]);
+        queue.push(current.right);
+      }
+      i++;
     }
     return root;
-}
+  }
 
-// Test Case 1: Standard example - k=1
-const tree1 = buildTree([3, 1, 4, null, 2]);
-console.log("Test 1 (k=1):", solution.kthSmallest(tree1, 1));
-// Expected: 1
+  // Test Case 1: Standard example - k=1
+  const tree1 = buildTree([3, 1, 4, null, 2]);
+  console.log("Test 1 (k=1):", solution.kthSmallest(tree1, 1));
+  // Expected: 1
 
-console.log("");
+  console.log("");
 
-// Test Case 2: Standard example - k=3
-const tree2 = buildTree([5, 3, 6, 2, 4, null, null, 1]);
-console.log("Test 2 (k=3):", solution.kthSmallest(tree2, 3));
-// Expected: 3
+  // Test Case 2: Standard example - k=3
+  const tree2 = buildTree([5, 3, 6, 2, 4, null, null, 1]);
+  console.log("Test 2 (k=3):", solution.kthSmallest(tree2, 3));
+  // Expected: 3
 
-// Test Case 3: k = 1 (smallest element)
-console.log("Test 3 (k=1):", solution.kthSmallest(tree2, 1));
-// Expected: 1
+  // Test Case 3: k = 1 (smallest element)
+  console.log("Test 3 (k=1):", solution.kthSmallest(tree2, 1));
+  // Expected: 1
 
-// Test Case 4: k = last element (largest)
-console.log("Test 4 (k=6):", solution.kthSmallest(tree2, 6));
-// Expected: 6  (values in order: 1,2,3,4,5,6)
+  // Test Case 4: k = last element (largest)
+  console.log("Test 4 (k=6):", solution.kthSmallest(tree2, 6));
+  // Expected: 6  (values in order: 1,2,3,4,5,6)
 
-// Test Case 5: Single node
-const tree5 = buildTree([10]);
-console.log("Test 5 (k=1):", solution.kthSmallest(tree5, 1));
-// Expected: 10
+  // Test Case 5: Single node
+  const tree5 = buildTree([10]);
+  console.log("Test 5 (k=1):", solution.kthSmallest(tree5, 1));
+  // Expected: 10
 
-// Test Case 6: Skewed left BST
-const tree6 = buildTree([5, 4, null, 3, null, 2, null, 1]);
-console.log("Test 6 (k=3):", solution.kthSmallest(tree6, 3));
-// Expected: 3
+  // Test Case 6: Skewed left BST
+  const tree6 = buildTree([5, 4, null, 3, null, 2, null, 1]);
+  console.log("Test 6 (k=3):", solution.kthSmallest(tree6, 3));
+  // Expected: 3
 
-// Test Case 7: Balanced BST
+  // Test Case 7: Balanced BST
 
-const tree7 = buildTree([8, 3, 10, 1, 6, null, 14, null, null, 4, 7, 13]);
-console.log("Test 7 (k=5):", solution.kthSmallest(tree7, 5));
-// Expected: 7   (inorder: 1,3,4,6,7,8,10,13,14)
-
-console.log("");
-
-// Edge case test
-console.log("Edge Case (k > total nodes):", solution.kthSmallest(tree1, 10));
-// Note: Problem assumes k is always valid, but code returns undefined behavior if k is too large
-
-/*
-Easy explanation:
-
-Since it's a **Binary Search Tree**, an Inorder traversal (left → root → right) visits nodes in sorted ascending order.
-
-We perform a DFS inorder traversal while keeping a countdown (k):
-- Go as left as possible
-- When visiting a node, decrement the remaining count
-- When the count reaches 0, that node is the kth smallest → store the value and stop
-We use an `Int32Array` (or could use an object) to mutate the counter 
-and result across recursive calls.
-
-This approach is very efficient because we can early-stop once we find the kth element — we don't need to traverse the entire tree.
-It's the standard and most optimized solution for this problem in interviews.
-*/
-
+  const tree7 = buildTree([8, 3, 10, 1, 6, null, 14, null, null, 4, 7, 13]);
+  console.log("Test 7 (k=5):", solution.kthSmallest(tree7, 5));
+  // Expected: 7   (inorder: 1,3,4,6,7,8,10,13,14)
 }
