@@ -368,6 +368,11 @@
     .p0-arr-cell { flex:1; aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:4px; font-size:12px; color:var(--body-text); font-family:'SF Mono', Consolas, monospace; }
     .p0-arr-cell.active { background:var(--active-bg); border-color:var(--blue); color:var(--title); font-weight:700; }
     .p0-arr-cell.shift { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.5); color:#ef4444; }
+    .p1-grid { display:inline-grid; gap:3px; margin-top:10px; }
+    .p1-grid-cell { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:4px; font-size:12px; font-family:'SF Mono', Consolas, monospace; color:var(--body-text); }
+    .p1-grid-cell.land { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.4); color:var(--green); }
+    .p1-grid-cell.water { background:rgba(255,255,255,0.03); color:var(--muted); }
+    .p1-grid-cell.current { outline:2px solid var(--blue); outline-offset:1px; }
     .p0-bucket-row { display:flex; gap:8px; margin-top:14px; align-items:flex-end; min-height:120px; }
     .p0-bucket { flex:1; display:flex; flex-direction:column-reverse; align-items:stretch; gap:3px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:4px 4px 0 0; padding:4px; min-height:24px; }
     .p0-bucket-labels { display:flex; gap:8px; margin-top:4px; }
@@ -2149,6 +2154,78 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       file: 'trees-serializeAndDeserializeBinaryTree.js',
       render: renderP1SerDe,
       init: initP1SerDeStepper,
+    },
+    {
+      id: 'numberOfIslands',
+      pattern: 'Graphs',
+      title: 'Number of Islands',
+      difficulty: 'medium',
+      file: 'graph-numberOfIslands.js',
+      render: renderP1NumberOfIslands,
+      init: initP1IslandsStepper,
+    },
+    {
+      id: 'cloneGraph',
+      pattern: 'Graphs',
+      title: 'Clone Graph',
+      difficulty: 'medium',
+      file: 'graph-cloneGraph.js',
+      render: renderP1CloneGraph,
+      init: initP1CloneGraphStepper,
+    },
+    {
+      id: 'courseSchedule',
+      pattern: 'Graphs',
+      title: 'Course Schedule',
+      difficulty: 'medium',
+      file: 'courseSchedule.js',
+      render: renderP1CourseSchedule,
+      init: initP1CourseScheduleStepper,
+    },
+    {
+      id: 'climbingStairs',
+      pattern: '1-D Dynamic Programming',
+      title: 'Climbing Stairs',
+      difficulty: 'easy',
+      file: 'dynamicProgramming-climbingStairs.js',
+      render: renderP1ClimbingStairs,
+      init: initP1ClimbingStairsStepper,
+    },
+    {
+      id: 'houseRobber',
+      pattern: '1-D Dynamic Programming',
+      title: 'House Robber',
+      difficulty: 'medium',
+      file: 'dynamicProgramming-houseRobber.js',
+      render: renderP1HouseRobber,
+      init: initP1HouseRobberStepper,
+    },
+    {
+      id: 'houseRobberII',
+      pattern: '1-D Dynamic Programming',
+      title: 'House Robber II',
+      difficulty: 'medium',
+      file: 'houseRobberII.js',
+      render: renderP1HouseRobberII,
+      init: initP1HouseRobberIIStepper,
+    },
+    {
+      id: 'mergeIntervals',
+      pattern: 'Greedy / Intervals',
+      title: 'Merge Intervals',
+      difficulty: 'medium',
+      file: 'intervals-mergeIntervals.js',
+      render: renderP1MergeIntervals,
+      init: initP1MergeIntervalsStepper,
+    },
+    {
+      id: 'insertInterval',
+      pattern: 'Greedy / Intervals',
+      title: 'Insert Interval',
+      difficulty: 'medium',
+      file: 'intervals-insertInterval.js',
+      render: renderP1InsertInterval,
+      init: initP1InsertIntervalStepper,
     },
   ];
 
@@ -8639,6 +8716,1379 @@ function deserialize(data) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ' Done — reconstructed tree matches the original exactly.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Renders a 2D grid (e.g. land/water) as CSS-grid cells. opts.cellColors: same-shaped 2D array of
+  // hex colors (or null per cell) that overrides the default land/water look — used to show islands
+  // being "sunk" one at a time during a step-through. opts.currentRC: [r, c] of the cell being visited
+  // right now, drawn with a highlighted outline. First shared visual helper for grid-based (Graphs)
+  // problems — later grid problems (e.g. Course Schedule's neighbors, flood-fill variants) can reuse it.
+  function renderP1Grid(grid, opts) {
+    opts = opts || {};
+    const cellColors = opts.cellColors;
+    const currentRC = opts.currentRC;
+    const cols = grid[0] ? grid[0].length : 0;
+    const cellsHtml = grid.map((row, r) => row.map((val, c) => {
+      const isCurrent = currentRC && currentRC[0] === r && currentRC[1] === c;
+      const color = cellColors && cellColors[r][c];
+      let cls = 'p1-grid-cell';
+      let style = '';
+      if (color) {
+        style = `background:${color}33;border-color:${color};color:${color}`;
+      } else if (val === '1') {
+        cls += ' land';
+      } else {
+        cls += ' water';
+      }
+      if (isCurrent) cls += ' current';
+      return `<div class="${cls}" style="${style}">${val}</div>`;
+    }).join('')).join('');
+    return `<div class="p1-grid" style="grid-template-columns:repeat(${cols}, 32px)">${cellsHtml}</div>`;
+  }
+
+  // Second shared Graphs visual: node-and-edge diagrams for non-grid graphs (adjacency lists), laid
+  // out in a circle so any small graph reads cleanly without needing a fixed tree/grid shape.
+  // n: node count (nodes are always 1..n). opts.edges: array of [a, b] value pairs to draw.
+  // opts.directed: draw arrowheads a→b instead of plain lines (for prerequisite/dependency graphs).
+  // opts.activeVals: Set of vals to draw solid (others draw faint/dashed — "not created yet", used to
+  // show a clone being built incrementally). opts.highlightVals: Set of vals to draw filled-in with
+  // opts.highlightColor (defaults to blue) — reused for "chosen"/"robbed" marking, not just current-node.
+  // opts.nodeStates: object val -> 'visiting' | 'done' for 3-color DFS traversal state (cycle
+  // detection); when set, this takes over node coloring instead of activeVals/dashing.
+  // opts.zeroIndexed: display labels as val-1 (edges/state keys still use internal 1..n) — for
+  // problems (like Course Schedule) whose own numbering starts at 0.
+  function renderP1GraphSVG(n, opts) {
+    opts = opts || {};
+    const edges = opts.edges || [];
+    const activeVals = opts.activeVals;
+    const highlightVals = opts.highlightVals;
+    const nodeStates = opts.nodeStates;
+    const directed = !!opts.directed;
+    const zeroIndexed = !!opts.zeroIndexed;
+    if (!n) return `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty graph)</div>`;
+    const W = 240, H = 200, R = 78, cx = W / 2, cy = H / 2, NODE_R = 16;
+    const pos = Array.from({ length: n }, (_, i) => {
+      const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+      return { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) };
+    });
+    const edgeParts = edges.map(([a, b]) => {
+      const p1 = pos[a - 1], p2 = pos[b - 1];
+      if (!directed) {
+        return `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${p2.x.toFixed(1)}" y2="${p2.y.toFixed(1)}" stroke="rgba(255,255,255,0.25)" stroke-width="1.6"/>`;
+      }
+      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      const AL = 7, AW = 5;
+      const baseX = p2.x - (NODE_R + AL) * Math.cos(angle), baseY = p2.y - (NODE_R + AL) * Math.sin(angle);
+      const tipX = p2.x - NODE_R * Math.cos(angle), tipY = p2.y - NODE_R * Math.sin(angle);
+      const leftX = baseX + AW * Math.cos(angle + Math.PI / 2), leftY = baseY + AW * Math.sin(angle + Math.PI / 2);
+      const rightX = baseX + AW * Math.cos(angle - Math.PI / 2), rightY = baseY + AW * Math.sin(angle - Math.PI / 2);
+      return `<line x1="${p1.x.toFixed(1)}" y1="${p1.y.toFixed(1)}" x2="${baseX.toFixed(1)}" y2="${baseY.toFixed(1)}" stroke="rgba(255,255,255,0.3)" stroke-width="1.6"/>`
+        + `<polygon points="${tipX.toFixed(1)},${tipY.toFixed(1)} ${leftX.toFixed(1)},${leftY.toFixed(1)} ${rightX.toFixed(1)},${rightY.toFixed(1)}" fill="rgba(255,255,255,0.45)"/>`;
+    }).join('');
+    const circles = Array.from({ length: n }, (_, i) => {
+      const val = i + 1;
+      let fill, stroke, textFill, dash = '';
+      if (nodeStates) {
+        const state = nodeStates[val];
+        if (state === 'visiting') { fill = 'rgba(234,179,8,0.18)'; stroke = 'var(--yellow)'; textFill = 'var(--yellow)'; }
+        else if (state === 'done') { fill = 'rgba(34,197,94,0.18)'; stroke = 'var(--green)'; textFill = 'var(--green)'; }
+        else { fill = 'rgba(255,255,255,0.08)'; stroke = 'rgba(255,255,255,0.35)'; textFill = 'var(--body-text)'; }
+      } else {
+        const isActive = !activeVals || activeVals.has(val);
+        fill = isActive ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)';
+        stroke = isActive ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)';
+        textFill = isActive ? 'var(--body-text)' : 'var(--muted)';
+        dash = isActive ? '' : ' stroke-dasharray="3,2"';
+      }
+      const isHighlight = highlightVals && highlightVals.has(val);
+      if (isHighlight) { fill = opts.highlightColor || '#3b82f6'; stroke = opts.highlightColor || '#3b82f6'; textFill = '#fff'; }
+      const showLabel = nodeStates ? true : (!activeVals || activeVals.has(val));
+      const displayVal = zeroIndexed ? val - 1 : val;
+      const label = showLabel ? `<text x="${pos[i].x.toFixed(1)}" y="${(pos[i].y + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-family="monospace" font-weight="600" fill="${textFill}">${displayVal}</text>` : '';
+      return `<circle cx="${pos[i].x.toFixed(1)}" cy="${pos[i].y.toFixed(1)}" r="${NODE_R}" fill="${fill}" stroke="${stroke}" stroke-width="2"${dash}/>${label}`;
+    }).join('');
+    return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeParts}${circles}</svg></div>`;
+  }
+
+  function renderP1NumberOfIslands() {
+    return `
+    <div class="p0-section-title">Number of Islands<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Graphs — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a 2D grid of <code>'1'</code>s (land) and <code>'0'</code>s (water). An <strong>island</strong> is a group of land cells connected to each other only up, down, left, or right — never diagonally. Count how many separate islands are in the grid.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "connected" means here</h4>
+      <p>These three land cells are all directly next to one another — that's <strong>one</strong> island:</p>
+      ${renderP1Grid([['1','1','0'],['0','1','0'],['0','0','0']])}
+      <p style="margin-top:16px">These two land cells only touch at a corner, with no up/down/left/right path between them — that's <strong>two separate</strong> islands, not one:</p>
+      ${renderP1Grid([['1','0'],['0','1']])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you land on an unvisited <code>'1'</code>, how do you find every other land cell that belongs to the same island?<br>
+      2. Once you've counted every cell in one island, how do you make sure none of those cells get counted again as the start of a "new" island later?<br>
+      3. What's the simplest way to explore all connected land from one starting cell — recursion, an explicit stack, or a queue? What does each cost in space?<br>
+      4. What should happen for an empty grid? A grid that's entirely water? A grid that's entirely land?</p>
+    </div>
+
+    ${renderP1Workflow('graph-numberOfIslands.js')}
+
+    <details class="p0-reveal">
+      <summary>Approach &amp; step-through — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>DFS flood fill</h4>
+        <p>Scan every cell in order. Whenever you find an unvisited <code>'1'</code>, you've found a brand-new island — count it, then flood outward from that cell (DFS or BFS), marking every connected land cell as visited so the outer scan never counts any of them again.</p>
+        <pre class="p0-code">function numIslands(grid) {
+  const ROWS = grid.length, COLS = grid[0].length;
+  let islands = 0;
+
+  function dfs(r, c) {
+    if (r < 0 || c < 0 || r >= ROWS || c >= COLS || grid[r][c] === '0') return;
+    grid[r][c] = '0'; // sink it so it's never revisited
+    dfs(r + 1, c); dfs(r - 1, c); dfs(r, c + 1); dfs(r, c - 1);
+  }
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (grid[r][c] === '1') {
+        islands++;
+        dfs(r, c);
+      }
+    }
+  }
+  return islands;
+}</pre>
+        <p>Time: <strong>O(M&times;N)</strong> — every cell is visited (and sunk) at most once across the whole run, no matter how the flood fills spread out. Space: <strong>O(M&times;N)</strong> worst case — if the entire grid is land, the DFS recursion stack can go as deep as the total cell count.</p>
+        <p style="margin-top:8px;font-size:12.5px;color:var(--sublabel)">Mutating the grid in place (<code>'1'</code> → <code>'0'</code>) to mark a cell visited avoids needing a separate <code>visited</code> set — a fine trade when you're allowed to modify the input. A BFS with an explicit queue solves it in the same O(M&times;N)/O(M&times;N) bounds and avoids recursion-depth limits on very large grids — a real alternative, not a worse "brute force."</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — a 4×5 grid with 3 islands</div>
+        <div id="p1-isl-grid"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Islands found so far</div>
+        <div class="p0-code" id="p1-isl-count"></div>
+        <div class="p0-sim-log" id="p1-isl-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-isl-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty grid</strong> (no rows, or rows with no columns): 0 islands — check this before touching <code>grid[0].length</code>.<br>
+        <strong>All water:</strong> the outer loop never finds a <code>'1'</code>, so the count stays 0.<br>
+        <strong>All land:</strong> one DFS call from the very first cell sinks the entire grid — the count ends at exactly 1.<br>
+        <strong>Diagonal-only land:</strong> DFS only checks the 4 orthogonal neighbors, so diagonal cells never merge into the same island automatically — that's correct, not a bug.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>DFS flood fill (in-place)</td><td class="num">O(M&times;N)</td><td class="num">O(M&times;N)</td></tr>
+          <tr><td>BFS flood fill (queue)</td><td class="num">O(M&times;N)</td><td class="num">O(M&times;N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1IslandsStepper() {
+    const btn = document.getElementById('p1-isl-step-btn');
+    if (!btn) return;
+    const gridHost = document.getElementById('p1-isl-grid');
+    const countHost = document.getElementById('p1-isl-count');
+    const logEl = document.getElementById('p1-isl-log');
+
+    const ISLAND_COLORS = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#06b6d4', '#ef4444'];
+    const grid = [
+      ['1', '1', '0', '0', '0'],
+      ['1', '1', '0', '0', '0'],
+      ['0', '0', '1', '0', '0'],
+      ['0', '0', '0', '1', '1'],
+    ];
+    const ROWS = grid.length, COLS = grid[0].length;
+    const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+    // Simulate the exact DFS flood-fill order so the stepper matches the reveal's algorithm precisely.
+    const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+    const steps = [];
+    const newIslandStepIdx = new Set();
+    let totalIslands = 0;
+
+    function dfs(r, c, islandNum) {
+      if (r < 0 || c < 0 || r >= ROWS || c >= COLS || grid[r][c] === '0' || visited[r][c]) return;
+      visited[r][c] = true;
+      steps.push({ r, c, islandNum });
+      for (const [dr, dc] of DIRS) dfs(r + dr, c + dc, islandNum);
+    }
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (grid[r][c] === '1' && !visited[r][c]) {
+          totalIslands++;
+          newIslandStepIdx.add(steps.length);
+          dfs(r, c, totalIslands);
+        }
+      }
+    }
+
+    let idx, colors;
+
+    function render(currentRC) {
+      gridHost.innerHTML = renderP1Grid(grid, { cellColors: colors, currentRC });
+    }
+
+    function reset() {
+      idx = 0;
+      colors = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      render(null);
+      countHost.textContent = '0';
+      logEl.textContent = 'Scanning the grid left-to-right, top-to-bottom, looking for an unvisited land cell.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      const isNew = newIslandStepIdx.has(idx);
+      colors[s.r][s.c] = ISLAND_COLORS[(s.islandNum - 1) % ISLAND_COLORS.length];
+      render([s.r, s.c]);
+      countHost.textContent = String(s.islandNum);
+      logEl.textContent = isNew
+        ? `Found new land at (${s.r},${s.c}) — starting island #${s.islandNum}. DFS floods outward from here.`
+        : `DFS spreads to (${s.r},${s.c}) — still island #${s.islandNum}, marking it visited.`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — ${totalIslands} island(s) total.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1CloneGraph() {
+    return `
+    <div class="p0-section-title">Clone Graph<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Graphs — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You're given a reference to one node in a connected undirected graph. Each node has a value and a list of neighbor references. Return a <strong>deep copy</strong> of the whole graph — every node must be a brand-new object, but the copy must have the exact same values and the exact same connections as the original.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "deep copy" means here</h4>
+      <p>This 4-node graph has a cycle: 1↔2, 2↔3, 3↔4, 4↔1.</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4], [4, 1]] })}
+      <p style="margin-top:10px">A correct clone reproduces this exact same shape — same 4 values, same 4 connections — but every single node object is new. None of the cloned nodes should be <code>===</code> to any original node.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. The graph can have cycles (node A points to node B, which points back to A). If you clone A, then start cloning its neighbor B, and B's neighbor list points back to A — what stops this from recursing forever?<br>
+      2. What data structure lets you check "have I already cloned this node?" and, if so, hand back the <em>same</em> clone instead of making a second one?<br>
+      3. Since a node's neighbor list can point to a node you haven't finished cloning yet, does it matter whether you store a node's clone in that structure <em>before</em> or <em>after</em> recursing into its neighbors?<br>
+      4. What should happen for a graph with a single node and no edges? For a completely empty graph (null input)?</p>
+    </div>
+
+    ${renderP1Workflow('graph-cloneGraph.js')}
+
+    <details class="p0-reveal">
+      <summary>Approach &amp; step-through — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>DFS with a hash map from old node → new node</h4>
+        <p>Use a map to remember which original nodes have already been cloned. On visiting a node: if it's already in the map, return its existing clone immediately — this is what breaks cycles. Otherwise, create its clone <em>first</em> and store it in the map <em>before</em> recursing into its neighbors, so if a neighbor's DFS loops back to this node, the map lookup finds the clone instead of recursing infinitely.</p>
+        <pre class="p0-code">function cloneGraph(node) {
+  const oldToNew = new Map();
+
+  function dfs(node) {
+    if (node === null) return null;
+    if (oldToNew.has(node)) return oldToNew.get(node);
+
+    const copy = new Node(node.val);
+    oldToNew.set(node, copy);
+    for (const nei of node.neighbors) {
+      copy.neighbors.push(dfs(nei));
+    }
+    return copy;
+  }
+
+  return dfs(node);
+}</pre>
+        <p>Time: <strong>O(N + E)</strong> — every node is visited once, and every edge is crossed once from each of its two directions. Space: <strong>O(N)</strong> — the map holds one entry per node, plus O(N) recursion depth worst case.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — original graph vs. clone being built</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px"><div class="p0-diagram-label">Original</div><div id="p1-cg-orig"></div></div>
+          <div style="flex:1;min-width:180px"><div class="p0-diagram-label">Clone (in progress)</div><div id="p1-cg-clone"></div></div>
+        </div>
+        <div class="p0-sim-log" id="p1-cg-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cg-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Null input:</strong> return null immediately — there's nothing to clone.<br>
+        <strong>Single node, no neighbors:</strong> the map gets exactly one entry; the clone's neighbor list stays empty.<br>
+        <strong>Self-loop</strong> (a node lists itself as its own neighbor): the map lookup catches it — by the time the loop reaches "itself," that node's own clone is already stored, so it links to itself correctly instead of recursing forever.<br>
+        <strong>Disconnected graphs</strong> aren't possible here — the problem guarantees the graph is connected, so a single DFS from the given start node always reaches every node.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>DFS + hash map (old → new)</td><td class="num">O(N + E)</td><td class="num">O(N)</td></tr>
+          <tr><td>BFS + hash map (queue instead of recursion)</td><td class="num">O(N + E)</td><td class="num">O(N)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1CloneGraphStepper() {
+    const btn = document.getElementById('p1-cg-step-btn');
+    if (!btn) return;
+    const origHost = document.getElementById('p1-cg-orig');
+    const cloneHost = document.getElementById('p1-cg-clone');
+    const logEl = document.getElementById('p1-cg-log');
+
+    const N = 4;
+    const ADJ = { 1: [2, 4], 2: [1, 3], 3: [2, 4], 4: [1, 3] };
+    const ORIG_EDGES = [[1, 2], [2, 3], [3, 4], [4, 1]];
+
+    const visited = new Set();
+    const steps = [];
+    (function dfs(val) {
+      if (visited.has(val)) return;
+      visited.add(val);
+      steps.push({ type: 'create', val });
+      for (const nei of ADJ[val]) {
+        const reused = visited.has(nei);
+        dfs(nei);
+        steps.push({ type: 'connect', from: val, to: nei, reused });
+      }
+    })(1);
+
+    let idx, activeVals, cloneEdges;
+
+    function edgeKey(a, b) { return a < b ? `${a}-${b}` : `${b}-${a}`; }
+
+    function render(currentVal) {
+      const hv = currentVal === undefined || currentVal === null ? null : new Set([currentVal]);
+      origHost.innerHTML = renderP1GraphSVG(N, { edges: ORIG_EDGES, highlightVals: hv });
+      cloneHost.innerHTML = renderP1GraphSVG(N, { edges: cloneEdges, activeVals, highlightVals: hv });
+    }
+
+    function reset() {
+      idx = 0;
+      activeVals = new Set();
+      cloneEdges = [];
+      render(null);
+      logEl.textContent = 'Starting DFS from node 1. A map will track old node → cloned node.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'create') {
+        activeVals.add(s.val);
+        render(s.val);
+        logEl.textContent = `Node ${s.val} not in the map yet — create its clone and store it before recursing into its neighbors.`;
+      } else {
+        const key = edgeKey(s.from, s.to);
+        if (!cloneEdges.some(([a, b]) => edgeKey(a, b) === key)) cloneEdges.push([s.from, s.to]);
+        render(s.from);
+        logEl.textContent = s.reused
+          ? `Node ${s.to} was already cloned — reuse it from the map (this is what closes the cycle). Connect ${s.from} → ${s.to}.`
+          : `Node ${s.from}'s clone connects to node ${s.to}'s freshly-made clone.`;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done — clone matches the original graph exactly, but every node is a new object.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1CourseSchedule() {
+    return `
+    <div class="p0-section-title">Course Schedule<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Graphs — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You have <code>numCourses</code> courses, numbered 0 to <code>numCourses - 1</code>. Each pair <code>[a, b]</code> in <code>prerequisites</code> means "you must finish course b before course a." Given all the pairs, return <code>true</code> if there's some order you could take every course in, or <code>false</code> if it's impossible.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What makes it impossible</h4>
+      <p>Arrows point from a prerequisite to the course that needs it. This one has a valid order — take 0, then 1, then 2, then 3:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4]], directed: true, zeroIndexed: true })}
+      <p style="margin-top:16px">This one doesn't — course 0 needs 2, 2 needs 1, and 1 needs 0. Every course in the loop is waiting on another course in the same loop:</p>
+      ${renderP1GraphSVG(3, { edges: [[1, 2], [2, 3], [3, 1]], directed: true, zeroIndexed: true })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you're following course X's prerequisite chain and that chain leads you back to X itself before you've finished checking it, what does that tell you?<br>
+      2. What data structure lets you track "which courses are currently being checked, mid-chain" — so you can recognize exactly that situation when it happens?<br>
+      3. Once you've confirmed a course's entire prerequisite chain has no cycle, how could you avoid redoing that same work if a different course later depends on it too?<br>
+      4. What should happen if <code>prerequisites</code> is empty? What if a course lists itself as its own prerequisite?</p>
+    </div>
+
+    ${renderP1Workflow('courseSchedule.js')}
+
+    <details class="p0-reveal">
+      <summary>Approach &amp; step-through — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>DFS with 3 states (cycle detection)</h4>
+        <p>Build an adjacency list: each course maps to its list of prerequisites. Then run DFS from every course, tracking two things: a <strong>visiting</strong> set (courses on the current chain, not yet confirmed safe) and a <strong>done</strong> marker (courses already confirmed safe, so later chains can skip re-checking them). If DFS ever reaches a course that's already in <code>visiting</code>, that's a cycle — the whole answer is <code>false</code>.</p>
+        <pre class="p0-code">function canFinish(numCourses, prerequisites) {
+  const preMap = new Map();
+  for (let i = 0; i < numCourses; i++) preMap.set(i, []);
+  for (const [crs, pre] of prerequisites) preMap.get(crs).push(pre);
+
+  const visiting = new Set();
+
+  function dfs(crs) {
+    if (visiting.has(crs)) return false;       // cycle!
+    if (preMap.get(crs).length === 0) return true; // no prereqs left — safe
+
+    visiting.add(crs);
+    for (const pre of preMap.get(crs)) {
+      if (!dfs(pre)) return false;
+    }
+    visiting.delete(crs);
+    preMap.set(crs, []); // memoize: this course (and its chain) is confirmed safe
+    return true;
+  }
+
+  for (let c = 0; c < numCourses; c++) {
+    if (!dfs(c)) return false;
+  }
+  return true;
+}</pre>
+        <p>Time: <strong>O(N + E)</strong> — building the adjacency list is O(N + E), and memoization (clearing a course's prereq list once it's confirmed safe) means no course's chain gets fully re-walked twice. Space: <strong>O(N + E)</strong> for the adjacency list, plus O(N) for the <code>visiting</code> set and recursion stack.</p>
+        <p style="margin-top:8px;font-size:12.5px;color:var(--sublabel)">This is sometimes called "white/gray/black" DFS: white = untouched, gray = <code>visiting</code> (on the current path), black = done. An equally valid alternative is Kahn's algorithm — BFS from courses with zero prerequisites, repeatedly peeling off finished courses — same O(N + E)/O(N + E) bounds, not a worse "brute force," just a different traversal order.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — numCourses = 4, prerequisites = [[1,0],[2,1],[3,2]]</div>
+        <div id="p1-cs-graph"></div>
+        <div class="p0-sim-log" id="p1-cs-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-cs-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>No prerequisites at all:</strong> every course's list is already empty, so every <code>dfs</code> call hits the base case immediately — always <code>true</code>.<br>
+        <strong>A course lists itself</strong> (<code>[0, 0]</code>): as soon as <code>dfs(0)</code> adds 0 to <code>visiting</code> and loops into its own prerequisite, it immediately finds 0 already in <code>visiting</code> — cycle detected correctly.<br>
+        <strong>Disconnected groups of courses:</strong> the outer loop calls <code>dfs</code> on every course, not just ones reachable from course 0, so an unrelated separate chain still gets checked.<br>
+        <strong>A course that's a prerequisite for many others:</strong> the <code>done</code>/memoization step means once it's confirmed safe, every later chain that depends on it short-circuits instantly instead of re-walking it.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>DFS, 3-state cycle detection</td><td class="num">O(N + E)</td><td class="num">O(N + E)</td></tr>
+          <tr><td>Kahn's algorithm (BFS topological sort)</td><td class="num">O(N + E)</td><td class="num">O(N + E)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1CourseScheduleStepper() {
+    const btn = document.getElementById('p1-cs-step-btn');
+    if (!btn) return;
+    const graphHost = document.getElementById('p1-cs-graph');
+    const logEl = document.getElementById('p1-cs-log');
+
+    const NUM_COURSES = 4;
+    const PREREQS = [[1, 0], [2, 1], [3, 2]];
+    // Internal 1-indexed edges for the visual, drawn prerequisite → course ("must finish before").
+    const EDGES = PREREQS.map(([a, b]) => [b + 1, a + 1]);
+
+    const preMap = new Map();
+    for (let i = 0; i < NUM_COURSES; i++) preMap.set(i, []);
+    for (const [crs, pre] of PREREQS) preMap.get(crs).push(pre);
+
+    const visiting = new Set();
+    const doneSet = new Set();
+    const steps = [];
+
+    function dfs(crs) {
+      if (visiting.has(crs)) { steps.push({ type: 'cycle', crs }); return false; }
+      if (preMap.get(crs).length === 0) {
+        steps.push({ type: 'safe', crs, memoized: doneSet.has(crs) });
+        doneSet.add(crs);
+        return true;
+      }
+      visiting.add(crs);
+      steps.push({ type: 'visiting', crs });
+      for (const pre of preMap.get(crs)) {
+        if (!dfs(pre)) return false;
+      }
+      visiting.delete(crs);
+      preMap.set(crs, []);
+      steps.push({ type: 'safe', crs, memoized: false });
+      doneSet.add(crs);
+      return true;
+    }
+    for (let c = 0; c < NUM_COURSES; c++) dfs(c);
+
+    let idx, nodeStates;
+
+    function render() {
+      graphHost.innerHTML = renderP1GraphSVG(NUM_COURSES, { edges: EDGES, directed: true, zeroIndexed: true, nodeStates });
+    }
+
+    function reset() {
+      idx = 0;
+      nodeStates = {};
+      render();
+      logEl.textContent = 'Checking each course 0 → 3 in order. A course is "visiting" while we\'re following its prerequisite chain, and becomes "done" once its chain is confirmed cycle-free.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'visiting') {
+        nodeStates[s.crs + 1] = 'visiting';
+        logEl.textContent = `Course ${s.crs} has unresolved prerequisites — mark it "visiting" and follow its prerequisite chain.`;
+      } else if (s.type === 'safe') {
+        nodeStates[s.crs + 1] = 'done';
+        logEl.textContent = s.memoized
+          ? `Course ${s.crs} was already confirmed safe earlier — reuse that result instead of re-deriving it.`
+          : `Course ${s.crs} has no unresolved prerequisites left — mark it "done," safe to take.`;
+      } else {
+        logEl.textContent = `Course ${s.crs} is already "visiting" on this same chain — that's a cycle. Impossible to finish.`;
+      }
+      render();
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done — every course reaches "done" with no cycle, so all 4 courses can be finished.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Builds the "steps remaining" decision tree for Climbing Stairs (left = take 1 step, right =
+  // take 2 steps), pruning negative remainders. Reuses the Trees pattern's renderP1TreeFromRoot —
+  // the same left/right branching SVG works unmodified for a plain decision tree, not just a BST.
+  function buildP1StairsDecisionTree(remaining) {
+    if (remaining < 0) return null;
+    const node = { val: remaining, left: null, right: null };
+    if (remaining === 0) return node;
+    node.left = buildP1StairsDecisionTree(remaining - 1);
+    node.right = buildP1StairsDecisionTree(remaining - 2);
+    return node;
+  }
+
+  function renderP1ClimbingStairs() {
+    return `
+    <div class="p0-section-title">Climbing Stairs<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">1-D Dynamic Programming — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You're standing at the bottom of a staircase with <code>n</code> steps. Each move, you can climb <strong>1 step</strong> or <strong>2 steps</strong>. How many distinct sequences of moves get you exactly to the top?</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Every choice, laid out</h4>
+      <p>For n = 3, each node is "steps remaining." Going left means "take 1 step," going right means "take 2 steps." A node that hits exactly 0 means you've landed exactly on the top — a valid way:</p>
+      ${renderP1TreeFromRoot(buildP1StairsDecisionTree(3), { highlightVals: new Set([0]) })}
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">Three highlighted leaves — three ways to reach the top, matching 1+1+1, 1+2, and 2+1 from the examples. Notice "1 step remaining" shows up twice, in two different branches — the exact same sub-problem, reached two different ways.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If <code>ways(n)</code> is "the number of ways to climb n steps," can you write <code>ways(n)</code> in terms of <code>ways(n-1)</code> and <code>ways(n-2)</code>? Think about your very first move.<br>
+      2. If you computed <code>ways(n)</code> with plain recursion and no memoization, the tree above shows the shape of the recursion — using Phase 0's "branching factor × depth" rule, what's the time complexity as n grows?<br>
+      3. That repeated sub-problem you noticed (the same "n remaining" showing up in multiple branches) — what's the cheapest way to avoid recomputing it: memoizing the recursion, or building the answer bottom-up in a small array?<br>
+      4. Does the recurrence need the <em>entire</em> array of past results, or just the last couple of values?</p>
+    </div>
+
+    ${renderP1Workflow('dynamicProgramming-climbingStairs.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — plain recursion, no memoization</h4>
+        <p>Directly translate the recurrence: the ways to reach step n is the ways to reach n-1, plus the ways to reach n-2.</p>
+        <pre class="p0-code">function climbStairs(n) {
+  if (n === 1) return 1;
+  if (n === 2) return 2;
+  return climbStairs(n - 1) + climbStairs(n - 2);
+}</pre>
+        <p>Time: <strong>O(2&sup2;)</strong> — branching factor 2, depth n (Phase 0, Section 2), since every call re-solves the same smaller sub-problems from scratch. Space: <strong>O(n)</strong> — the recursion stack's depth.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — bottom-up with two rolling variables</h4>
+        <p>This is exactly the Fibonacci recurrence. You never need more than the previous two values, so skip the array entirely and roll two variables forward.</p>
+        <pre class="p0-code">function climbStairs(n) {
+  if (n === 1) return 1;
+  if (n === 2) return 2;
+  let prev2 = 1, prev1 = 2;
+  for (let i = 3; i <= n; i++) {
+    const current = prev1 + prev2;
+    prev2 = prev1;
+    prev1 = current;
+  }
+  return prev1;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass from 3 to n. Space: <strong>O(1)</strong> — just two rolling variables, no array. (A top-down memoized version is also valid, at O(n) time but O(n) space for the memo table plus recursion stack — this bottom-up version is strictly better on space.)</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — building ways(1) through ways(5)</div>
+        <div id="p1-clm-row"></div>
+        <div class="p0-sim-log" id="p1-clm-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-clm-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>n = 1:</strong> only one way (a single 1-step) — must be handled as a base case, since the general loop assumes at least 2 steps already computed.<br>
+        <strong>n = 2:</strong> exactly two ways (1+1 or 2) — the other base case.<br>
+        <strong>Large n:</strong> the values grow like Fibonacci numbers, roughly doubling every ~1.44 steps — for very large n this can exceed <code>Number.MAX_SAFE_INTEGER</code>, though not for this problem's usual constraints (n ≤ 45).</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (plain recursion)</td><td class="num">O(2&sup2;)</td><td class="num">O(n)</td></tr>
+          <tr><td>Top-down (memoized recursion)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Bottom-up (two rolling variables)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ClimbingStairsStepper() {
+    const btn = document.getElementById('p1-clm-step-btn');
+    if (!btn) return;
+    const rowHost = document.getElementById('p1-clm-row');
+    const logEl = document.getElementById('p1-clm-log');
+
+    const N = 5;
+    const ways = [null, 1, 2];
+    for (let i = 3; i <= N; i++) ways[i] = ways[i - 1] + ways[i - 2];
+
+    let idx;
+
+    function renderRow(upTo) {
+      const cells = [];
+      for (let i = 1; i <= N; i++) {
+        const shown = i <= upTo;
+        cells.push(`<div class="p0-arr-cell${i === upTo ? ' active' : ''}">${shown ? ways[i] : ''}</div>`);
+      }
+      rowHost.innerHTML = `<div class="p0-arr-row">${cells.join('')}</div>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderRow(0);
+      logEl.textContent = 'Filling in ways(1) through ways(5), left to right — each cell only needs the two cells before it.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= N) return;
+      idx++;
+      renderRow(idx);
+      if (idx === 1) {
+        logEl.textContent = 'ways(1) = 1 — base case: only one way to climb a single step.';
+      } else if (idx === 2) {
+        logEl.textContent = 'ways(2) = 2 — base case: 1+1, or a single 2-step.';
+      } else {
+        logEl.textContent = `ways(${idx}) = ways(${idx - 1}) + ways(${idx - 2}) = ${ways[idx - 1]} + ${ways[idx - 2]} = ${ways[idx]}.`;
+      }
+      if (idx >= N) {
+        logEl.textContent += ` Done — ways(${N}) = ${ways[N]}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Shared 1-D DP visual: an array row with some cells marked "chosen" (blue) or, for showing an
+  // invalid/rule-breaking selection, "chosen but conflicting" (red). Reusable for House Robber II.
+  function renderP1ChosenRow(nums, chosenIdx, opts) {
+    opts = opts || {};
+    const invalid = !!opts.invalid;
+    const chosen = new Set(chosenIdx);
+    const cells = nums.map((v, i) => {
+      if (!chosen.has(i)) return `<div class="p0-arr-cell">${v}</div>`;
+      const style = invalid
+        ? 'border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.1)'
+        : 'border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,0.1)';
+      return `<div class="p0-arr-cell" style="${style}">${v}</div>`;
+    }).join('');
+    return `<div class="p0-arr-row">${cells}</div>`;
+  }
+
+  function renderP1HouseRobber() {
+    return `
+    <div class="p0-section-title">House Robber<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">1-D Dynamic Programming — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get an array of houses, each holding some amount of money. You can rob any set of houses you want, <strong>except you can never rob two houses that are next to each other</strong> — that trips the alarm. Return the most money you can rob.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>A valid selection vs. one that trips the alarm</h4>
+      <p>nums = [2, 7, 9, 3, 2]. Robbing houses 0, 2, 4 is valid — no two are adjacent:</p>
+      ${renderP1ChosenRow([2, 7, 9, 3, 2], [0, 2, 4])}
+      <p style="margin-top:16px">Robbing houses 2 and 3 is <strong>not</strong> valid — they're right next to each other:</p>
+      ${renderP1ChosenRow([2, 7, 9, 3, 2], [2, 3], { invalid: true })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. At each house, you really only have two choices: rob it, or skip it. If you rob house i, which house must you have skipped just before it?<br>
+      2. If <code>best(i)</code> means "the most money you can have after deciding about house i," can you write <code>best(i)</code> in terms of <code>best(i-1)</code> and <code>best(i-2)</code>?<br>
+      3. Do you need to remember the best value for every single house so far, or just the last two?<br>
+      4. What should happen for an empty list of houses? A single house?</p>
+    </div>
+
+    ${renderP1Workflow('dynamicProgramming-houseRobber.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — plain recursion, no memoization</h4>
+        <p>At each house, try both choices and take the better one: rob it (skip to i+2) or skip it (move to i+1).</p>
+        <pre class="p0-code">function rob(nums, i = 0) {
+  if (i >= nums.length) return 0;
+  const robThis = nums[i] + rob(nums, i + 2);
+  const skipThis = rob(nums, i + 1);
+  return Math.max(robThis, skipThis);
+}</pre>
+        <p>Time: <strong>O(2&sup2;)</strong> — branching factor 2, depth n, since the same sub-arrays get re-solved repeatedly. Space: <strong>O(n)</strong> — the recursion stack.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — bottom-up with two rolling variables</h4>
+        <p>Same idea as Climbing Stairs: you only ever need the previous two "best so far" values, so roll them forward instead of keeping a full array.</p>
+        <pre class="p0-code">function rob(nums) {
+  let rob1 = 0, rob2 = 0;
+  for (const num of nums) {
+    const temp = Math.max(num + rob1, rob2);
+    rob1 = rob2;
+    rob2 = temp;
+  }
+  return rob2;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one pass. Space: <strong>O(1)</strong> — two rolling variables, no array.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [2, 7, 9, 3, 2]</div>
+        <div id="p1-hr-row"></div>
+        <div class="p0-sim-log" id="p1-hr-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-hr-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty array:</strong> 0 — nothing to rob.<br>
+        <strong>Single house:</strong> rob it — no neighbor to conflict with.<br>
+        <strong>Two houses:</strong> rob whichever has more — you can only take one of them.<br>
+        <strong>A big value sandwiched between two small ones</strong> (like [1, 100, 1]): the algorithm correctly skips both small houses and takes only the big one — robbing both small ones (1 + 1 = 2) never beats the big one alone (100).</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (plain recursion)</td><td class="num">O(2&sup2;)</td><td class="num">O(n)</td></tr>
+          <tr><td>Top-down (memoized recursion)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Bottom-up (two rolling variables)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1HouseRobberStepper() {
+    const btn = document.getElementById('p1-hr-step-btn');
+    if (!btn) return;
+    const rowHost = document.getElementById('p1-hr-row');
+    const logEl = document.getElementById('p1-hr-log');
+
+    const NUMS = [2, 7, 9, 3, 2];
+    const dp = [];
+    for (let i = 0; i < NUMS.length; i++) {
+      if (i === 0) dp[0] = NUMS[0];
+      else if (i === 1) dp[1] = Math.max(NUMS[0], NUMS[1]);
+      else dp[i] = Math.max(dp[i - 1], dp[i - 2] + NUMS[i]);
+    }
+
+    let idx;
+
+    function renderRow(upTo) {
+      const cells = NUMS.map((v, i) => {
+        const cls = i === upTo - 1 ? 'p0-arr-cell active' : 'p0-arr-cell';
+        return `<div class="${cls}">${i < upTo ? dp[i] : v}</div>`;
+      }).join('');
+      rowHost.innerHTML = `<div class="p0-arr-row">${cells}</div>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderRow(0);
+      logEl.textContent = 'Each cell will hold "the most money robbable using houses 0 through i." Starting from house 0.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= NUMS.length) return;
+      const i = idx;
+      renderRow(idx + 1);
+      if (i === 0) {
+        logEl.textContent = `best(0) = ${dp[0]} — only one house so far, rob it.`;
+      } else if (i === 1) {
+        logEl.textContent = `best(1) = max(${NUMS[0]}, ${NUMS[1]}) = ${dp[1]} — two houses, take the bigger one.`;
+      } else {
+        logEl.textContent = `best(${i}) = max(best(${i - 1}), best(${i - 2}) + nums[${i}]) = max(${dp[i - 1]}, ${dp[i - 2]} + ${NUMS[i]}) = ${dp[i]}.`;
+      }
+      idx++;
+      if (idx >= NUMS.length) {
+        logEl.textContent += ` Done — the most you can rob is ${dp[NUMS.length - 1]}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1HouseRobberII() {
+    return `
+    <div class="p0-section-title">House Robber II<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">1-D Dynamic Programming — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Same rules as House Robber, except the houses are arranged in a <strong>circle</strong> — the first house and the last house are neighbors too. You still can't rob two adjacent houses. Return the most money you can rob.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>The new gotcha: the wraparound</h4>
+      <p>4 houses in a circle — house 0 and house 3 are neighbors too, even though they sit at opposite ends of the array:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4], [4, 1]], zeroIndexed: true })}
+      <p style="margin-top:16px">Robbing houses 0 and 2 is valid — neither pair is adjacent, even going around the circle:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4], [4, 1]], zeroIndexed: true, highlightVals: new Set([1, 3]) })}
+      <p style="margin-top:16px">Robbing houses 0 and 3 is <strong>not</strong> valid — they look far apart by index, but the circle makes them neighbors:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4], [4, 1]], zeroIndexed: true, highlightVals: new Set([1, 4]), highlightColor: '#ef4444' })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. In House Robber, you never had to worry about the first and last house being neighbors. Here they are — what specifically breaks if you just run the exact same linear algorithm on the whole circular array?<br>
+      2. You already know house 0 and house n-1 can never both be robbed. Can you split this into two problems you've already solved — one that considers house 0 but never house n-1, and one that does the opposite?<br>
+      3. Once you have the best answer for each of those two cases, how do you combine them into the final answer?<br>
+      4. What's the smallest circle size where things get tricky? Think through n = 1, n = 2, and n = 3 specifically.</p>
+    </div>
+
+    ${renderP1Workflow('houseRobberII.js')}
+
+    <details class="p0-reveal">
+      <summary>Approach &amp; step-through — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Reduce to two House Robber I calls</h4>
+        <p>Since house 0 and house n-1 can never both be robbed, the answer is the better of two linear sub-problems: rob houses 0 through n-2 (never touch the last house), or rob houses 1 through n-1 (never touch the first house). Each sub-problem is exactly House Robber I — reuse that same rolling-variable helper.</p>
+        <pre class="p0-code">function rob(nums) {
+  if (nums.length === 1) return nums[0];
+
+  function helper(houses) {
+    let rob1 = 0, rob2 = 0;
+    for (const num of houses) {
+      const temp = Math.max(num + rob1, rob2);
+      rob1 = rob2;
+      rob2 = temp;
+    }
+    return rob2;
+  }
+
+  return Math.max(
+    helper(nums.slice(0, -1)), // exclude the last house
+    helper(nums.slice(1))      // exclude the first house
+  );
+}</pre>
+        <p>Time: <strong>O(n)</strong> — two linear passes over (roughly) the whole array. Space: <strong>O(n)</strong> as written, since <code>.slice()</code> copies each sub-array — that copy is avoidable by running the same rolling-variable loop directly over index ranges <code>[0, n-2]</code> and <code>[1, n-1]</code> instead of slicing, which brings space down to O(1).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — nums = [1, 2, 3, 4, 5, 1]</div>
+        <div class="p0-diagram-label" style="margin-top:6px;text-transform:none;font-size:11px">Case 1 — exclude the last house: [1, 2, 3, 4, 5]</div>
+        <div id="p1-hr2-row1"></div>
+        <div class="p0-diagram-label" style="margin-top:12px;text-transform:none;font-size:11px">Case 2 — exclude the first house: [2, 3, 4, 5, 1]</div>
+        <div id="p1-hr2-row2"></div>
+        <div class="p0-sim-log" id="p1-hr2-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-hr2-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>n = 1:</strong> a single house has no neighbor at all — rob it directly; don't run the two-case split (slicing down to an empty array would break the reduction).<br>
+        <strong>n = 2:</strong> the two houses are each other's neighbor on both sides of the circle — you can only take one, so the answer is just the larger of the two.<br>
+        <strong>n = 3:</strong> every house is adjacent to both others in a 3-cycle, so at most one house can ever be robbed — the answer is just the single largest value.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Two linear passes, with slicing</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Two linear passes, index-bounded (no slicing)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1HouseRobberIIStepper() {
+    const btn = document.getElementById('p1-hr2-step-btn');
+    if (!btn) return;
+    const row1Host = document.getElementById('p1-hr2-row1');
+    const row2Host = document.getElementById('p1-hr2-row2');
+    const logEl = document.getElementById('p1-hr2-log');
+
+    const CASE1 = [1, 2, 3, 4, 5];
+    const CASE2 = [2, 3, 4, 5, 1];
+
+    function buildDp(nums) {
+      const dp = [];
+      for (let i = 0; i < nums.length; i++) {
+        if (i === 0) dp[0] = nums[0];
+        else if (i === 1) dp[1] = Math.max(nums[0], nums[1]);
+        else dp[i] = Math.max(dp[i - 1], dp[i - 2] + nums[i]);
+      }
+      return dp;
+    }
+    const dp1 = buildDp(CASE1);
+    const dp2 = buildDp(CASE2);
+
+    function buildSteps(row, label, nums, dp) {
+      return nums.map((v, i) => {
+        let msg;
+        if (i === 0) msg = `${label}: best(0) = ${dp[0]}.`;
+        else if (i === 1) msg = `${label}: best(1) = max(${nums[0]}, ${nums[1]}) = ${dp[1]}.`;
+        else msg = `${label}: best(${i}) = max(best(${i - 1}), best(${i - 2}) + ${nums[i]}) = max(${dp[i - 1]}, ${dp[i - 2]} + ${nums[i]}) = ${dp[i]}.`;
+        return { row, i, msg };
+      });
+    }
+
+    const steps = [
+      ...buildSteps(1, 'Case 1 (exclude last)', CASE1, dp1),
+      ...buildSteps(2, 'Case 2 (exclude first)', CASE2, dp2),
+      { combine: true },
+    ];
+
+    let idx;
+
+    function renderRow(host, nums, dp, upTo) {
+      const cells = nums.map((v, i) => {
+        const cls = i === upTo - 1 ? 'p0-arr-cell active' : 'p0-arr-cell';
+        return `<div class="${cls}">${i < upTo ? dp[i] : v}</div>`;
+      }).join('');
+      host.innerHTML = `<div class="p0-arr-row">${cells}</div>`;
+    }
+
+    function reset() {
+      idx = 0;
+      renderRow(row1Host, CASE1, dp1, 0);
+      renderRow(row2Host, CASE2, dp2, 0);
+      logEl.textContent = 'Solving Case 1 first — House Robber I on houses 0 through n-2.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.combine) {
+        const final1 = dp1[dp1.length - 1], final2 = dp2[dp2.length - 1];
+        logEl.textContent = `Combine: max(Case 1 = ${final1}, Case 2 = ${final2}) = ${Math.max(final1, final2)}. Done.`;
+      } else if (s.row === 1) {
+        renderRow(row1Host, CASE1, dp1, s.i + 1);
+        logEl.textContent = s.msg;
+      } else {
+        renderRow(row2Host, CASE2, dp2, s.i + 1);
+        logEl.textContent = s.msg;
+      }
+      idx++;
+      if (idx >= steps.length) {
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // First shared Greedy/Intervals visual: intervals drawn as horizontal bars on a shared numeric
+  // axis. Overlapping intervals are auto-stacked onto separate rows so they stay legible instead of
+  // drawing on top of each other. intervals: array of [start, end] pairs. opts.colors: array of
+  // per-interval hex colors, same order as intervals.
+  function renderP1Timeline(intervals, opts) {
+    opts = opts || {};
+    if (!intervals.length) return `<div style="font-size:12px;color:var(--muted);padding:6px 0">(no intervals)</div>`;
+    const allVals = intervals.flat();
+    const min = Math.min(...allVals), max = Math.max(...allVals);
+    const span = Math.max(1, max - min);
+    const W = 320, PAD = 12, ROW_H = 28, GAP = 6;
+    const xFor = v => PAD + ((v - min) / span) * (W - PAD * 2);
+
+    const rowEnd = []; // rowEnd[r] = end value of the last interval placed in row r
+    const rowOf = intervals.map(([s, e]) => {
+      let r = 0;
+      while (rowEnd[r] !== undefined && rowEnd[r] > s) r++;
+      rowEnd[r] = e;
+      return r;
+    });
+    const numRows = Math.max(...rowOf) + 1;
+    const H = numRows * (ROW_H + GAP) + GAP;
+
+    const bars = intervals.map(([s, e], i) => {
+      const x = xFor(s), w = Math.max(2, xFor(e) - xFor(s));
+      const y = GAP + rowOf[i] * (ROW_H + GAP);
+      const color = (opts.colors && opts.colors[i]) || '#3b82f6';
+      return `<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${ROW_H}" rx="4" fill="${color}33" stroke="${color}" stroke-width="1.6"/>`
+        + `<text x="${(x + w / 2).toFixed(1)}" y="${(y + ROW_H / 2 + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-family="monospace" fill="${color}">[${s},${e}]</text>`;
+    }).join('');
+    return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${bars}</svg></div>`;
+  }
+
+  function renderP1MergeIntervals() {
+    return `
+    <div class="p0-section-title">Merge Intervals<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Greedy / Intervals — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of intervals, each written as <code>[start, end]</code>. Whenever two intervals overlap — or even just touch — combine them into one bigger interval. Return the smallest set of intervals that still covers everything the original list covered.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before and after</h4>
+      <p>intervals = [1,3], [2,6], [8,10], [15,18]. The first two overlap and collapse into one; the other two are already separate:</p>
+      ${renderP1Timeline([[1, 3], [2, 6], [8, 10], [15, 18]], { colors: ['#3b82f6', '#3b82f6', '#a855f7', '#f97316'] })}
+      <p style="margin-top:10px">Merged result — [1,6], [8,10], [15,18]:</p>
+      ${renderP1Timeline([[1, 6], [8, 10], [15, 18]], { colors: ['#3b82f6', '#a855f7', '#f97316'] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you sort the intervals by start time first, do any two intervals that overlap end up sitting right next to each other in the sorted order? Why does that make a single left-to-right pass enough?<br>
+      2. Walking through the sorted list, when should the current interval merge into the one you're building, versus start a brand new one?<br>
+      3. When you merge two overlapping intervals, is the merged end always the second interval's end — or could the first interval's end already be bigger?<br>
+      4. What should happen if two intervals just touch, like [1,4] and [4,5], but don't actually overlap in the strict sense?</p>
+    </div>
+
+    ${renderP1Workflow('intervals-mergeIntervals.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — repeatedly merge any overlapping pair</h4>
+        <p>Without sorting first, overlapping intervals can sit anywhere in the list, including chains where interval A only overlaps C once it's already been merged with B. Repeatedly scan every pair, merge any that overlap, and repeat until a full pass makes no changes.</p>
+        <p>Time: <strong>O(n&sup2;)</strong> or worse — each pass compares every pair, and multiple passes may be needed to fully resolve chained merges. Space: <strong>O(n)</strong>.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sort first, then one linear pass</h4>
+        <p>Sort by start time. Now any intervals that overlap are guaranteed to be adjacent in the sorted order, so a single pass is enough: keep a "current merged interval," and for each next interval, either fold it in (if it overlaps) or close off the current one and start a new one.</p>
+        <pre class="p0-code">function merge(intervals) {
+  if (intervals.length === 0) return [];
+  intervals.sort((a, b) => a[0] - b[0]);
+
+  const output = [intervals[0]];
+  for (const [start, end] of intervals) {
+    const last = output[output.length - 1];
+    if (start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      output.push([start, end]);
+    }
+  }
+  return output;
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — dominated by the sort; the merge pass itself is O(n). Space: <strong>O(n)</strong> for the output array.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — intervals = [1,3], [2,6], [6,10], [15,18], [8,9] (sorted first)</div>
+        <div class="p0-diagram-label" style="margin-top:6px;text-transform:none;font-size:11px">Sorted input</div>
+        <div id="p1-mi-input"></div>
+        <div class="p0-diagram-label" style="margin-top:12px;text-transform:none;font-size:11px">Output being built</div>
+        <div id="p1-mi-output"></div>
+        <div class="p0-sim-log" id="p1-mi-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mi-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty input:</strong> return an empty array immediately.<br>
+        <strong>Single interval:</strong> nothing to merge — return it as-is.<br>
+        <strong>Touching intervals</strong> (like [1,4] and [4,5]): still merge — the condition is <code>start &lt;= last[1]</code>, not <code>&lt;</code>, so touching counts as overlapping.<br>
+        <strong>A chain of merges</strong> (A overlaps B, B overlaps C, but A doesn't overlap C directly): sorting plus tracking the running merged end handles this correctly with no special-casing needed.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (repeated pairwise merging)</td><td class="num">O(n&sup2;) or worse</td><td class="num">O(n)</td></tr>
+          <tr><td>Sort + single pass</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MergeIntervalsStepper() {
+    const btn = document.getElementById('p1-mi-step-btn');
+    if (!btn) return;
+    const inputHost = document.getElementById('p1-mi-input');
+    const outputHost = document.getElementById('p1-mi-output');
+    const logEl = document.getElementById('p1-mi-log');
+
+    const RAW = [[1, 3], [2, 6], [6, 10], [15, 18], [8, 9]];
+    const sorted = [...RAW].sort((a, b) => a[0] - b[0]);
+    const COLORS = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#06b6d4'];
+
+    const steps = [];
+    let output = [[...sorted[0]]];
+    steps.push({ output: output.map(iv => [...iv]), note: `Start with the first sorted interval: [${sorted[0][0]}, ${sorted[0][1]}].` });
+
+    for (let i = 1; i < sorted.length; i++) {
+      const [start, end] = sorted[i];
+      const last = output[output.length - 1];
+      if (start <= last[1]) {
+        const oldEnd = last[1];
+        last[1] = Math.max(last[1], end);
+        steps.push({ output: output.map(iv => [...iv]), note: `[${start}, ${end}] overlaps the current interval (start ${start} ≤ end ${oldEnd}) — merge: end becomes max(${oldEnd}, ${end}) = ${last[1]}.` });
+      } else {
+        output.push([start, end]);
+        steps.push({ output: output.map(iv => [...iv]), note: `[${start}, ${end}] starts after the current interval ends (${start} > ${last[1]}) — no overlap, start a new interval.` });
+      }
+    }
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      inputHost.innerHTML = renderP1Timeline(sorted, { colors: sorted.map((_, i) => COLORS[i % COLORS.length]) });
+      outputHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(not started)</div>`;
+      logEl.textContent = 'Sorted by start time. Building the merged output one interval at a time.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      outputHost.innerHTML = renderP1Timeline(s.output, { colors: s.output.map((_, i) => COLORS[i % COLORS.length]) });
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — final merged result: ${JSON.stringify(s.output)}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1InsertInterval() {
+    return `
+    <div class="p0-section-title">Insert Interval<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Greedy / Intervals — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You already have a sorted, non-overlapping list of intervals. You get one new interval to insert. Put it in the right place, merging it with any existing intervals it overlaps, so the list stays sorted and non-overlapping.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Where the new interval lands</h4>
+      <p>intervals = [1,2], [3,5], [6,7], [8,10], [12,16]. newInterval = [4,8] (shown in red) overlaps three of them at once:</p>
+      ${renderP1Timeline([[1, 2], [3, 5], [6, 7], [8, 10], [12, 16], [4, 8]], { colors: ['#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#ef4444'] })}
+      <p style="margin-top:10px">Result — [1,2], [3,10], [12,16]. The three overlapping intervals collapsed into one, absorbing newInterval:</p>
+      ${renderP1Timeline([[1, 2], [3, 10], [12, 16]], { colors: ['#3b82f6', '#a855f7', '#f97316'] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. The existing intervals are already sorted and non-overlapping — does that mean you can skip sorting entirely, unlike Merge Intervals?<br>
+      2. Scanning left to right, when can you say "this existing interval definitely comes entirely before newInterval — just keep it as-is"?<br>
+      3. Once an existing interval overlaps newInterval, how do you grow newInterval to absorb it? How do you know when to stop absorbing and move on?<br>
+      4. What should happen if newInterval doesn't overlap anything at all — does it just slot into the correct sorted position on its own?</p>
+    </div>
+
+    ${renderP1Workflow('intervals-insertInterval.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — reuse Merge Intervals from scratch</h4>
+        <p>Append newInterval to the existing list, then run the full Merge Intervals algorithm: sort everything by start, then do the single merge pass.</p>
+        <p>Time: <strong>O(n log n)</strong> — the sort dominates. Space: <strong>O(n)</strong>. This works, but it throws away something you already know for free: the input was already sorted.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — one pass, three phases, no sorting needed</h4>
+        <p>Since the input is already sorted, walk it once: first copy over every interval that ends entirely before newInterval starts, then absorb every interval that overlaps newInterval (growing its start/end as you go), then copy over everything left after that.</p>
+        <pre class="p0-code">function insert(intervals, newInterval) {
+  const res = [];
+  let i = 0;
+
+  while (i < intervals.length && intervals[i][1] < newInterval[0]) {
+    res.push(intervals[i]);
+    i++;
+  }
+
+  while (i < intervals.length && newInterval[1] >= intervals[i][0]) {
+    newInterval[0] = Math.min(newInterval[0], intervals[i][0]);
+    newInterval[1] = Math.max(newInterval[1], intervals[i][1]);
+    i++;
+  }
+  res.push(newInterval);
+
+  while (i < intervals.length) {
+    res.push(intervals[i]);
+    i++;
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n)</strong> — one linear pass, no sort needed since the input already came sorted. Space: <strong>O(n)</strong> for the result array.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — intervals = [1,2],[3,5],[6,7],[8,10],[12,16], newInterval = [4,8]</div>
+        <div class="p0-diagram-label" style="margin-top:6px;text-transform:none;font-size:11px">Original (newInterval in red)</div>
+        <div id="p1-ii-input"></div>
+        <div class="p0-diagram-label" style="margin-top:12px;text-transform:none;font-size:11px">Result being built</div>
+        <div id="p1-ii-output"></div>
+        <div class="p0-sim-log" id="p1-ii-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-ii-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty intervals list:</strong> the first and second while-loops never run — the result is just <code>[newInterval]</code>.<br>
+        <strong>newInterval before everything:</strong> phase 1 copies nothing, phase 2 absorbs nothing, newInterval gets pushed first, phase 3 copies the rest.<br>
+        <strong>newInterval after everything:</strong> phase 1 copies everything, phase 2 absorbs nothing, newInterval gets pushed last.<br>
+        <strong>newInterval fully inside an existing interval:</strong> phase 2 still "absorbs" that interval, but <code>min</code>/<code>max</code> leave newInterval's bounds exactly where the existing interval already was — the result is unchanged.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (append + sort + merge)</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Optimal (single pass, no sort)</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1InsertIntervalStepper() {
+    const btn = document.getElementById('p1-ii-step-btn');
+    if (!btn) return;
+    const inputHost = document.getElementById('p1-ii-input');
+    const outputHost = document.getElementById('p1-ii-output');
+    const logEl = document.getElementById('p1-ii-log');
+
+    const INTERVALS = [[1, 2], [3, 5], [6, 7], [8, 10], [12, 16]];
+    const NEW_INTERVAL_START = [4, 8];
+    const COLORS = ['#3b82f6', '#a855f7', '#f97316', '#eab308', '#06b6d4'];
+
+    const res = [];
+    const steps = [];
+    let ni = [...NEW_INTERVAL_START];
+    let i = 0;
+
+    while (i < INTERVALS.length && INTERVALS[i][1] < ni[0]) {
+      res.push(INTERVALS[i]);
+      steps.push({ res: res.map(iv => [...iv]), ni: [...ni], note: `[${INTERVALS[i][0]}, ${INTERVALS[i][1]}] ends before newInterval starts (${INTERVALS[i][1]} < ${ni[0]}) — copy it over as-is.` });
+      i++;
+    }
+    while (i < INTERVALS.length && ni[1] >= INTERVALS[i][0]) {
+      const [os, oe] = ni;
+      ni = [Math.min(ni[0], INTERVALS[i][0]), Math.max(ni[1], INTERVALS[i][1])];
+      steps.push({ res: res.map(iv => [...iv]), ni: [...ni], note: `[${INTERVALS[i][0]}, ${INTERVALS[i][1]}] overlaps newInterval (${INTERVALS[i][0]} ≤ ${oe}) — absorb it: newInterval becomes [${ni[0]}, ${ni[1]}].` });
+      i++;
+    }
+    res.push(ni);
+    steps.push({ res: res.map(iv => [...iv]), ni: [...ni], note: `No more overlap — insert newInterval [${ni[0]}, ${ni[1]}] into the result.` });
+    while (i < INTERVALS.length) {
+      res.push(INTERVALS[i]);
+      steps.push({ res: res.map(iv => [...iv]), ni: [...ni], note: `[${INTERVALS[i][0]}, ${INTERVALS[i][1]}] is untouched — copy over the rest as-is.` });
+      i++;
+    }
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      inputHost.innerHTML = renderP1Timeline([...INTERVALS, NEW_INTERVAL_START], { colors: [...INTERVALS.map(() => '#3b82f6'), '#ef4444'] });
+      outputHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(not started)</div>`;
+      logEl.textContent = 'Scanning left to right — no sorting needed, the input is already sorted.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      outputHost.innerHTML = renderP1Timeline(s.res, { colors: s.res.map((_, i2) => COLORS[i2 % COLORS.length]) });
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — final result: ${JSON.stringify(s.res)}.`;
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }

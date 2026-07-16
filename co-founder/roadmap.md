@@ -12,12 +12,12 @@
 - [ ] Tries — 0 available, none imported yet
 - [ ] Heap / Priority Queue (standalone) — 0 available (mergeKSortedLinkedLists touches heap concepts but isn't standalone heap practice)
 - [ ] Backtracking — 0 available, none imported yet
-- [ ] Graphs — 3 available (courseSchedule, cloneGraph, numberOfIslands)
+- [x] Graphs — 3/3 solved live (numberOfIslands ✓, cloneGraph ✓, courseSchedule ✓)
 - [ ] Advanced Graphs (Union Find, Dijkstra, MST) — 0 available, none imported yet
-- [ ] 1-D DP — 3 available (houseRobber, houseRobberII, climbingStairs)
+- [x] 1-D DP — 3/3 solved live (climbingStairs ✓, houseRobber ✓, houseRobberII ✓)
 - [ ] 2-D DP — 0 available, none imported yet
-- [ ] Greedy / Intervals — 4 available (nonOverlappingIntervals, insertInterval, meetingRoomsII, mergeIntervals)
+- [ ] Greedy / Intervals — 2/4 solved live (mergeIntervals ✓, insertInterval ✓, nonOverlappingIntervals pending, meetingRoomsII pending)
 - [ ] Bit Manipulation — 0 available, none imported yet
 - [ ] Math & Geometry — 0 available, none imported yet
 
-47 total reference problems in LiveCoding, 37 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 11 Trees). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, and Trees are all done. Next up: Graphs (0/3 solved, numberOfIslands to be stubbed and assigned next).
+47 total reference problems in LiveCoding, 45 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 11 Trees + 3 Graphs + 3 1-D DP + 2 Greedy/Intervals). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Graphs, and 1-D DP are all done. Next up: Greedy/Intervals (2/4 solved, nonOverlappingIntervals to be stubbed and assigned next, then meetingRoomsII).
