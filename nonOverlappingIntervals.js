@@ -39,23 +39,36 @@ Space Complexity: O(1)         [sorting is done in-place]
      */
 
     eraseOverlapIntervals(intervals) {
-      if (intervals.length === 0) return 0; // edge case: no intervals → no removals needed
-      intervals.sort((a, b) => a[0] - b[0]); // Sort intervals by start time
-      let res = 0; // number of intervals to remove
-      let prevEnd = intervals[0][1]; // end time of the last kept interval
+      // let removed = 0;
+      // // Sort by starting time
+      // intervals.sort((a, b) => a[0] - b[0]);
+      // for (let i = 0; i < intervals.length - 1; i++) {
+      //   if (intervals[i][1] > intervals[i + 1][0]) {
+      //     removed++;
+      //     // Remove the interval with the larger ending time
+      //     if (intervals[i][1] > intervals[i + 1][1]) {
+      //       intervals[i] = intervals[i + 1];
+      //     }
+      //   }
+      // }
+      // return removed;
+      // Time: O(2n) — every subset of n intervals. Space: O(n) per subset. Falls apart past a handful of intervals.
+
+      if (intervals.length === 0) return 0;
+      intervals.sort((a, b) => a[0] - b[0]);
+      let res = 0;
+      let prevEnd = intervals[0][1];
       for (let i = 1; i < intervals.length; i++) {
-        //Greedy traversal
-        const start = intervals[i][0]; // start time of current interval
-        const end = intervals[i][1]; // end time of current interval
+        const [start, end] = intervals[i];
         if (start >= prevEnd) {
-          // if current interval starts after or at the end of previous → no overlap
-          prevEnd = end; // No overlap → keep this interval
+          prevEnd = end;
         } else {
-          res++; // Overlap found → remove one interval
-          prevEnd = Math.min(end, prevEnd); // Keep the one that ends earlier (greedy choice)
+          res++;
+          prevEnd = Math.min(end, prevEnd);
         }
       }
       return res;
+      // Time: O(n log n) — dominated by the sort. Space: O(1) extra — sorting in place, just counting.
     }
   }
 
@@ -143,7 +156,19 @@ Space Complexity: O(1)         [sorting is done in-place]
   console.log(" ");
 
   // 1
-  test(1, [[0,5],[0,3],[3,5],[4,7],[6,8],[6,11],[8,11]], 3);
+  test(
+    1,
+    [
+      [0, 5],
+      [0, 3],
+      [3, 5],
+      [4, 7],
+      [6, 8],
+      [6, 11],
+      [8, 11],
+    ],
+    3,
+  );
 
   // 2
   // solution.eraseOverlapIntervals([[1,2]])

@@ -45,6 +45,8 @@
     "trees-serializeAndDeserializeBinaryTree.js",
     "trees-subtreeOfAnotherTree.js",
     "trees-validBinarySearchTree.js",
+    "trie-addAndSearchWords.js",
+    "trie-implementTrie.js",
     "twoPointers-containerWithMostWater.js",
     "twoPointers-threeSum.js",
     "twoPointers-validPalindrome.js"

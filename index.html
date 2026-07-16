@@ -2227,6 +2227,42 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1InsertInterval,
       init: initP1InsertIntervalStepper,
     },
+    {
+      id: 'nonOverlappingIntervals',
+      pattern: 'Greedy / Intervals',
+      title: 'Non-overlapping Intervals',
+      difficulty: 'medium',
+      file: 'nonOverlappingIntervals.js',
+      render: renderP1NonOverlappingIntervals,
+      init: initP1NonOverlappingIntervalsStepper,
+    },
+    {
+      id: 'meetingRoomsII',
+      pattern: 'Greedy / Intervals',
+      title: 'Meeting Rooms II',
+      difficulty: 'medium',
+      file: 'intervals-meetingRoomsII.js',
+      render: renderP1MeetingRoomsII,
+      init: initP1MeetingRoomsIIStepper,
+    },
+    {
+      id: 'implementTrie',
+      pattern: 'Tries',
+      title: 'Implement Trie (Prefix Tree)',
+      difficulty: 'medium',
+      file: 'trie-implementTrie.js',
+      render: renderP1ImplementTrie,
+      init: initP1ImplementTrieStepper,
+    },
+    {
+      id: 'addAndSearchWords',
+      pattern: 'Tries',
+      title: 'Design Add and Search Words Data Structure',
+      difficulty: 'medium',
+      file: 'trie-addAndSearchWords.js',
+      render: renderP1AddAndSearchWords,
+      init: initP1AddAndSearchWordsStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -8729,6 +8765,108 @@ function deserialize(data) {
   // being "sunk" one at a time during a step-through. opts.currentRC: [r, c] of the cell being visited
   // right now, drawn with a highlighted outline. First shared visual helper for grid-based (Graphs)
   // problems — later grid problems (e.g. Course Schedule's neighbors, flood-fill variants) can reuse it.
+  // Tries' first visual: builds a small trie from a word list and lays it out as an n-ary tree
+  // (character per node, root drawn as a dot). Nodes marked isEnd (a real inserted word ends there)
+  // get a green ring. opts.highlightPath: a word/prefix to trace from the root — nodes along the
+  // matched portion turn blue, and the final relevant node is colored green (success) or red
+  // (dead end, or found-but-not-a-word for search) depending on opts.requireEnd (true for search,
+  // false/omitted for startsWith, since startsWith only needs the path to exist).
+  function buildP1TrieForVisual(words) {
+    const root = { children: {}, isEnd: false, char: '' };
+    for (const w of words) {
+      let node = root;
+      for (const ch of w) {
+        if (!node.children[ch]) node.children[ch] = { children: {}, isEnd: false, char: ch };
+        node = node.children[ch];
+      }
+      node.isEnd = true;
+    }
+    return root;
+  }
+
+  function walkP1TriePath(root, str) {
+    const path = [root];
+    let node = root;
+    for (const ch of str) {
+      if (!node.children[ch]) return { path, complete: false };
+      node = node.children[ch];
+      path.push(node);
+    }
+    return { path, complete: true, isEnd: node.isEnd };
+  }
+
+  function layoutP1TrieForVisual(root) {
+    const nodes = [];
+    const edges = [];
+    const idOf = new Map();
+    let nextX = 0;
+    function assign(node, depth) {
+      const id = nodes.length;
+      idOf.set(node, id);
+      nodes.push({ id, char: node.char, isEnd: node.isEnd, depth, x: 0 });
+      const childChars = Object.keys(node.children).sort();
+      if (childChars.length === 0) {
+        nodes[id].x = nextX++;
+      } else {
+        const childIds = childChars.map(ch => {
+          const childId = assign(node.children[ch], depth + 1);
+          edges.push([id, childId]);
+          return childId;
+        });
+        nodes[id].x = childIds.reduce((sum, cid) => sum + nodes[cid].x, 0) / childIds.length;
+      }
+      return id;
+    }
+    assign(root, 0);
+    const maxDepth = Math.max(...nodes.map(n => n.depth));
+    return { nodes, edges, maxDepth, leafCount: nextX, idOf };
+  }
+
+  function renderP1Trie(words, opts) {
+    opts = opts || {};
+    const root = buildP1TrieForVisual(words);
+    const { nodes, edges, maxDepth, leafCount, idOf } = layoutP1TrieForVisual(root);
+
+    let highlightIds = new Set();
+    let finalId = null, finalColor = null;
+    if (opts.highlightPath !== undefined) {
+      const { path, complete, isEnd } = walkP1TriePath(root, opts.highlightPath);
+      highlightIds = new Set(path.map(n => idOf.get(n)));
+      finalId = idOf.get(path[path.length - 1]);
+      if (!complete) finalColor = '#ef4444';
+      else if (opts.requireEnd) finalColor = isEnd ? '#22c55e' : '#ef4444';
+      else finalColor = '#22c55e';
+    }
+
+    const COL_W = 46, ROW_H = 54, PAD = 24;
+    const W = Math.max(220, leafCount * COL_W + PAD * 2);
+    const H = (maxDepth + 1) * ROW_H + PAD;
+    const xFor = x => PAD + x * COL_W;
+    const yFor = d => PAD + d * ROW_H;
+
+    const edgeLines = edges.map(([a, c]) => {
+      const A = nodes[a], C = nodes[c];
+      const active = highlightIds.has(a) && highlightIds.has(c);
+      return `<line x1="${xFor(A.x).toFixed(1)}" y1="${yFor(A.depth).toFixed(1)}" x2="${xFor(C.x).toFixed(1)}" y2="${yFor(C.depth).toFixed(1)}" stroke="${active ? '#3b82f6' : 'rgba(255,255,255,0.2)'}" stroke-width="${active ? 2.2 : 1.4}"/>`;
+    }).join('');
+
+    const circles = nodes.map(nd => {
+      const cx = xFor(nd.x).toFixed(1), cy = yFor(nd.depth).toFixed(1);
+      const isRoot = nd.depth === 0;
+      const isFinal = nd.id === finalId;
+      const isOnPath = highlightIds.has(nd.id);
+      let stroke = nd.isEnd ? '#22c55e' : 'rgba(255,255,255,0.35)';
+      let fill = nd.isEnd ? '#22c55e33' : (isRoot ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)');
+      if (isOnPath && !isFinal) { stroke = '#3b82f6'; fill = nd.isEnd ? '#22c55e33' : '#3b82f633'; }
+      if (isFinal) { stroke = finalColor; fill = finalColor + '33'; }
+      const label = isRoot ? '•' : escapeHtml(nd.char);
+      return `<circle cx="${cx}" cy="${cy}" r="15" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`
+        + `<text x="${cx}" y="${(parseFloat(cy) + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-family="monospace" font-weight="600" fill="var(--body-text)">${label}</text>`;
+    }).join('');
+
+    return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines}${circles}</svg></div>`;
+  }
+
   function renderP1Grid(grid, opts) {
     opts = opts || {};
     const cellColors = opts.cellColors;
@@ -10089,6 +10227,673 @@ function deserialize(data) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ` Done — final result: ${JSON.stringify(s.res)}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1NonOverlappingIntervals() {
+    return `
+    <div class="p0-section-title">Non-overlapping Intervals<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Greedy / Intervals — problem 3</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of intervals. Some of them overlap each other. Remove the smallest number of intervals so none of the ones left over overlap. You only need to say how many to remove, not which ones.</p>
+      <p>Intervals that just touch at a point, like [1,2] and [2,3], do NOT count as overlapping.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Which one has to go</h4>
+      <p>intervals = [1,2], [2,3], [3,4], [1,3]. [1,3] (in red) overlaps both [1,2] and [2,3] — removing it is enough to make everything else non-overlapping:</p>
+      ${renderP1Timeline([[1, 2], [2, 3], [3, 4], [1, 3]], { colors: ['#3b82f6', '#3b82f6', '#3b82f6', '#ef4444'] })}
+      <p style="margin-top:10px">Remove 1 interval, and the rest — [1,2], [2,3], [3,4] — don't overlap (touching at a point is fine):</p>
+      ${renderP1Timeline([[1, 2], [2, 3], [3, 4]], { colors: ['#3b82f6', '#a855f7', '#f97316'] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you sort by start time, and you find two intervals that overlap, which is smarter to keep — the one that ends earlier, or the one that ends later? Why does ending earlier leave more room for what comes next?<br>
+      2. Do you actually need to build the final list of kept intervals, or can you just count how many you remove as you go?<br>
+      3. When two intervals overlap, what should happen to the "current end" you're tracking — does it stay the same, or shrink to the smaller of the two ends?<br>
+      4. What should happen when intervals only touch at a point, like [1,2] and [2,3] — does that count as an overlap that forces a removal?</p>
+    </div>
+
+    ${renderP1Workflow('nonOverlappingIntervals.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — try every subset</h4>
+        <p>Try every possible subset of intervals, keep only the subsets where nothing overlaps, and find the biggest one that survives. The answer is n minus the size of that biggest surviving subset.</p>
+        <pre class="p0-code">function eraseOverlapIntervals(intervals) {
+  const n = intervals.length;
+  let maxKept = 0;
+
+  for (let mask = 0; mask < (1 << n); mask++) {
+    const subset = [];
+    for (let i = 0; i < n; i++) {
+      if (mask & (1 << i)) subset.push(intervals[i]);
+    }
+
+    let valid = true;
+    for (let i = 0; i < subset.length && valid; i++) {
+      for (let j = i + 1; j < subset.length; j++) {
+        const [s1, e1] = subset[i];
+        const [s2, e2] = subset[j];
+        if (s1 < e2 && s2 < e1) valid = false; // real overlap, touching is fine
+      }
+    }
+
+    if (valid) maxKept = Math.max(maxKept, subset.length);
+  }
+
+  return n - maxKept;
+}</pre>
+        <p>Time: <strong>O(2<sup>n</sup> &middot; n<sup>2</sup>)</strong> — every subset of n intervals, each checked pairwise for overlaps. Space: <strong>O(n)</strong> per subset. Falls apart past a handful of intervals.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sort by start, greedily keep whichever end is smaller</h4>
+        <p>Sort by start time. Walk through once, tracking the end of the interval you're currently committed to (<code>prevEnd</code>). If the next interval starts before <code>prevEnd</code>, it overlaps — remove one (count it), and keep tracking whichever of the two ends earlier, since that leaves the most room for whatever comes next. If it starts at or after <code>prevEnd</code>, there's no overlap — just move <code>prevEnd</code> forward.</p>
+        <pre class="p0-code">function eraseOverlapIntervals(intervals) {
+  if (intervals.length === 0) return 0;
+  intervals.sort((a, b) => a[0] - b[0]);
+
+  let res = 0;
+  let prevEnd = intervals[0][1];
+  for (let i = 1; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    if (start >= prevEnd) {
+      prevEnd = end;
+    } else {
+      res++;
+      prevEnd = Math.min(end, prevEnd);
+    }
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — dominated by the sort. Space: <strong>O(1)</strong> extra — sorting in place, just counting.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — intervals = [1,2], [2,3], [3,4], [1,3] (sorted by start: [1,2], [1,3], [2,3], [3,4])</div>
+        <div id="p1-noi-timeline"></div>
+        <div class="p0-sim-log" id="p1-noi-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-noi-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty input:</strong> nothing to remove — return 0 immediately.<br>
+        <strong>Single interval:</strong> nothing can overlap it — return 0.<br>
+        <strong>Touching intervals</strong> (like [1,2] and [2,3]): not an overlap — the check is <code>start &gt;= prevEnd</code>, so touching at a point still counts as "no overlap."<br>
+        <strong>Many intervals sharing the same start</strong> (like three copies of [1,2]): all but one get removed, one at a time, since each new one still starts before the shrinking <code>prevEnd</code>.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (try every subset)</td><td class="num">O(2<sup>n</sup>)</td><td class="num">O(n)</td></tr>
+          <tr><td>Sort by start + greedy keep-earlier-end</td><td class="num">O(n log n)</td><td class="num">O(1)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1NonOverlappingIntervalsStepper() {
+    const btn = document.getElementById('p1-noi-step-btn');
+    if (!btn) return;
+    const timelineHost = document.getElementById('p1-noi-timeline');
+    const logEl = document.getElementById('p1-noi-log');
+
+    const SORTED = [[1, 2], [1, 3], [2, 3], [3, 4]];
+    const KEEP = '#22c55e', REMOVE = '#ef4444', PENDING = '#94a3b8';
+
+    const colors = SORTED.map((_, i) => (i === 0 ? KEEP : PENDING));
+    let prevEnd = SORTED[0][1];
+    let removed = 0;
+    const steps = [{ colors: [...colors], removed, note: `Start with [${SORTED[0][0]}, ${SORTED[0][1]}] kept. Tracking prevEnd = ${prevEnd}.` }];
+
+    for (let i = 1; i < SORTED.length; i++) {
+      const [start, end] = SORTED[i];
+      const oldPrevEnd = prevEnd;
+      if (start >= oldPrevEnd) {
+        colors[i] = KEEP;
+        prevEnd = end;
+        steps.push({ colors: [...colors], removed, note: `[${start}, ${end}] starts at or after prevEnd (${start} ≥ ${oldPrevEnd}) — just touching or clear, no overlap. Keep it, prevEnd becomes ${end}.` });
+      } else {
+        colors[i] = REMOVE;
+        removed++;
+        prevEnd = Math.min(end, oldPrevEnd);
+        steps.push({ colors: [...colors], removed, note: `[${start}, ${end}] starts before prevEnd (${start} < ${oldPrevEnd}) — overlap, remove it. prevEnd stays the smaller end: min(${end}, ${oldPrevEnd}) = ${prevEnd}.` });
+      }
+    }
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      timelineHost.innerHTML = renderP1Timeline(SORTED, { colors: SORTED.map(() => PENDING) });
+      logEl.textContent = 'Sorted by start time. Green = kept, red = removed, gray = not decided yet.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      timelineHost.innerHTML = renderP1Timeline(SORTED, { colors: s.colors });
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — ${s.removed} interval${s.removed === 1 ? '' : 's'} removed.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1MeetingRoomsII() {
+    return `
+    <div class="p0-section-title">Meeting Rooms II<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Greedy / Intervals — problem 4</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get a list of meeting times, each written as <code>[start, end]</code>. Meetings that overlap can't share a room. Figure out the smallest number of rooms you'd need to book so every meeting has a room, with no two overlapping meetings in the same room at once.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Rows are rooms</h4>
+      <p>meetings = [0,30], [5,10], [15,20]. When two meetings overlap in time, this picture stacks them into a new row — so the number of rows you see IS the number of rooms needed:</p>
+      ${renderP1Timeline([[0, 30], [5, 10], [15, 20]], { colors: ['#3b82f6', '#a855f7', '#a855f7'] })}
+      <p style="margin-top:6px">[0,30] overlaps both of the others, so they can't share its row — but [5,10] and [15,20] don't overlap each other, so they share row 2. That's <strong>2 rooms</strong>.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If every meeting start is "+1 room needed" and every meeting end is "-1 room freed," and you sort all of these moments by time, what does the running total at any moment tell you?<br>
+      2. If one meeting ends at the exact same time another begins, should the room get freed before or after the new meeting claims a room? Why would getting this backwards overcount rooms?<br>
+      3. Do you need to track which specific meeting is in which room, or just the busiest moment across the whole day?<br>
+      4. Is the answer just the biggest number of meetings that are simultaneously in progress at any single instant?</p>
+    </div>
+
+    ${renderP1Workflow('intervals-meetingRoomsII.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — count overlaps for every meeting</h4>
+        <p>For every meeting, count how many meetings (including itself) are already running at that meeting's start time — just compare it against every other meeting. The peak concurrency always happens at some meeting's start time, so the biggest count you see is the answer.</p>
+        <pre class="p0-code">function minMeetingRooms(intervals) {
+  if (intervals.length === 0) return 0;
+  let maxRooms = 0;
+
+  for (const a of intervals) {
+    let count = 0;
+    for (const b of intervals) {
+      if (b.start <= a.start && a.start < b.end) count++;
+    }
+    maxRooms = Math.max(maxRooms, count);
+  }
+
+  return maxRooms;
+}</pre>
+        <p>Time: <strong>O(n&sup2;)</strong> — every meeting compared against every other meeting. Space: <strong>O(1)</strong> extra.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — sweep through start/end events in time order</h4>
+        <p>Turn every meeting into two events: a <code>+1</code> at its start time and a <code>-1</code> at its end time. Sort all of these events by time — but if a start and an end land on the exact same time, process the <strong>end first</strong>, so a room freed at that instant can be reused instead of double-counted. Walk through the sorted events keeping a running total; the biggest total you ever see is the answer.</p>
+        <pre class="p0-code">function minMeetingRooms(intervals) {
+  if (intervals.length === 0) return 0;
+  const time = [];
+  for (const i of intervals) {
+    time.push([i.start, 1]);
+    time.push([i.end, -1]);
+  }
+  time.sort((a, b) => {
+    if (a[0] === b[0]) return a[1] - b[1]; // end (-1) before start (+1) on a tie
+    return a[0] - b[0];
+  });
+
+  let res = 0;
+  let count = 0;
+  for (const t of time) {
+    count += t[1];
+    res = Math.max(res, count);
+  }
+  return res;
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> — dominated by sorting the 2n events. Space: <strong>O(n)</strong> for the events array.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — meetings = [0,30], [5,10], [15,20], [10,15]</div>
+        <div class="p0-diagram-label" style="margin-top:6px;text-transform:none;font-size:11px">Meetings</div>
+        <div id="p1-mr-input"></div>
+        <div class="p0-diagram-label" style="margin-top:12px;text-transform:none;font-size:11px">Rooms in use right now (out of the eventual peak)</div>
+        <div id="p1-mr-rooms"></div>
+        <div class="p0-sim-log" id="p1-mr-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-mr-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>No meetings:</strong> return 0 immediately.<br>
+        <strong>Single meeting:</strong> always needs exactly 1 room.<br>
+        <strong>One meeting ends exactly when another starts</strong> (like [5,10] and [10,15]): the tie-break processes the end first, so they can share a room — this does NOT force an extra room.<br>
+        <strong>Every meeting overlaps at one busy instant:</strong> the running count peaks at the total number of meetings — every single one needs its own room at that moment.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (pairwise overlap counting)</td><td class="num">O(n&sup2;)</td><td class="num">O(1)</td></tr>
+          <tr><td>Sweep through sorted start/end events</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1MeetingRoomsIIStepper() {
+    const btn = document.getElementById('p1-mr-step-btn');
+    if (!btn) return;
+    const inputHost = document.getElementById('p1-mr-input');
+    const roomsHost = document.getElementById('p1-mr-rooms');
+    const logEl = document.getElementById('p1-mr-log');
+
+    const INTERVALS = [[0, 30], [5, 10], [15, 20], [10, 15]];
+
+    const events = [];
+    INTERVALS.forEach(([s, e]) => {
+      events.push([s, 1, `[${s},${e}]`]);
+      events.push([e, -1, `[${s},${e}]`]);
+    });
+    events.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));
+
+    let count = 0, peak = 0;
+    const steps = [];
+    for (const [t, type, label] of events) {
+      count += type;
+      peak = Math.max(peak, count);
+      const note = type === 1
+        ? `t=${t}: ${label} starts — a room is claimed. Rooms in use now: ${count}.`
+        : `t=${t}: ${label} ends — a room is freed. Rooms in use now: ${count}.`;
+      steps.push({ count, peak, note });
+    }
+    const finalPeak = peak;
+
+    function renderRoomDots(active, total) {
+      const dots = [];
+      for (let i = 0; i < total; i++) {
+        const on = i < active;
+        dots.push(`<div style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-family:monospace;border:1.6px solid ${on ? '#3b82f6' : 'var(--muted)'};background:${on ? '#3b82f633' : 'transparent'};color:${on ? '#3b82f6' : 'var(--muted)'};margin-right:8px">${i + 1}</div>`);
+      }
+      return `<div>${dots.join('')}</div>`;
+    }
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      inputHost.innerHTML = renderP1Timeline(INTERVALS, { colors: ['#3b82f6', '#a855f7', '#f97316', '#eab308'] });
+      roomsHost.innerHTML = renderRoomDots(0, finalPeak);
+      logEl.textContent = `Sweeping start/end events in time order. Peak rooms needed will turn out to be ${finalPeak}.`;
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      roomsHost.innerHTML = renderRoomDots(s.count, finalPeak);
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ` Done — peak rooms in use at any one moment: ${s.peak}.`;
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1ImplementTrie() {
+    return `
+    <div class="p0-section-title">Implement Trie (Prefix Tree)<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Tries — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Build a data structure that stores a set of words, one character at a time, as a tree. Each node is one letter, and a path from the root down through several nodes spells out a word. You need three operations: <code>insert(word)</code> adds a word, <code>search(word)</code> checks whether that exact word was inserted, and <code>startsWith(prefix)</code> checks whether any inserted word begins with that prefix.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What the tree looks like</h4>
+      <p>After inserting "cat", "car", and "card" — shared letters share a path, and green rings mark nodes where a real word ends. Notice "car" (green, at depth 3) still has a child "d" for "card" — a word can end in the middle of a longer branch:</p>
+      ${renderP1Trie(['cat', 'car', 'card'])}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. When inserting a word, if a character's child node doesn't exist yet, what should you do? What if it already exists, like the shared "c" and "a" in "cat" and "car"?<br>
+      2. How do you mark that a complete word ends at a node, given that the same node might still have children going deeper (like "car" ending partway along the path to "card")?<br>
+      3. <code>search</code> and <code>startsWith</code> both just walk down the trie one character at a time — what's the one extra check <code>search</code> needs that <code>startsWith</code> doesn't?<br>
+      4. What should happen if, partway through walking a word, you hit a character with no matching child at all?</p>
+    </div>
+
+    ${renderP1Workflow('trie-implementTrie.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — just keep a list of every inserted word</h4>
+        <p>Store every inserted word in a plain array. <code>search</code> checks whether the word is anywhere in that array; <code>startsWith</code> checks whether any stored word begins with the prefix. Both have to scan every stored word to be sure.</p>
+        <pre class="p0-code">class Trie {
+  constructor() {
+    this.words = [];
+  }
+  insert(word) {
+    this.words.push(word);
+  }
+  search(word) {
+    return this.words.includes(word);
+  }
+  startsWith(prefix) {
+    return this.words.some(w => w.startsWith(prefix));
+  }
+}</pre>
+        <p>Time: <strong>insert O(1)</strong> amortized, but <strong>search/startsWith O(N &middot; L)</strong> — comparing against every one of the N stored words, each comparison up to L characters. Space: <strong>O(N &middot; L)</strong> total characters stored.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — an actual tree of characters</h4>
+        <p>Each node holds a map from character to child node, plus a flag for "a word ends here." <code>insert</code> walks the word one character at a time, creating any node that doesn't exist yet, then flags the last node. <code>search</code> and <code>startsWith</code> share the same walk — the only difference is <code>search</code> also requires the final node's end-of-word flag to be true.</p>
+        <pre class="p0-code">class TrieNode {
+  constructor() {
+    this.children = {};
+    this.isEnd = false;
+  }
+}
+
+class Trie {
+  constructor() {
+    this.root = new TrieNode();
+  }
+
+  insert(word) {
+    let node = this.root;
+    for (const ch of word) {
+      if (!node.children[ch]) node.children[ch] = new TrieNode();
+      node = node.children[ch];
+    }
+    node.isEnd = true;
+  }
+
+  search(word) {
+    const node = this._traverse(word);
+    return node !== null && node.isEnd;
+  }
+
+  startsWith(prefix) {
+    return this._traverse(prefix) !== null;
+  }
+
+  _traverse(str) {
+    let node = this.root;
+    for (const ch of str) {
+      if (!node.children[ch]) return null;
+      node = node.children[ch];
+    }
+    return node;
+  }
+}</pre>
+        <p>Time: <strong>O(L)</strong> per operation, where L is the length of the word/prefix — each character is one hop down the tree, no scanning other words. Space: <strong>O(total characters inserted)</strong>, since shared prefixes only cost one path, not one per word.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — insert "cat", "car", "card", then run a few lookups</div>
+        <div id="p1-trie-diagram"></div>
+        <div class="p0-sim-log" id="p1-trie-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-trie-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty trie:</strong> <code>search</code> and <code>startsWith</code> on any string just fail immediately — the root has no children.<br>
+        <strong>Inserting the same word twice:</strong> harmless — the walk finds every node already exists and just re-flags the last one as end-of-word.<br>
+        <strong>Empty string as a "word":</strong> insert("") marks the root itself as end-of-word; search("") and startsWith("") both return true without walking anywhere.<br>
+        <strong>One word is a prefix of another</strong> (like "car" and "card"): the shorter word's last node is flagged end-of-word AND still has children — both facts have to be tracked independently, one doesn't cancel the other.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time (search/startsWith)</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (array of words)</td><td class="num">O(N &middot; L)</td><td class="num">O(N &middot; L)</td></tr>
+          <tr><td>Trie (tree of characters)</td><td class="num">O(L)</td><td class="num">O(total chars)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1ImplementTrieStepper() {
+    const btn = document.getElementById('p1-trie-step-btn');
+    if (!btn) return;
+    const diagramHost = document.getElementById('p1-trie-diagram');
+    const logEl = document.getElementById('p1-trie-log');
+
+    const steps = [
+      { words: ['cat'], note: `insert("cat") — walk c → a → t, creating all three nodes since the trie is empty, then flag "t" as end-of-word.` },
+      { words: ['cat', 'car'], note: `insert("car") — "c" and "a" already exist (shared with "cat"), so only "r" is newly created and flagged end-of-word.` },
+      { words: ['cat', 'car', 'card'], note: `insert("card") — "c", "a", "r" already exist; only "d" is newly created and flagged end-of-word. Note "r" stays flagged too — "car" is still a real word even though the trie keeps going.` },
+      { words: ['cat', 'car', 'card'], query: 'car', requireEnd: true, note: `search("car") walks c → a → r successfully and finds "r" flagged end-of-word → true.` },
+      { words: ['cat', 'car', 'card'], query: 'ca', requireEnd: true, note: `search("ca") walks c → a successfully, but "a" is NOT flagged end-of-word (no word ends exactly at "ca") → false.` },
+      { words: ['cat', 'car', 'card'], query: 'ca', requireEnd: false, note: `startsWith("ca") only needs the path to exist — it does — so → true, even though "ca" was never inserted as its own word.` },
+      { words: ['cat', 'car', 'card'], query: 'care', requireEnd: true, note: `search("care") walks c → a → r, but "r" has no "e" child — dead end → false.` },
+    ];
+
+    let idx;
+
+    function draw(step) {
+      const opts = step.query !== undefined ? { highlightPath: step.query, requireEnd: step.requireEnd } : {};
+      diagramHost.innerHTML = renderP1Trie(step.words, opts);
+      logEl.textContent = step.note;
+    }
+
+    function reset() {
+      idx = 0;
+      diagramHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty trie)</div>`;
+      logEl.textContent = 'Nothing inserted yet — step through building the trie, then a few lookups.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      draw(steps[idx]);
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1AddAndSearchWords() {
+    return `
+    <div class="p0-section-title">Design Add and Search Words Data Structure<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Tries — problem 2</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Same idea as a trie: <code>addWord</code> stores a word, <code>search</code> checks whether a matching word exists. The twist — <code>search</code>'s string can contain <code>.</code> as a wildcard that matches ANY single letter. So instead of always following one exact path down the tree, sometimes you have to try every branch at once.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Why this isn't just a straight walk anymore</h4>
+      <p>addWord("bad"), addWord("dad"), addWord("mad") — these three don't share any prefix at all, so they form three completely separate chains from the root:</p>
+      ${renderP1Trie(['bad', 'dad', 'mad'])}
+      <p style="margin-top:6px">search(".ad") has to check the root's "b", "d", AND "m" children before it can say true — a single fixed path won't do.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. When <code>search</code> hits a literal letter, it just follows one child — same as the plain Trie. What should happen instead when it hits a <code>.</code>?<br>
+      2. If a <code>.</code> has several children to try and the first one doesn't lead anywhere, what do you do next? Does this remind you of an approach you've used before?<br>
+      3. What's the worst-case time if the search word is ALL dots, like <code>"...."</code>? How does that compare to a plain Trie's usual O(L) search?<br>
+      4. Do you still need the same "did I reach the end of the word at a node flagged end-of-word" check as before?</p>
+    </div>
+
+    ${renderP1Workflow('trie-addAndSearchWords.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — keep a list, compare character by character</h4>
+        <p>Store every added word in a plain array. For <code>search</code>, check every stored word of the same length, comparing character by character and letting <code>.</code> match anything.</p>
+        <pre class="p0-code">class WordDictionary {
+  constructor() {
+    this.words = [];
+  }
+  addWord(word) {
+    this.words.push(word);
+  }
+  search(word) {
+    return this.words.some(w => {
+      if (w.length !== word.length) return false;
+      for (let i = 0; i < word.length; i++) {
+        if (word[i] !== '.' && word[i] !== w[i]) return false;
+      }
+      return true;
+    });
+  }
+}</pre>
+        <p>Time: <strong>O(N &middot; L)</strong> per search — every stored word compared, up to L characters each. Space: <strong>O(N &middot; L)</strong> total characters stored.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — trie, with a DFS that branches on '.'</h4>
+        <p>Build the same trie as before. <code>search</code> walks it recursively: a literal letter follows exactly one child, same as always. A <code>.</code> tries EVERY child at that node — recurse into each one, and return true the moment any of them leads to a full match. This is backtracking: explore a branch, and if it doesn't pan out, fall back and try the next one.</p>
+        <pre class="p0-code">class TrieNode {
+  constructor() {
+    this.children = {};
+    this.isEnd = false;
+  }
+}
+
+class WordDictionary {
+  constructor() {
+    this.root = new TrieNode();
+  }
+
+  addWord(word) {
+    let node = this.root;
+    for (const ch of word) {
+      if (!node.children[ch]) node.children[ch] = new TrieNode();
+      node = node.children[ch];
+    }
+    node.isEnd = true;
+  }
+
+  search(word) {
+    const dfs = (node, i) => {
+      if (!node) return false;
+      if (i === word.length) return node.isEnd;
+
+      const ch = word[i];
+      if (ch === '.') {
+        for (const key in node.children) {
+          if (dfs(node.children[key], i + 1)) return true;
+        }
+        return false;
+      }
+      if (!node.children[ch]) return false;
+      return dfs(node.children[ch], i + 1);
+    };
+    return dfs(this.root, 0);
+  }
+}</pre>
+        <p>Time: <strong>O(L)</strong> for a search with no dots — same as a plain Trie. Worst case with all dots: <strong>O(26<sup>D</sup> &middot; L)</strong>, where D is the number of dots, since each one branches into every child. In practice it's usually much better, bounded by how many words actually share those prefixes. Space: <strong>O(total characters added)</strong> for the trie, plus O(L) recursion depth per search.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — addWord("bad"), "dad", "mad", then a few searches</div>
+        <div id="p1-aasw-diagram"></div>
+        <div class="p0-sim-log" id="p1-aasw-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-aasw-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty dictionary:</strong> any search fails immediately — the root has no children to branch into.<br>
+        <strong>Search word longer or shorter than every stored word:</strong> naturally fails — either you run out of trie before reaching the word's end, or you reach a node with no <code>isEnd</code> flag when the word "ends" too early.<br>
+        <strong>All dots</strong> (like <code>"..."</code>): every branch at every level gets tried — correct, but this is the slow path, bounded by the alphabet size at each level.<br>
+        <strong>Repeated addWord of the same word:</strong> harmless, identical to the plain Trie's insert.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time (search)</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (array of words)</td><td class="num">O(N &middot; L)</td><td class="num">O(N &middot; L)</td></tr>
+          <tr><td>Trie + DFS with '.' branching</td><td class="num">O(L) typical, O(26<sup>D</sup>&middot;L) worst case</td><td class="num">O(total chars)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1AddAndSearchWordsStepper() {
+    const btn = document.getElementById('p1-aasw-step-btn');
+    if (!btn) return;
+    const diagramHost = document.getElementById('p1-aasw-diagram');
+    const logEl = document.getElementById('p1-aasw-log');
+
+    const steps = [
+      { words: ['bad'], note: `addWord("bad") — the trie is empty, so all of b → a → d are newly created, and "d" is flagged end-of-word.` },
+      { words: ['bad', 'dad'], note: `addWord("dad") — no letters shared with "bad" at all (different first letter), so a whole separate d → a → d chain is created.` },
+      { words: ['bad', 'dad', 'mad'], note: `addWord("mad") — same story, a third separate chain m → a → d. The trie now has three totally unconnected branches from the root.` },
+      { words: ['bad', 'dad', 'mad'], note: `search("pad") — position 0 is the literal "p". The root only has children "b", "d", "m" — no "p" — dead end immediately → false.` },
+      { words: ['bad', 'dad', 'mad'], note: `search("bad") — no dots at all, so this is just a plain walk: b → a → d, and "d" is flagged end-of-word → true.` },
+      { words: ['bad', 'dad', 'mad'], note: `search(".ad") — position 0 is a wildcard. Try root's "b" first: b → a → d reaches end-of-word → true immediately, without even trying "d" or "m".` },
+      { words: ['bad', 'dad', 'mad'], note: `search("b..") — position 0 "b" matches root's "b" child directly. Position 1 "." — "b" only has one child, "a" — try it, matches. Position 2 "." — "a" only has one child, "d", which is end-of-word → true.` },
+    ];
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      diagramHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty trie)</div>`;
+      logEl.textContent = 'Nothing added yet — step through building the trie, then a few searches (some with wildcards).';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      diagramHost.innerHTML = renderP1Trie(s.words);
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done.';
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
