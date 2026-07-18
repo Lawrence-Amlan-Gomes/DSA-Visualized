@@ -9,8 +9,8 @@
 - [x] Binary Search — 2/2 solved live (searchInRotatedSortedArray ✓, findMinimumInRotatedSortedArray ✓)
 - [x] Linked List — 6/6 solved live (reverseLinkedList ✓, linkedListCycle ✓, mergeTwoSortedLists ✓, removeNthFromEnd ✓, reorderLinkedList ✓, mergeKSortedLinkedLists ✓)
 - [x] Trees — 11/11 solved live (invertBinaryTree ✓, maximumDepthOfBinaryTree ✓, sameBinaryTree ✓, subtreeOfAnotherTree ✓, lowestCommonAncestorBST ✓, binaryTreeLevelOrderTraversal ✓, validBinarySearchTree ✓, kthSmallestIntegerInBST ✓, constructBinaryTreeFromPreorderAndInorderTraversal ✓, binaryTreeMaximumPathSum ✓, serializeAndDeserializeBinaryTree ✓)
-- [~] Tries — 1/2 solved live (implementTrie ✓, addAndSearchWords assigned, pending)
-- [ ] Heap / Priority Queue (standalone) — 0 available (mergeKSortedLinkedLists touches heap concepts but isn't standalone heap practice); next pattern up, to be authored from scratch
+- [x] Tries — 2/2 solved live (implementTrie ✓, addAndSearchWords ✓)
+- [x] Heap / Priority Queue — 1/1 solved live (kthLargestInStream ✓)
 - [ ] Backtracking — 0 available, not yet authored
 - [x] Graphs — 3/3 solved live (numberOfIslands ✓, cloneGraph ✓, courseSchedule ✓)
 - [ ] Advanced Graphs (Union Find, Dijkstra, MST) — 0 available, not yet authored
@@ -20,4 +20,4 @@
 - [ ] Bit Manipulation — 0 available, not yet authored
 - [ ] Math & Geometry — 0 available, not yet authored
 
-49 total problems in LiveCoding (47 originally imported + 2 self-authored so far), 48 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 11 Trees + 3 Graphs + 3 1-D DP + 4 Greedy/Intervals + 1 Tries). Phase 0, Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Graphs, 1-D DP, and Greedy/Intervals are all done — every originally imported reference problem is solved. Next up: finish Tries (addAndSearchWords assigned, closes it at 2/2), then Heap/Priority Queue — first problem to be authored from scratch.
+50 total problems in LiveCoding (47 originally imported + 3 self-authored so far), 50 solved through a real mentor session (10 Arrays & Hashing + 3 Two Pointers + 4 Sliding Window + 1 Stack + 2 Binary Search + 6 Linked List + 11 Trees + 2 Tries + 1 Heap/Priority Queue + 3 Graphs + 3 1-D DP + 4 Greedy/Intervals). Every problem currently in LiveCoding has been solved through a real mentor session — Tries and Heap/Priority Queue are both now fully closed. Next up: Backtracking — 0 available, first problem (Subsets) to be authored from scratch.

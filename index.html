@@ -343,6 +343,9 @@
     .p0-table td.num { text-align:right; font-family:'SF Mono', Consolas, monospace; color:var(--title); }
     .p0-callout { border-left:3px solid var(--blue); padding:10px 14px; background:rgba(59,130,246,0.06); border-radius:0 6px 6px 0; font-size:13px; color:var(--body-text); line-height:1.6; margin-top:2px; }
     .p0-callout strong { color:var(--title); }
+    .p1-primer { border:1px solid rgba(168,85,247,0.35); background:rgba(168,85,247,0.05); border-radius:10px; padding:18px 20px 6px; margin-bottom:20px; }
+    .p1-primer-label { font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--purple); font-weight:700; margin-bottom:14px; }
+    .p1-primer .p0-card:last-child { margin-bottom:12px; }
     .p0-footer-next { margin-top:14px; font-size:12px; color:var(--muted); font-style:italic; }
     .p0-next-btn { font-style:normal; margin-top:0; padding:10px 18px; background:var(--blue); color:#ffffff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; transition:background .12s; }
     .p0-next-btn:hover { background:#2563eb; }
@@ -365,7 +368,7 @@
     .p0-trace-bar { width:100%; border-radius:2px 2px 0 0; }
     .p0-trace-idx { font-size:8px; color:var(--muted); margin-top:3px; }
     .p0-arr-row { display:flex; gap:4px; margin-top:10px; }
-    .p0-arr-cell { flex:1; aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:4px; font-size:12px; color:var(--body-text); font-family:'SF Mono', Consolas, monospace; }
+    .p0-arr-cell { flex:0 1 40px; aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:4px; font-size:12px; color:var(--body-text); font-family:'SF Mono', Consolas, monospace; }
     .p0-arr-cell.active { background:var(--active-bg); border-color:var(--blue); color:var(--title); font-weight:700; }
     .p0-arr-cell.shift { background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.5); color:#ef4444; }
     .p1-grid { display:inline-grid; gap:3px; margin-top:10px; }
@@ -2263,6 +2266,15 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1AddAndSearchWords,
       init: initP1AddAndSearchWordsStepper,
     },
+    {
+      id: 'kthLargestInStream',
+      pattern: 'Heap / Priority Queue',
+      title: 'Kth Largest Element in a Stream',
+      difficulty: 'easy',
+      file: 'heap-kthLargestElementInStream.js',
+      render: renderP1KthLargestStream,
+      init: initP1KthLargestStreamStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -2287,6 +2299,26 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     'Math & Geometry',
   ];
 
+  // Maps a PHASE1_CATEGORIES name -> a render function for that pattern's teaching primer (what it
+  // is, how it works, when to reach for it, common variations, complexity cheat-sheet). Shown above
+  // the problem pills whenever that category is open. Authored one pattern at a time as sessions
+  // reach them, same incremental approach as PHASE1_PROBLEMS itself — categories with no entry here
+  // yet simply show no primer.
+  const PATTERN_PRIMERS = {
+    'Arrays & Hashing': renderPrimerArraysHashing,
+    'Two Pointers': renderPrimerTwoPointers,
+    'Sliding Window': renderPrimerSlidingWindow,
+    'Stack': renderPrimerStack,
+    'Binary Search': renderPrimerBinarySearch,
+    'Linked List': renderPrimerLinkedList,
+    'Trees': renderPrimerTrees,
+    'Tries': renderPrimerTries,
+    'Heap / Priority Queue': renderPrimerHeap,
+    'Graphs': renderPrimerGraphs,
+    '1-D Dynamic Programming': renderPrimerOneDDP,
+    'Greedy / Intervals': renderPrimerGreedyIntervals,
+  };
+
   let currentP1Problem = localStorage.getItem('dsa-p1-problem') || PHASE1_PROBLEMS[0].id;
   let currentP1Category = localStorage.getItem('dsa-p1-category')
     || (PHASE1_PROBLEMS.find(p => p.id === currentP1Problem) || PHASE1_PROBLEMS[0]).pattern;
@@ -2295,6 +2327,9 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     const categoryNavHtml = PHASE1_CATEGORIES.map(cat =>
       `<div class="p0-nav-item${cat === currentP1Category ? ' active' : ''}" data-p1cat="${escapeHtml(cat)}">${escapeHtml(cat)}</div>`
     ).join('');
+
+    const primerFn = PATTERN_PRIMERS[currentP1Category];
+    const primerHtml = primerFn ? `<div class="p1-primer">${primerFn()}</div>` : '';
 
     const problemsInCategory = PHASE1_PROBLEMS.filter(p => p.pattern === currentP1Category);
     let bodyHtml;
@@ -2308,7 +2343,7 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       bodyHtml = `<div class="p0-nav">${problemNavHtml}</div><div class="p0-container" id="p1-body">${active.render()}</div>`;
     }
 
-    return `<div class="p0-nav">${categoryNavHtml}</div>${bodyHtml}`;
+    return `<div class="p0-nav">${categoryNavHtml}</div>${primerHtml}${bodyHtml}`;
   }
 
   function bindPhase1Handlers() {
@@ -2363,6 +2398,470 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     } else {
       footer.textContent = "You've reached the end of what's built so far in Phase 1 — more problems added as we go.";
     }
+  }
+
+  // ── Pattern primers: one per PHASE1_CATEGORIES entry, shown above that category's problem pills.
+  // Each teaches the pattern itself (not any one problem) — what it is, how it works, when to reach
+  // for it, common variations, and a complexity cheat-sheet. Reuses each pattern's own shared visual
+  // helper (renderP1Trie, renderP1Heap, renderP1GraphSVG, etc.) so no new rendering infra is needed.
+
+  function renderPrimerArraysHashing() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Arrays &amp; Hashing</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>An array is a row of numbered slots — slot <code>i</code> is reached instantly, no searching needed. Hashing turns any key (a number, string, whatever) into a slot number, so a hash map or hash set gives you that same "jump straight there" speed for lookups too, not just for arrays.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>A hash map/set runs your key through a hash function to get a bucket number, then stores (or looks up) the key in that bucket. Same key always hashes to the same bucket, so checking "have I seen this?" or "how many of these are there?" is instant — no scanning. Matching colors below are the same value, found by hashing instead of by comparing every pair:</p>
+      <div class="p0-arr-row">${renderP1ArrayRow([1, 2, 3, 2, 4, 1])}</div>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Have I seen this before?" &middot; "how many times does X appear?" &middot; "find two values that add up to a target" &middot; "group things by some computed key" &middot; anything where checking membership or counting needs to be fast, not a linear scan.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p>Hash <strong>set</strong> for plain membership ("have I seen this?" — Contains Duplicate). Hash <strong>map</strong> of value→index or value→count (Two Sum's complement lookup, frequency counting). Hash map of a computed key→group (Group Anagrams sorts each string to build the key). Prefix/suffix running totals stored alongside a map (Product of Array Except Self).</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Average</th><th style="text-align:right">Worst case</th></tr></thead>
+      <tbody>
+        <tr><td>Insert / lookup / delete (hash map or set)</td><td class="num">O(1)</td><td class="num">O(n)</td></tr>
+        <tr><td>Array access by index</td><td class="num">O(1)</td><td class="num">O(1)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerTwoPointers() {
+    const arr = [1, 3, 4, 6, 7, 9];
+    const pointerRow = `<div class="p0-arr-row" style="align-items:flex-end">${arr.map((v, i) => {
+      const isL = i === 0, isR = i === arr.length - 1;
+      const label = isL ? '▲ L' : (isR ? '▲ R' : '');
+      const color = isL || isR ? '#3b82f6' : undefined;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="p0-arr-cell"${color ? ` style="border-color:${color}"` : ''}>${v}</div>
+        <div style="font-size:10px;color:var(--blue);height:12px">${label}</div>
+      </div>`;
+    }).join('')}</div>`;
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Two Pointers</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>Instead of a nested loop checking every pair (O(n²)), you keep two index variables that each only ever move forward — never backtrack — across a sorted or naturally-ordered structure. That single-direction movement is what cuts the work down to O(n).</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Two common shapes: pointers starting at opposite ends and moving toward each other, or one pointer chasing another from the same side. Either way, each step you take rules out possibilities you'll never need to check again:</p>
+      ${pointerRow}
+      <p style="margin-top:6px">L and R close inward based on what you compare at each step — e.g. if the sum at L+R is too small, move L right; too big, move R left.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>The array is sorted (or you sort it first) &middot; "find a pair/triple that sums to a target" &middot; "reverse or check symmetry in place" &middot; anything where a nested loop would work but feels wasteful.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Opposite ends closing inward</strong> — Valid Palindrome, Container With Most Water. <strong>Fixed first value + two pointers on the rest</strong> — 3Sum sorts, fixes one number, then two-pointers the remainder for the other two. <strong>Same-direction, different speeds</strong> — removing duplicates in place, or the fast/slow pointer trick used for cycle detection.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Nested loop (brute force)</td><td class="num">O(n&sup2;)</td><td class="num">O(1)</td></tr>
+        <tr><td>Two pointers (plus a sort, if needed)</td><td class="num">O(n log n)</td><td class="num">O(1)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerSlidingWindow() {
+    const arr = [4, 2, 1, 7, 8, 3, 5];
+    const winStart = 2, winEnd = 4;
+    const windowRow = `<div class="p0-arr-row">${arr.map((v, i) => {
+      const inWindow = i >= winStart && i <= winEnd;
+      return `<div class="p0-arr-cell"${inWindow ? ' style="border-color:#22c55e;background:#22c55e22"' : ''}>${v}</div>`;
+    }).join('')}</div>`;
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Sliding Window</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A window is a contiguous chunk of an array or string, marked by a left and right edge. Instead of recomputing everything from scratch for every possible window, you grow the window by moving the right edge, and shrink it by moving the left edge — reusing whatever you already knew about the previous window.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>The green cells are the current window. Moving the right edge forward adds one new element to whatever you're tracking (a count, a sum, a set of seen characters); moving the left edge forward removes one:</p>
+      ${windowRow}
+      <p style="margin-top:6px">This is what makes it O(n) overall even though it looks like two nested loops — each edge only ever moves forward, so together they take at most 2n steps total, never n&sup2;.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Longest/shortest/best <strong>contiguous</strong> substring or subarray that satisfies some condition" — the word "contiguous" is the giveaway. "No repeating characters," "at most k distinct," "contains all of these characters" all fit this shape.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Fixed-size window</strong> — the window length is given up front, just slide it across. <strong>Variable-size window</strong> (far more common) — grow the right edge until the window becomes invalid, then shrink the left edge until it's valid again, tracking the best window seen along the way. Longest Substring Without Repeating, Longest Repeating Character Replacement, and Minimum Window Substring are all this second shape.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Check every substring/subarray (brute force)</td><td class="num">O(n&sup2;) or O(n&sup3;)</td><td class="num">varies</td></tr>
+        <tr><td>Sliding window (two pointers, one pass)</td><td class="num">O(n)</td><td class="num">O(k) typical</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerStack() {
+    const stackVals = ['(', '[', '('];
+    const stackVisual = `<div style="display:flex;flex-direction:column-reverse;align-items:center;gap:4px;width:60px">
+      ${stackVals.map((v, i) => `<div class="p0-arr-cell" style="width:44px${i === stackVals.length - 1 ? ';border-color:#22c55e' : ''}">${escapeHtml(v)}</div>`).join('')}
+    </div>
+    <div style="font-size:10px;color:var(--sublabel);margin-top:4px;text-align:center;width:60px">↑ top</div>`;
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Stack</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A stack only lets you add or remove from ONE end — the top. Last thing pushed in is the first thing popped out (LIFO — Last In, First Out). No random access, no peeking anywhere except the top.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Push adds to the top, pop removes from the top, peek looks at the top without removing it. Below, three opening brackets have been pushed — the green one on top is the most recently opened, so it's the first one that must be closed:</p>
+      <div style="display:flex;flex-direction:column;align-items:center">${stackVisual}</div>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Matching pairs" (parentheses, brackets, tags) &middot; "undo the most recent thing" &middot; anything where you need to know "what was the most recent unmatched/unprocessed item" &middot; simulating recursion without actual function calls.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Plain stack</strong> for matching/validity checks — Valid Parentheses pushes openers, pops and compares on closers. <strong>Monotonic stack</strong> — keep the stack always increasing or always decreasing, popping off anything that violates that order, used for "next greater/smaller element" style problems. <strong>Stack simulating recursion</strong> — iterative DFS, expression evaluation.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Push / pop / peek</td><td class="num">O(1)</td><td class="num">O(n) total</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerBinarySearch() {
+    const arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+    function boundsRow(lo, mid, hi) {
+      return `<div class="p0-arr-row" style="align-items:flex-end">${arr.map((v, i) => {
+        let label = '', color;
+        if (i === lo) { label = 'L'; color = '#a855f7'; }
+        if (i === mid) { label = 'mid'; color = '#3b82f6'; }
+        if (i === hi) { label = label ? label + '/R' : 'R'; color = '#a855f7'; }
+        const inRange = i >= lo && i <= hi;
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div class="p0-arr-cell"${color ? ` style="border-color:${color}"` : (inRange ? '' : ' style="opacity:0.3"')}>${v}</div>
+          <div style="font-size:9px;color:var(--sublabel);height:11px">${label}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Binary Search</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>If your search space is sorted — or has some property that flips cleanly from "no" to "yes" at one point — you don't need to check every element. Check the middle; whether the answer is bigger or smaller tells you which HALF to throw away entirely. Repeat, and each step cuts what's left in half.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Searching for 23 in a sorted array of 10 values. Start with L and R at the ends, check mid:</p>
+      ${boundsRow(0, 4, 9)}
+      <p style="margin-top:8px">23 &lt; 16? No, so the left half (indices 0-4) can be thrown away entirely — search only continues in the right half from here:</p>
+      ${boundsRow(5, 6, 9)}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>Sorted array (even if rotated) &middot; a problem that explicitly asks for O(log n) &middot; "find the point where a condition switches from true to false" &middot; "minimize/maximize some value such that a condition still holds" — even when there's no obvious array to search.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Classic search</strong> for one exact value. <strong>Rotated sorted array</strong> — figure out which half (left or right of mid) is still properly ordered, then decide which half the target could be in. <strong>Binary search on the answer</strong> — instead of searching the array, guess a candidate answer, check if it satisfies the condition, and narrow the range of possible answers — the array itself may not even be sorted, only the condition needs to be monotonic.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Linear scan</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        <tr><td>Binary search</td><td class="num">O(log n)</td><td class="num">O(1) iterative</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerLinkedList() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Linked List</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>Instead of one contiguous block of memory like an array, each node stores its value plus a pointer to the next node. There's no index — to reach node 5, you must walk from the head, one <code>next</code> pointer at a time.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>A chain of nodes, each pointing to the next, ending in null:</p>
+      ${renderP1LLChainSimple([1, 2, 3, 4, 5])}
+      <p style="margin-top:6px">No shifting is needed to insert or delete once you're already at the right node — you just rewire a couple of pointers. That's the trade-off versus an array: no O(1) random access, but O(1) insert/delete once you're there.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>The problem explicitly hands you a linked list &middot; you need O(1) insert/delete in the middle without shifting elements &middot; anything about detecting cycles, merging chains, or reordering nodes in place.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Fast &amp; slow pointers</strong> — slow moves 1 step, fast moves 2. They meet inside a cycle, or when fast reaches the end, slow is exactly at the middle. <strong>Dummy head node</strong> — a fake node before the real head, so removing/inserting at the very front doesn't need a special case. <strong>Reversing in place</strong> — track <code>prev</code>, <code>curr</code>, and <code>next</code> as three pointers while you walk and flip each link. <strong>Merging multiple lists</strong> — compare current heads directly (two lists) or with a heap (k lists).</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Access by index (must walk from head)</td><td class="num">O(n)</td><td class="num">O(1)</td></tr>
+        <tr><td>Insert / delete at a known node</td><td class="num">O(1)</td><td class="num">O(1)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerTrees() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Trees</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A tree is a node with child pointers (usually two, for a binary tree), forming a hierarchy with one root and no cycles — everything branches downward, and every node has exactly one path back up to the root.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>A binary search tree (BST) — every node's left subtree is smaller, right subtree is bigger, which is what lets you skip half the tree at every step during a search:</p>
+      ${renderP1TreeSVG([8, 3, 10, 1, 6, null, 14])}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>The data is naturally hierarchical (parent/child, nested) &middot; you need fast search + insert + delete on sorted data (BST) &middot; "traverse level by level" &middot; "find a path from root to leaf" &middot; "lowest common ancestor," "subtree," or "depth" show up in the problem statement.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>DFS</strong> (preorder, inorder, postorder) — recursion naturally mirrors the tree's own shape, and is the default choice for most tree problems. <strong>BFS</strong> with a queue — used whenever you need level-by-level order. <strong>BST property</strong> — comparing against the current node lets you discard an entire subtree instead of visiting every node, the same idea as binary search applied to a tree shape.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Balanced</th><th style="text-align:right">Worst case</th></tr></thead>
+      <tbody>
+        <tr><td>Search / insert / delete (BST)</td><td class="num">O(log n)</td><td class="num">O(n)</td></tr>
+        <tr><td>Full traversal (visit every node)</td><td class="num">O(n) time, O(log n) space</td><td class="num">O(n) time, O(n) space</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerTries() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Tries</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A trie (prefix tree) is a tree where each edge is a single character, and a path from the root spells out a string. Words that share a prefix share the same path for that prefix, only branching where they first differ.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>"cat," "car," and "dog" inserted — "cat" and "car" share the c → a path and only branch at the last letter, while "dog" gets its own separate chain:</p>
+      ${renderP1Trie(['cat', 'car', 'dog'])}
+      <p style="margin-top:6px">Checking whether "car" was ever inserted just means walking c → a → r and checking the end-of-word flag — no scanning through a list of stored strings.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Does any word start with this prefix?" &middot; autocomplete &middot; storing and searching a large set of strings efficiently by shared prefixes &middot; wildcard string matching.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Plain trie</strong> — insert, search, startsWith. <strong>Trie + DFS with wildcard branching</strong> — a wildcard character tries every child at that node instead of following one exact path (Design Add and Search Words). <strong>Trie for autocomplete</strong> — walk to the end of a prefix, then DFS everything below it to collect matching words.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Insert / search a word of length L</td><td class="num">O(L)</td><td class="num">O(total characters stored)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerHeap() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Heap / Priority Queue</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A heap keeps its smallest (min-heap) or largest (max-heap) element instantly reachable at the root, without fully sorting everything else. It's stored as a plain array, but behaves like a tree — every parent is smaller (or larger) than its own children.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>A min-heap — notice every parent is smaller than both its children, but siblings aren't ordered relative to each other. That partial ordering is exactly enough to make the root always correct, without paying for a full sort:</p>
+      ${renderP1Heap([2, 5, 4, 8, 7])}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Kth largest/smallest" &middot; "top k" &middot; always needing the current min/max while the rest of the data can stay unordered &middot; merging several already-sorted sources together &middot; scheduling/processing by priority.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Fixed-size heap capped at k</strong> — evict the smallest the moment you exceed k, so the root is always "the kth largest so far" (Kth Largest Element in a Stream). <strong>Heap of "next candidates"</strong> across multiple sources — one entry per source's current head, used to merge many sorted lists (Merge K Sorted Lists). <strong>Two heaps</strong> (a max-heap for the smaller half, min-heap for the larger half) for running-median-style problems.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Operation</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Push / pop</td><td class="num">O(log n)</td><td class="num">O(n)</td></tr>
+        <tr><td>Peek at min/max</td><td class="num">O(1)</td><td class="num">—</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerGraphs() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Graphs</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A graph is nodes (vertices) connected by edges, with no guarantee of a single root or "no cycles" — far more general than a tree. Edges can be directed (one-way) or undirected, and may or may not have weights.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>A small undirected graph — each line is a connection both directions can travel:</p>
+      ${renderP1GraphSVG(5, { edges: [[1, 2], [2, 3], [3, 4], [4, 5], [5, 1], [1, 3]] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>Connections/relationships between items that aren't strictly hierarchical &middot; a grid where each cell connects to its neighbors &middot; "can you get from A to B" &middot; dependencies or prerequisites &middot; "islands," "clone," "connected components."</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>DFS</strong> (recursion or explicit stack) — explore as deep as possible before backtracking, natural for "does a path exist" or "find every connected piece." <strong>BFS</strong> (queue) — shortest path in an unweighted graph, or level-by-level spread (like water or fire spreading across a grid). <strong>3-color cycle detection</strong> (unvisited / currently visiting / fully done) — needed for "is there a valid order" problems like Course Schedule. An <strong>adjacency list</strong> (node → list of neighbors) is almost always the right representation over an adjacency matrix, unless the graph is dense.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Traversal</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>DFS / BFS</td><td class="num">O(V + E)</td><td class="num">O(V)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerOneDDP() {
+    const dp = [1, 1, 2, 3, 5, 8];
+    const dpRow = `<div class="p0-arr-row" style="align-items:flex-end">${dp.map((v, i) =>
+      `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="p0-arr-cell">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">dp[${i}]</div>
+      </div>`
+    ).join('')}</div>`;
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — 1-D Dynamic Programming</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>When the answer for size n can be built from the answers to smaller sizes (n-1, n-2, ...), you don't need to recompute those smaller answers every time — store each one the first time it's computed, and reuse it. That's the whole trick: trade memory for skipping repeated work.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Each slot only depends on the one or two slots right before it, so once those are known, the next one is a quick combination of them — no need to recompute from scratch:</p>
+      ${dpRow}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Number of ways to do X" &middot; "minimum/maximum cost to reach X" &middot; the problem naturally breaks into "the answer for n depends on the answer(s) for smaller n" &middot; a brute-force recursion that keeps recomputing the exact same smaller subproblems over and over.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Top-down (memoization)</strong> — write the brute-force recursion first, then cache results so repeated calls return instantly. <strong>Bottom-up</strong> — build a dp array from the smallest base case upward, no recursion at all. <strong>Rolling / O(1) space</strong> — once you notice dp[i] only ever depends on the last one or two values, drop the full array and just keep those few variables (House Robber only ever needs the previous two totals).</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Naive recursion (recomputes subproblems)</td><td class="num">O(2<sup>n</sup>) typical</td><td class="num">O(n) call stack</td></tr>
+        <tr><td>Memoized / bottom-up DP</td><td class="num">O(n)</td><td class="num">O(n), often reducible to O(1)</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function renderPrimerGreedyIntervals() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Greedy / Intervals</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>A greedy algorithm makes the locally-best choice at each step and never reconsiders — no backtracking. It only works when you can show that the locally-best choice never rules out the globally-best answer. Interval problems (start/end ranges) are a common home for greedy, since sorting by start or end usually reveals an obvious "always pick this one" rule.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Sort by start, then merge whenever the next interval's start is at or before the current one's end:</p>
+      ${renderP1Timeline([[1, 3], [2, 6], [8, 10], [15, 18]], { colors: ['#3b82f6', '#3b82f6', '#a855f7', '#f97316'] })}
+      <p style="margin-top:8px">Merged — the first two collapse into one, the rest stay separate:</p>
+      ${renderP1Timeline([[1, 6], [8, 10], [15, 18]], { colors: ['#3b82f6', '#a855f7', '#f97316'] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Combine/merge overlapping ranges" &middot; "schedule the maximum number of non-overlapping events" &middot; "minimum number of resources (rooms, arrows, platforms) needed at once."</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Sort by start</strong>, merge while adjacent intervals overlap — Merge Intervals, Insert Interval. <strong>Sort by END</strong>, greedily keep whichever interval finishes earliest to leave the most room for what comes next — Non-overlapping Intervals, the classic "activity selection" proof. <strong>Sweep-line</strong> over start/end events sorted together, tracking how many are "currently open" at once — Meeting Rooms II.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Greedy over sorted intervals</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+      </tbody>
+    </table>`;
   }
 
   // Small non-spoiler visual: color-codes cells by value so "duplicate" is something Lawrence
@@ -8954,6 +9453,54 @@ function deserialize(data) {
     return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeParts}${circles}</svg></div>`;
   }
 
+  // Shared Heap/Priority Queue visual: draws a binary heap laid out from its backing array, using
+  // the standard implicit-tree rule (node i's children live at 2i+1 and 2i+2). Reusable for any
+  // future heap problem, not just Kth Largest — pass opts.highlight = { index: '#hexcolor' } to ring
+  // specific nodes (e.g. the node that just moved during a bubble-up/down step).
+  function renderP1Heap(data, opts) {
+    opts = opts || {};
+    const highlight = opts.highlight || {};
+    const n = data.length;
+    if (!n) return `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty heap)</div>`;
+
+    const maxDepth = Math.floor(Math.log2(n));
+    const COL_W = 46, ROW_H = 54, PAD = 24;
+    const fullWidth = Math.pow(2, maxDepth) * COL_W;
+    const W = Math.max(220, fullWidth + PAD * 2);
+    const H = (maxDepth + 1) * ROW_H + PAD;
+
+    const depthOf = i => Math.floor(Math.log2(i + 1));
+    const xFor = i => {
+      const d = depthOf(i);
+      const levelStart = Math.pow(2, d) - 1;
+      const posInLevel = i - levelStart;
+      const totalInLevel = Math.pow(2, d);
+      return PAD + ((posInLevel + 0.5) / totalInLevel) * fullWidth;
+    };
+    const yFor = i => PAD + depthOf(i) * ROW_H;
+
+    const edgeLines = [];
+    for (let i = 0; i < n; i++) {
+      for (const c of [2 * i + 1, 2 * i + 2]) {
+        if (c < n) {
+          edgeLines.push(`<line x1="${xFor(i).toFixed(1)}" y1="${yFor(i).toFixed(1)}" x2="${xFor(c).toFixed(1)}" y2="${yFor(c).toFixed(1)}" stroke="rgba(255,255,255,0.2)" stroke-width="1.4"/>`);
+        }
+      }
+    }
+
+    const circles = data.map((val, i) => {
+      const cx = xFor(i).toFixed(1), cy = yFor(i).toFixed(1);
+      const isRoot = i === 0;
+      let fill = isRoot ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)';
+      let stroke = 'rgba(255,255,255,0.35)';
+      if (highlight[i]) { fill = highlight[i] + '33'; stroke = highlight[i]; }
+      return `<circle cx="${cx}" cy="${cy}" r="15" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`
+        + `<text x="${cx}" y="${(parseFloat(cy) + 4).toFixed(1)}" text-anchor="middle" font-size="12" font-family="monospace" font-weight="600" fill="var(--body-text)">${val}</text>`;
+    }).join('');
+
+    return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${edgeLines.join('')}${circles}</svg></div>`;
+  }
+
   function renderP1NumberOfIslands() {
     return `
     <div class="p0-section-title">Number of Islands<span class="p1-badge medium">Medium</span></div>
@@ -10890,6 +11437,196 @@ class WordDictionary {
       if (idx >= steps.length) return;
       const s = steps[idx];
       diagramHost.innerHTML = renderP1Trie(s.words);
+      logEl.textContent = s.note;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' Done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  // Non-spoiler concept visual for Kth Largest in a Stream: shows what "kth largest so far" means
+  // (sort everything seen, highlight the kth position) without hinting at the heap technique.
+  function renderP1KthLargestConcept(nums, k) {
+    const sorted = [...nums].sort((a, b) => b - a);
+    const cells = sorted.map((v, i) => {
+      const isKth = i === k - 1;
+      const style = isKth ? 'border-color:#22c55e;background:#22c55e22' : '';
+      return `<div class="p0-arr-cell" style="${style}">${v}</div>`;
+    }).join('');
+    return `<div class="p0-arr-row">${cells}</div>`;
+  }
+
+  function renderP1KthLargestStream() {
+    return `
+    <div class="p0-section-title">Kth Largest Element in a Stream<span class="p1-badge easy">Easy</span></div>
+    <div class="p0-section-sub">Heap / Priority Queue — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Build a class that keeps track of a growing stream of numbers, and can always answer "what's the kth largest number I've seen so far?" — <code>k</code> is fixed when you create the object. Every time <code>add(val)</code> is called, a new number joins the stream, and you return the kth largest across everything seen up to that point (including the initial <code>nums</code> you started with).</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What "kth largest so far" means</h4>
+      <p>Say k = 3. After seeing [4, 5, 8, 2], sort what you've seen from biggest to smallest — the 3rd one (green) is the answer right now:</p>
+      ${renderP1KthLargestConcept([4, 5, 8, 2], 3)}
+      <p style="margin-top:6px">Now a new number, 10, streams in. "Everything seen" grows to [4, 5, 8, 2, 10] — sort again, and the 3rd-largest position now points at a different value:</p>
+      ${renderP1KthLargestConcept([4, 5, 8, 2, 10], 3)}
+      <p style="margin-top:6px">Re-sorting the whole list from scratch every time a number arrives works, but it's wasteful. The real question this problem is testing: can you answer "what's the kth largest so far" after every single new number, without re-sorting everything each time?</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. If you kept every number ever seen and re-sorted after each <code>add()</code>, what's the time complexity of one <code>add()</code> call? Of <code>n</code> calls total?<br>
+      2. You only ever care about the top k numbers. Once a number is clearly outside the top k, do you need to remember it at all?<br>
+      3. If you only kept the k largest values seen so far, what's the cheapest way to know instantly which ONE of those k is the smallest — the one that gets kicked out the moment something bigger shows up?<br>
+      4. What kind of structure keeps its smallest (or largest) element instantly reachable, without a full re-sort every time something is added or removed?</p>
+    </div>
+
+    ${renderP1Workflow('heap-kthLargestElementInStream.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — keep everything, re-sort on every add</h4>
+        <p>Store every number ever seen in a plain array. On every <code>add(val)</code>, push the new value, sort the whole array descending, and return the element at index <code>k - 1</code>.</p>
+        <pre class="p0-code">class KthLargest {
+  constructor(k, nums) {
+    this.k = k;
+    this.stream = [...nums];
+  }
+  add(val) {
+    this.stream.push(val);
+    this.stream.sort((a, b) => b - a);
+    return this.stream[this.k - 1];
+  }
+}</pre>
+        <p>Time: <strong>O(n log n)</strong> per <code>add()</code> call, where n is how many numbers have been seen so far — and n only grows, so later calls get slower and slower. Space: <strong>O(n)</strong> — every number ever seen is kept around forever.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — a min-heap that never holds more than k values</h4>
+        <p>Keep a min-heap capped at size k, holding only the k largest numbers seen so far. Its root (the smallest of those k) is always the answer, because anything smaller than the root can't possibly be in the top k. On <code>add(val)</code>: push val in, and if the heap now has more than k values, pop the smallest one straight back out. JS has no built-in heap, so it's implemented directly on an array with bubble-up (on push) and bubble-down (on pop).</p>
+        <pre class="p0-code">class MinHeap {
+  constructor() {
+    this.data = [];
+  }
+  size() {
+    return this.data.length;
+  }
+  peek() {
+    return this.data[0];
+  }
+  push(val) {
+    this.data.push(val);
+    let i = this.data.length - 1;
+    while (i > 0) {
+      const parent = Math.floor((i - 1) / 2);
+      if (this.data[parent] <= this.data[i]) break;
+      [this.data[parent], this.data[i]] = [this.data[i], this.data[parent]];
+      i = parent;
+    }
+  }
+  pop() {
+    const top = this.data[0];
+    const last = this.data.pop();
+    if (this.data.length > 0) {
+      this.data[0] = last;
+      let i = 0;
+      const n = this.data.length;
+      while (true) {
+        let smallest = i;
+        const left = 2 * i + 1, right = 2 * i + 2;
+        if (left < n && this.data[left] < this.data[smallest]) smallest = left;
+        if (right < n && this.data[right] < this.data[smallest]) smallest = right;
+        if (smallest === i) break;
+        [this.data[i], this.data[smallest]] = [this.data[smallest], this.data[i]];
+        i = smallest;
+      }
+    }
+    return top;
+  }
+}
+
+class KthLargest {
+  constructor(k, nums) {
+    this.k = k;
+    this.heap = new MinHeap();
+    for (const num of nums) this.add(num);
+  }
+  add(val) {
+    this.heap.push(val);
+    if (this.heap.size() > this.k) this.heap.pop();
+    return this.heap.peek();
+  }
+}</pre>
+        <p>Time: <strong>O(log k)</strong> per <code>add()</code> call — the heap never holds more than k elements, so both push's bubble-up and pop's bubble-down are bounded by the heap's height, log k. Space: <strong>O(k)</strong> — the heap only ever stores the k largest values.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — KthLargest(3, [4,5,8,2]), then add(3), add(5), add(10), add(9), add(4)</div>
+        <div id="p1-klis-diagram"></div>
+        <div class="p0-sim-log" id="p1-klis-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-klis-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>k equal to or larger than the initial nums length:</strong> the heap simply grows until it reaches k, popping nothing along the way — the problem's constraints guarantee <code>add()</code> is only called once at least k numbers are already in the stream, so <code>peek()</code> on a not-yet-full heap never needs to be handled.<br>
+        <strong>Duplicate values:</strong> the heap's comparisons (<code>&lt;</code>, <code>&lt;=</code>) treat equal values consistently — no special-casing needed, ties just stack up in the heap.<br>
+        <strong>Negative numbers:</strong> comparisons work the same regardless of sign, so nothing changes.<br>
+        <strong>k = 1:</strong> the heap of size 1 always holds just the current maximum — every <code>add()</code> either replaces the root with a bigger value or immediately evicts the new value if it's smaller.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time (add)</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (re-sort every add)</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
+          <tr><td>Min-heap capped at size k</td><td class="num">O(log k)</td><td class="num">O(k)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1KthLargestStreamStepper() {
+    const btn = document.getElementById('p1-klis-step-btn');
+    if (!btn) return;
+    const diagramHost = document.getElementById('p1-klis-diagram');
+    const logEl = document.getElementById('p1-klis-log');
+
+    const steps = [
+      { data: [4], note: `Construction starts: build with nums=[4,5,8,2], k=3. Push 4 → heap=[4]. Size 1 ≤ k=3, nothing to pop. Root (kth largest so far) = 4.` },
+      { data: [4, 5], note: `Push 5 → heap=[4,5]. Size 2 ≤ 3, no pop. Root = 4, still the smaller of the two.` },
+      { data: [4, 5, 8], note: `Push 8 → heap=[4,5,8]. Size 3 ≤ 3 — exactly k, the last push that needs no pop. Root = 4.` },
+      { data: [4, 5, 8], note: `Push 2 → temporarily [2,4,8,5] (2 bubbles up past 5 and 4 since it's smaller than both). Size 4 > k=3, so the minimum (2) — the value just added — gets popped straight back off. Final heap=[4,5,8]. Root = 4. Construction is done.` },
+      { data: [4, 5, 8], note: `add(3): push 3 → temporarily [3,4,8,5]. Size 4 > 3, pop the minimum (3) — again the value just added. Final heap unchanged: [4,5,8]. Root = 4 → that's the answer.` },
+      { data: [5, 5, 8], note: `add(5): push 5 → [4,5,8,5]. Size 4 > 3, pop the minimum (4) — this time an OLD value gets evicted, not the new one. Final heap=[5,5,8]. Root = 5 → that's the answer.` },
+      { data: [5, 10, 8], note: `add(10): push 10 → [5,5,8,10]. Size 4 > 3, pop the minimum (5). Final heap=[5,10,8]. Root = 5 → that's the answer.` },
+      { data: [8, 9, 10], note: `add(9): push 9 → [5,9,8,10]. Size 4 > 3, pop the minimum (5). Final heap=[8,9,10]. Root = 8 → that's the answer.` },
+      { data: [8, 9, 10], note: `add(4): push 4 → [4,8,10,9]. Size 4 > 3, pop the minimum (4) — the value just added, since it's smaller than everything already in the top 3. Final heap unchanged: [8,9,10]. Root = 8 → that's the answer.` },
+    ];
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      diagramHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(empty heap)</div>`;
+      logEl.textContent = 'Nothing added yet — step through the construction, then five explicit add() calls.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      diagramHost.innerHTML = renderP1Heap(s.data, { highlight: { 0: '#22c55e' } });
       logEl.textContent = s.note;
       idx++;
       if (idx >= steps.length) {

@@ -26,6 +26,25 @@ Space Complexity: O(total characters added), plus O(L) recursion depth per searc
 
 */
 
+  // class WordDictionary {
+  //   constructor() {
+  //     this.words = [];
+  //   }
+  //   addWord(word) {
+  //     this.words.push(word);
+  //   }
+  //   search(word) {
+  //     return this.words.some((w) => {
+  //       if (w.length !== word.length) return false;
+  //       for (let i = 0; i < word.length; i++) {
+  //         if (word[i] !== "." && word[i] !== w[i]) return false;
+  //       }
+  //       return true;
+  //     });
+  //   }
+  // }
+  // Time: O(N · L) per search — every stored word compared, up to L characters each. Space: O(N · L) total characters stored.
+
   class TrieNode {
     constructor() {
       this.children = {};
@@ -35,25 +54,37 @@ Space Complexity: O(total characters added), plus O(L) recursion depth per searc
 
   class WordDictionary {
     constructor() {
-
+      this.root = new TrieNode();
     }
 
-    /**
-     * @param {string} word
-     * @return {void}
-     */
     addWord(word) {
-
+      let node = this.root;
+      for (const ch of word) {
+        if (!node.children[ch]) node.children[ch] = new TrieNode();
+        node = node.children[ch];
+      }
+      node.isEnd = true;
     }
 
-    /**
-     * @param {string} word
-     * @return {boolean}
-     */
     search(word) {
+      const dfs = (node, i) => {
+        if (!node) return false;
+        if (i === word.length) return node.isEnd;
 
+        const ch = word[i];
+        if (ch === ".") {
+          for (const key in node.children) {
+            if (dfs(node.children[key], i + 1)) return true;
+          }
+          return false;
+        }
+        if (!node.children[ch]) return false;
+        return dfs(node.children[ch], i + 1);
+      };
+      return dfs(this.root, 0);
     }
   }
+  // Time: O(L) for a search with no dots — same as a plain Trie. Worst case with all dots: O(26D · L), where D is the number of dots, since each one branches into every child. In practice it's usually much better, bounded by how many words actually share those prefixes. Space: O(total characters added) for the trie, plus O(L) recursion depth per search.
 
   const wd1 = new WordDictionary();
   wd1.addWord("bad");
@@ -114,7 +145,16 @@ Space Complexity: O(total characters added), plus O(L) recursion depth per searc
   // 1: classic example
   test(
     1,
-    ["WordDictionary", "addWord", "addWord", "addWord", "search", "search", "search", "search"],
+    [
+      "WordDictionary",
+      "addWord",
+      "addWord",
+      "addWord",
+      "search",
+      "search",
+      "search",
+      "search",
+    ],
     [[], ["bad"], ["dad"], ["mad"], ["pad"], ["bad"], [".ad"], ["b.."]],
     [null, null, null, null, false, true, true, true],
   );
@@ -154,7 +194,15 @@ Space Complexity: O(total characters added), plus O(L) recursion depth per searc
   // 6: multiple words sharing a prefix, wildcard disambiguates
   test(
     6,
-    ["WordDictionary", "addWord", "addWord", "addWord", "search", "search", "search"],
+    [
+      "WordDictionary",
+      "addWord",
+      "addWord",
+      "addWord",
+      "search",
+      "search",
+      "search",
+    ],
     [[], ["cat"], ["car"], ["can"], ["ca."], ["c.t"], ["c.n"]],
     [null, null, null, null, true, true, true],
   );
