@@ -10,6 +10,7 @@
     "array-hashMap-topKFrequent.js",
     "array-hashMap-twoSum.js",
     "array-hashMap-validAnagram.js",
+    "backtracking-subsets.js",
     "binarySearch-findMinimumInRotatedSortedArray.js",
     "binaryTreeMaximumPathSum.js",
     "courseSchedule.js",

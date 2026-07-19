@@ -2275,6 +2275,15 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       render: renderP1KthLargestStream,
       init: initP1KthLargestStreamStepper,
     },
+    {
+      id: 'subsets',
+      pattern: 'Backtracking',
+      title: 'Subsets',
+      difficulty: 'medium',
+      file: 'backtracking-subsets.js',
+      render: renderP1Subsets,
+      init: initP1SubsetsStepper,
+    },
   ];
 
   // Top-level pattern categories, matching co-founder/roadmap.md's order. Shown as pills first;
@@ -2317,6 +2326,7 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     'Graphs': renderPrimerGraphs,
     '1-D Dynamic Programming': renderPrimerOneDDP,
     'Greedy / Intervals': renderPrimerGreedyIntervals,
+    'Backtracking': renderPrimerBacktracking,
   };
 
   let currentP1Problem = localStorage.getItem('dsa-p1-problem') || PHASE1_PROBLEMS[0].id;
@@ -2862,6 +2872,46 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
         <tr><td>Greedy over sorted intervals</td><td class="num">O(n log n)</td><td class="num">O(n)</td></tr>
       </tbody>
     </table>`;
+  }
+
+  function renderPrimerBacktracking() {
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Backtracking</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>Backtracking explores a tree of choices with plain recursion: at each step, make a choice, recurse deeper as if it were final, and when that recursive call returns, undo the choice before trying the next one. "Undo" is the whole idea — without it, choices from one branch would leak into the next.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>The same three-step cycle — choose, explore, un-choose — shown with nums = [1,2,3]:</p>
+      <div class="p0-diagram-label">1. Choose: include 1</div>
+      ${renderP1ChosenRow([1, 2, 3], [0])}
+      <div class="p0-diagram-label" style="margin-top:10px">2. Explore deeper: also include 2</div>
+      ${renderP1ChosenRow([1, 2, 3], [0, 1])}
+      <div class="p0-diagram-label" style="margin-top:10px">3. Backtrack: undo 2, back to just [1] — now try the next branch instead</div>
+      ${renderP1ChosenRow([1, 2, 3], [0])}
+      <p style="margin-top:6px">Every step forward adds exactly one choice; every step back removes exactly the last choice made. That's why the "currently chosen so far" list is always accurate for wherever the recursion currently is — nothing from an abandoned branch is ever left behind.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Return all possible ___" (subsets, combinations, permutations) &middot; constraint satisfaction where you place things one at a time and some placements become invalid (N-Queens, Sudoku) &middot; searching a grid/graph where you need to remember "the path taken so far" and un-mark it on the way back (Word Search) &middot; anytime the brute force is "try every combination of choices," but you want to stop exploring a branch early once it's clearly wrong (pruning).</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Include/exclude per index</strong> — at each position, branch into "skip it" and "take it" (Subsets). <strong>Start-index loop</strong> — at each level, try every remaining candidate from a moving start point, so the same element is never reused earlier in the path (Combinations, Combination Sum). <strong>Grid DFS with a visited set</strong> — mark a cell visited going in, recurse into neighbors, un-mark it coming back out, so a path can revisit that cell from a different route (Word Search). <strong>Pruning</strong> — check a partial choice against the constraints immediately and stop recursing the moment it can't possibly work, instead of building the whole thing first and checking at the end.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Explore every branch (b choices, depth d)</td><td class="num">O(b<sup>d</sup>)</td><td class="num">O(d)</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:6px;font-size:12.5px;color:var(--sublabel)">b and d depend on the problem — for Subsets, b = 2 (include/exclude) and d = n, giving O(2<sup>n</sup>). The O(d) space is the recursion stack plus whatever "current choice" list you're building — it's small even though the total number of branches explored is huge.</p>`;
   }
 
   // Small non-spoiler visual: color-codes cells by value so "duplicate" is something Lawrence
@@ -11631,6 +11681,161 @@ class KthLargest {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ' Done.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1Subsets() {
+    return `
+    <div class="p0-section-title">Subsets<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Backtracking — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>You get an array of numbers, all different from each other. Return every possible subset you could make from it — the "power set." That includes the empty set (pick nothing) and the whole array (pick everything). Order doesn't matter, inside a subset or between subsets.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What a "subset" means here</h4>
+      <p>A subset is just a yes/no choice for every number — include it, or don't. For nums = [1,2,3], here's every subset, grouped by how many numbers it has (digits shown = which numbers are in it, so "13" means {1,3}):</p>
+      <div class="p0-diagram-label">0 numbers chosen</div>
+      <div class="p0-arr-row">${renderP1ArrayRow(['∅'])}</div>
+      <div class="p0-diagram-label" style="margin-top:10px">1 number chosen</div>
+      <div class="p0-arr-row">${renderP1ArrayRow(['1', '2', '3'])}</div>
+      <div class="p0-diagram-label" style="margin-top:10px">2 numbers chosen</div>
+      <div class="p0-arr-row">${renderP1ArrayRow(['12', '13', '23'])}</div>
+      <div class="p0-diagram-label" style="margin-top:10px">3 numbers chosen</div>
+      <div class="p0-arr-row">${renderP1ArrayRow(['123'])}</div>
+      <p style="margin-top:10px;font-size:12.5px;color:var(--sublabel)">8 subsets total for 3 numbers — each number is independently "in" or "out," so 2 &times; 2 &times; 2 = 2&sup3; = 8.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. What's the simplest way to generate every subset if you numbered every subset 0 through 2<sup>n</sup>-1, and looked at each number's binary representation?<br>
+      2. If instead you walked through the numbers one at a time, making an "include or exclude" decision at each one — how would you track "what's currently included" as you go deeper, and undo that decision once you've explored both branches?<br>
+      3. When exactly does a partial decision become a finished subset worth recording — after every single choice, or only once you've made a choice for <em>every</em> number?<br>
+      4. What has to happen to your "currently included" list right after a recursive call returns, before you try the other choice?</p>
+    </div>
+
+    ${renderP1Workflow('backtracking-subsets.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — count from 0 to 2<sup>n</sup>-1, read off the bits</h4>
+        <p>There are exactly 2<sup>n</sup> subsets. Number them 0 through 2<sup>n</sup>-1. For each number, look at its binary form — bit i tells you whether <code>nums[i]</code> is in that subset. Looping the counter through every value and reading its bits generates every subset exactly once.</p>
+        <pre class="p0-code">function subsets(nums) {
+  const n = nums.length;
+  const result = [];
+  for (let mask = 0; mask < (1 << n); mask++) {
+    const subset = [];
+    for (let i = 0; i < n; i++) {
+      if (mask & (1 << i)) subset.push(nums[i]);
+    }
+    result.push(subset);
+  }
+  return result;
+}</pre>
+        <p>Time: <strong>O(n &middot; 2<sup>n</sup>)</strong> — 2<sup>n</sup> masks, and building each subset costs up to O(n). Space: <strong>O(n &middot; 2<sup>n</sup>)</strong> for the output (unavoidable — that's how many numbers appear across all subsets combined).</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — backtracking: include or exclude, then undo</h4>
+        <p>Recurse through the numbers one index at a time. At each index, try both choices: skip to the next index without <code>nums[i]</code>, then add <code>nums[i]</code> to the current list, recurse again, and remove it again ("backtrack") before returning. Once the index reaches the end of the array, the current list is a finished subset — record a copy of it. This isn't a faster Big-O than the bitmask version (there are still 2<sup>n</sup> subsets to produce, so it can't be), but it's the general template — the same include/exclude/undo shape reappears in Combination Sum, Permutations, and Word Search, where a bitmask trick doesn't apply.</p>
+        <pre class="p0-code">function subsets(nums) {
+  const result = [];
+  const current = [];
+  const backtrack = (i) => {
+    if (i === nums.length) {
+      result.push([...current]);
+      return;
+    }
+    backtrack(i + 1);        // exclude nums[i]
+    current.push(nums[i]);
+    backtrack(i + 1);        // include nums[i]
+    current.pop();           // undo before returning
+  };
+  backtrack(0);
+  return result;
+}</pre>
+        <p>Time: <strong>O(n &middot; 2<sup>n</sup>)</strong> — 2<sup>n</sup> leaves in the recursion tree, and copying <code>current</code> into the result at each one costs up to O(n). Space: <strong>O(n)</strong> extra for the recursion stack and the <code>current</code> array (not counting the output itself, which is O(n &middot; 2<sup>n</sup>) either way).</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — subsets([1,2,3]), one leaf at a time</div>
+        <div id="p1-sub-current"></div>
+        <div class="p0-diagram-label" style="margin-top:10px">Results found so far</div>
+        <div id="p1-sub-results"></div>
+        <div class="p0-sim-log" id="p1-sub-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-sub-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>Empty input:</strong> <code>nums = []</code> — the recursion's base case (<code>i === nums.length</code>) is true immediately, so the only subset recorded is the empty one, <code>[[]]</code>.<br>
+        <strong>Single element:</strong> exactly 2 subsets — <code>[]</code> and the element itself.<br>
+        <strong>Negative numbers:</strong> no special handling needed — the algorithm never compares values, only decides include/exclude per index.<br>
+        <strong>Forgetting to copy <code>current</code>:</strong> pushing <code>current</code> itself (instead of <code>[...current]</code>) into <code>result</code> stores a reference — every later <code>push</code>/<code>pop</code> would then silently mutate subsets you already "recorded."<br>
+        <strong>Duplicate values:</strong> this problem's constraints guarantee unique elements — with duplicates allowed, this exact code would produce duplicate subsets (that's a different problem, Subsets II, which needs sorting + skip-duplicate logic).</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space (excl. output)</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force (bitmask)</td><td class="num">O(n&middot;2<sup>n</sup>)</td><td class="num">O(n)</td></tr>
+          <tr><td>Backtracking (include/exclude)</td><td class="num">O(n&middot;2<sup>n</sup>)</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1SubsetsStepper() {
+    const btn = document.getElementById('p1-sub-step-btn');
+    if (!btn) return;
+    const currentHost = document.getElementById('p1-sub-current');
+    const resultsHost = document.getElementById('p1-sub-results');
+    const logEl = document.getElementById('p1-sub-log');
+
+    const nums = [1, 2, 3];
+    const steps = [
+      { chosenIdx: [], subset: [], note: '1: exclude, 2: exclude, 3: exclude' },
+      { chosenIdx: [2], subset: [3], note: '1: exclude, 2: exclude, 3: include' },
+      { chosenIdx: [1], subset: [2], note: '1: exclude, 2: include, 3: exclude' },
+      { chosenIdx: [1, 2], subset: [2, 3], note: '1: exclude, 2: include, 3: include' },
+      { chosenIdx: [0], subset: [1], note: '1: include, 2: exclude, 3: exclude' },
+      { chosenIdx: [0, 2], subset: [1, 3], note: '1: include, 2: exclude, 3: include' },
+      { chosenIdx: [0, 1], subset: [1, 2], note: '1: include, 2: include, 3: exclude' },
+      { chosenIdx: [0, 1, 2], subset: [1, 2, 3], note: '1: include, 2: include, 3: include' },
+    ];
+
+    let idx;
+
+    function reset() {
+      idx = 0;
+      currentHost.innerHTML = renderP1ChosenRow(nums, []);
+      resultsHost.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:6px 0">(no results yet)</div>`;
+      logEl.textContent = 'Nothing explored yet — step through the 8 leaves of the recursion, in the order the code actually visits them.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      currentHost.innerHTML = renderP1ChosenRow(nums, s.chosenIdx);
+      const found = steps.slice(0, idx + 1).map(st => st.subset.length ? st.subset.join('') : '∅');
+      resultsHost.innerHTML = `<div class="p0-arr-row">${renderP1ArrayRow(found)}</div>`;
+      const label = s.subset.length ? `[${s.subset.join(',')}]` : '[]';
+      logEl.textContent = `${s.note} → subset = ${label} pushed to result. (${idx + 1}/${steps.length})`;
+      idx++;
+      if (idx >= steps.length) {
+        logEl.textContent += ' All 8 subsets found — done.';
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
