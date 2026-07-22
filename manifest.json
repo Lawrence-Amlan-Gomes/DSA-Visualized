@@ -18,6 +18,7 @@
     "dynamicProgramming-houseRobber.js",
     "graph-cloneGraph.js",
     "graph-numberOfIslands.js",
+    "graph-redundantConnection.js",
     "heap-kthLargestElementInStream.js",
     "houseRobberII.js",
     "intervals-insertInterval.js",

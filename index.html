@@ -2186,6 +2186,15 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
       init: initP1CourseScheduleStepper,
     },
     {
+      id: 'redundantConnection',
+      pattern: 'Advanced Graphs (Union Find, Dijkstra, MST)',
+      title: 'Redundant Connection',
+      difficulty: 'medium',
+      file: 'graph-redundantConnection.js',
+      render: renderP1RedundantConnection,
+      init: initP1RedundantConnectionStepper,
+    },
+    {
       id: 'climbingStairs',
       pattern: '1-D Dynamic Programming',
       title: 'Climbing Stairs',
@@ -2324,6 +2333,7 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
     'Tries': renderPrimerTries,
     'Heap / Priority Queue': renderPrimerHeap,
     'Graphs': renderPrimerGraphs,
+    'Advanced Graphs (Union Find, Dijkstra, MST)': renderPrimerAdvancedGraphs,
     '1-D Dynamic Programming': renderPrimerOneDDP,
     'Greedy / Intervals': renderPrimerGreedyIntervals,
     'Backtracking': renderPrimerBacktracking,
@@ -2795,6 +2805,51 @@ for (let j = 0; j &lt; n; j++) { /* O(1) */ }</pre>
         <tr><td>DFS / BFS</td><td class="num">O(V + E)</td><td class="num">O(V)</td></tr>
       </tbody>
     </table>`;
+  }
+
+  function renderPrimerAdvancedGraphs() {
+    const arrRow = (arr, labelPrefix) => `<div class="p0-arr-row" style="align-items:flex-end">${arr.map((v, i) =>
+      `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="p0-arr-cell">${v}</div>
+        <div style="font-size:9px;color:var(--sublabel)">${labelPrefix}[${i + 1}]</div>
+      </div>`
+    ).join('')}</div>`;
+
+    return `
+    <div class="p1-primer-label">📘 Pattern Primer — Advanced Graphs (Union Find, Dijkstra, MST)</div>
+
+    <div class="p0-card">
+      <h4>What it is</h4>
+      <p>This category bundles three separate tools for graph problems that plain DFS/BFS handles badly: <strong>Union Find</strong> (tracking which nodes are already connected as edges get added one at a time), <strong>Dijkstra's algorithm</strong> (shortest paths on a weighted graph), and <strong>Minimum Spanning Tree</strong> (connecting every node as cheaply as possible). The first problem here uses Union Find — Dijkstra and MST get their own problems later, so this primer focuses on Union Find for now.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>How it works</h4>
+      <p>Every node starts as its own group, pointing at itself as its "parent" (its root). This is nodes 1-5, each in its own group:</p>
+      ${arrRow([1, 2, 3, 4, 5], 'parent')}
+      <p style="margin-top:10px">Union(1, 2) merges the two groups by making one root point at the other. Now node 1's parent is 2 — following parent pointers from either 1 or 2 lands on the same root, so they're "connected":</p>
+      ${arrRow([2, 2, 3, 4, 5], 'parent')}
+      <p style="margin-top:8px;font-size:12.5px;color:var(--sublabel)">To check "are nodes X and Y connected," follow each one's parent pointer until it points at itself — that's the root. Same root means same group.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>When to reach for it</h4>
+      <p>"Are these two nodes already connected" checked over and over as edges arrive one at a time &middot; find the edge that creates a cycle in an undirected graph &middot; count connected components without a full DFS/BFS pass &middot; Kruskal's MST — add edges cheapest-first, skip any edge that would connect two nodes already in the same group.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>Common variations</h4>
+      <p><strong>Path compression</strong> — while following parent pointers to find a root, re-point every node visited along the way straight at that root, so the next lookup from any of them is instant. <strong>Union by rank/size</strong> — always attach the smaller group's root under the bigger group's root, so the tree of parent pointers never gets tall. Combined, these two tricks make each operation run in almost constant time. Dijkstra and MST (Prim's/Kruskal's) are separate tools in this same bucket, covered as their own problems later — Union Find by itself only answers "are these connected," nothing about shortest paths or edge weights.</p>
+    </div>
+
+    <table class="p0-table">
+      <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+      <tbody>
+        <tr><td>Union Find, no compression/rank</td><td class="num">O(n)</td><td class="num">O(n)</td></tr>
+        <tr><td>Union Find + path compression + union by rank</td><td class="num">O(&alpha;(n))<span style="color:var(--sublabel)"> amortized</span></td><td class="num">O(n)</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:6px;font-size:12.5px;color:var(--sublabel)">&alpha;(n) is the inverse Ackermann function — it grows so slowly that for any n you'd ever actually use, treat it as a small constant.</p>`;
   }
 
   function renderPrimerOneDDP() {
@@ -10027,6 +10082,216 @@ function deserialize(data) {
       idx++;
       if (idx >= steps.length) {
         logEl.textContent += ' Done — every course reaches "done" with no cycle, so all 4 courses can be finished.';
+        btn.textContent = '↺ Reset';
+        btn.onclick = reset;
+      }
+    }
+
+    reset();
+  }
+
+  function renderP1RedundantConnection() {
+    return `
+    <div class="p0-section-title">Redundant Connection<span class="p1-badge medium">Medium</span></div>
+    <div class="p0-section-sub">Advanced Graphs (Union Find, Dijkstra, MST) — problem 1</div>
+
+    <div class="p0-card">
+      <h4>The problem, in plain English</h4>
+      <p>Think of nodes connected by edges, like towns connected by roads. There are <code>n</code> nodes, numbered 1 to n. A normal tree with n nodes only needs n - 1 edges, and it never makes a loop. But here, someone added <strong>one extra edge</strong> by mistake. Now there are n edges — one too many — and that extra edge makes exactly one loop.</p>
+      <p style="margin-top:10px"><strong>Input:</strong> <code>edges</code> — a list of edges, in the order they were added. Each edge is two node numbers, like <code>[1, 2]</code>, meaning node 1 and node 2 are connected.<br>
+      <strong>Output:</strong> the one edge you should remove to make it a normal tree again (no loop, everything still connected) — same format, like <code>[2, 3]</code>. If more than one edge could work, pick the one that shows up <strong>last</strong> in the list.</p>
+    </div>
+
+    <div class="p0-card">
+      <h4>What makes an edge "extra"</h4>
+      <p>4 nodes, 3 edges, no loop. This is just a normal tree — all good:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4]] })}
+      <p style="margin-top:16px">Now add one more edge: 1-4. There are 4 edges for 4 nodes now — one too many. Follow the nodes around: 1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 1 — that's a loop. You could remove any one edge in that loop and the loop goes away, but the problem wants specifically whichever one of those edges appears last in the list:</p>
+      ${renderP1GraphSVG(4, { edges: [[1, 2], [2, 3], [3, 4], [1, 4]] })}
+    </div>
+
+    <div class="p0-card">
+      <h4>Before you code — think about these</h4>
+      <p>1. Say you add edges one at a time, and you keep track of which nodes are already connected to each other. What happens the moment you try to add an edge between two nodes that are already connected?<br>
+      2. What's a fast way to check "are these two nodes already connected" — faster than walking the whole graph from scratch every single time?<br>
+      3. If several edges could each be a valid answer, why does picking the very first edge (in list order) that connects two already-connected nodes give you the edge that comes last among all the possible answers?<br>
+      4. What's the smallest loop you can make? (Hint: you don't need 4 nodes — think smaller.) Does your idea still catch it?</p>
+    </div>
+
+    ${renderP1Workflow('graph-redundantConnection.js')}
+
+    <details class="p0-reveal">
+      <summary>Brute force &amp; optimal — open only after you've attempted it</summary>
+
+      <div class="p0-card">
+        <h4>Brute force — recheck connectivity from scratch with DFS</h4>
+        <p>Build the adjacency list one edge at a time. Before adding an edge, run a DFS from one endpoint to see if the other endpoint is already reachable. If it is, this edge is redundant — return it. Otherwise add it and keep going.</p>
+        <pre class="p0-code">function findRedundantConnection(edges) {
+  const n = edges.length;
+  const adj = Array.from({ length: n + 1 }, () => []);
+
+  function isConnected(start, target) {
+    const visited = new Set([start]);
+    const stack = [start];
+    while (stack.length) {
+      const node = stack.pop();
+      if (node === target) return true;
+      for (const next of adj[node]) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          stack.push(next);
+        }
+      }
+    }
+    return false;
+  }
+
+  for (const [u, v] of edges) {
+    if (isConnected(u, v)) return [u, v];
+    adj[u].push(v);
+    adj[v].push(u);
+  }
+  return [];
+}</pre>
+        <p>Time: <strong>O(n&sup2;)</strong> — n edges, and each can trigger a DFS that visits up to O(n) nodes. Space: <strong>O(n)</strong> for the adjacency list and DFS stack.</p>
+      </div>
+
+      <div class="p0-card">
+        <h4>Optimal — Union Find (path compression + union by rank)</h4>
+        <p>Give every node its own group. For each edge, find both endpoints' roots. If they're already the same root, this edge connects two nodes already in the same group — it's the redundant one. Otherwise merge the two groups and keep going.</p>
+        <pre class="p0-code">function findRedundantConnection(edges) {
+  const n = edges.length;
+  const parent = Array.from({ length: n + 1 }, (_, i) => i);
+  const rank = new Array(n + 1).fill(1);
+
+  function find(x) {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]]; // path compression
+      x = parent[x];
+    }
+    return x;
+  }
+
+  function union(x, y) {
+    const rootX = find(x), rootY = find(y);
+    if (rootX === rootY) return false; // already connected -> cycle
+    if (rank[rootX] < rank[rootY]) {
+      parent[rootX] = rootY;
+      rank[rootY] += rank[rootX];
+    } else {
+      parent[rootY] = rootX;
+      rank[rootX] += rank[rootY];
+    }
+    return true;
+  }
+
+  for (const [u, v] of edges) {
+    if (!union(u, v)) return [u, v];
+  }
+  return [];
+}</pre>
+        <p>Time: <strong>O(n&middot;&alpha;(n))</strong> &asymp; O(n) — union/find with path compression and union by rank runs in amortized inverse-Ackermann time per call, essentially constant. Space: <strong>O(n)</strong> for the parent and rank arrays.</p>
+
+        <div class="p0-diagram-label" style="margin-top:14px">Step through it — edges = [[1,2],[2,3],[3,4],[1,4],[1,5]]</div>
+        <div id="p1-rc-graph"></div>
+        <div class="p0-sim-log" id="p1-rc-log"></div>
+        <button class="p0-next-btn p0-sim-btn" id="p1-rc-step-btn">▶ Step</button>
+      </div>
+
+      <div class="p0-card">
+        <h4>Edge cases</h4>
+        <p><strong>The redundant edge is the very last one listed:</strong> every prior edge unions cleanly, and only the final union call fails — still correctly detected.<br>
+        <strong>The cycle is the smallest possible (a triangle, 3 nodes/3 edges):</strong> the third edge's two endpoints already share a root from the first two unions.<br>
+        <strong>Multiple edges could each be "the" answer</strong> (e.g. a longer cycle where removing any one edge in it works): processing strictly in input order and returning the first failed union guarantees you get whichever qualifying edge appears last.<br>
+        <strong>Path compression correctness:</strong> re-pointing visited nodes straight at the root during <code>find</code> only shortens future lookups — it never changes which group a node belongs to.</p>
+      </div>
+
+      <table class="p0-table">
+        <thead><tr><th>Approach</th><th style="text-align:right">Time</th><th style="text-align:right">Space</th></tr></thead>
+        <tbody>
+          <tr><td>Brute force — DFS connectivity check per edge</td><td class="num">O(n&sup2;)</td><td class="num">O(n)</td></tr>
+          <tr><td>Union Find + path compression + union by rank</td><td class="num">O(n&middot;&alpha;(n))</td><td class="num">O(n)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="p0-footer-next" id="p1-next-footer"></div>`;
+  }
+
+  function initP1RedundantConnectionStepper() {
+    const btn = document.getElementById('p1-rc-step-btn');
+    if (!btn) return;
+    const graphHost = document.getElementById('p1-rc-graph');
+    const logEl = document.getElementById('p1-rc-log');
+
+    const N = 5;
+    const EDGES = [[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]];
+
+    const parent = Array.from({ length: N + 1 }, (_, i) => i);
+    const rank = new Array(N + 1).fill(1);
+    const steps = [];
+
+    function find(x) {
+      while (parent[x] !== x) {
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+      }
+      return x;
+    }
+
+    for (const [u, v] of EDGES) {
+      const rootU = find(u), rootV = find(v);
+      if (rootU === rootV) {
+        steps.push({ type: 'redundant', u, v });
+        break;
+      }
+      steps.push({ type: 'union', u, v });
+      if (rank[rootU] < rank[rootV]) {
+        parent[rootU] = rootV;
+        rank[rootV] += rank[rootU];
+      } else {
+        parent[rootV] = rootU;
+        rank[rootU] += rank[rootV];
+      }
+    }
+
+    let idx, drawnEdges, nodeStates, highlightVals;
+
+    function render() {
+      graphHost.innerHTML = renderP1GraphSVG(N, {
+        edges: drawnEdges,
+        nodeStates,
+        highlightVals,
+        highlightColor: 'var(--red)',
+      });
+    }
+
+    function reset() {
+      idx = 0;
+      drawnEdges = [];
+      nodeStates = {};
+      highlightVals = null;
+      render();
+      logEl.textContent = 'Processing edges in order. Each edge either unions two separate groups, or — if both endpoints already share a root — is the redundant one.';
+      btn.textContent = '▶ Step';
+      btn.disabled = false;
+      btn.onclick = step;
+    }
+
+    function step() {
+      if (idx >= steps.length) return;
+      const s = steps[idx];
+      if (s.type === 'union') {
+        drawnEdges = [...drawnEdges, [s.u, s.v]];
+        nodeStates = { ...nodeStates, [s.u]: 'done', [s.v]: 'done' };
+        logEl.textContent = `Union(${s.u}, ${s.v}): different groups — merge them, edge added.`;
+      } else {
+        highlightVals = new Set([s.u, s.v]);
+        logEl.textContent = `Find(${s.u}) and Find(${s.v}) already point to the same root — they're already connected. Adding [${s.u}, ${s.v}] would create a cycle. This is the redundant edge.`;
+      }
+      render();
+      idx++;
+      if (idx >= steps.length) {
         btn.textContent = '↺ Reset';
         btn.onclick = reset;
       }
