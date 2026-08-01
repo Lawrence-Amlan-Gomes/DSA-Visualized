@@ -18,6 +18,24 @@ Before touching a single problem, Big O has to be reflexive — something you re
 
 You can look at any of the first 5-10 problems in Phase 1 and state the brute-force and optimal complexity before writing a line of code, without hesitating.
 
+## Phase 0.5 — OOP Fundamentals
+
+DSA patterns are only half of most interview loops — a lot of interviewers (especially at product companies) also probe object-oriented design: the four pillars, when to use inheritance vs. composition, and whether you can reason about a class hierarchy out loud. This phase makes that reflexive too, the same way Phase 0 did for Big O.
+
+### What to actually learn
+
+- Classes vs. objects, constructors, and encapsulation (why hide internal state behind methods).
+- Abstraction — hiding *how* something works behind a simple interface.
+- Inheritance — sharing behavior through an "is-a" relationship, and its pitfalls (fragile base class, deep hierarchies).
+- Composition — building behavior by combining smaller pieces ("has-a"), and why "favor composition over inheritance" is common advice.
+- Polymorphism — one interface, many implementations; method overriding vs. overloading.
+- The SOLID principles at a working level — able to name each one and give a concrete example, not just recite the acronym.
+- How JavaScript's own OOP model works under the hood (prototypes, `class` as syntax sugar) since that's the language used throughout this app.
+
+### How you'll know you're done
+
+You can be handed a plain-English design prompt ("design a class for X") and talk through the classes, their responsibilities, and how they relate — inheritance vs. composition, which pillar is doing the work — without hesitating, the same way Phase 0 made complexity analysis automatic.
+
 ## Phase 1 — Core Patterns (Blind 75 core → NeetCode 150 breadth)
 
 This is the bulk of the work. Patterns in this order — don't skip ahead to the next one until the current pattern's core trick is something you can explain without looking at a solution:
