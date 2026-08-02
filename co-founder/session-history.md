@@ -2,6 +2,16 @@
 
 *(Newest first. On every `End Today`, the outgoing "Last Session" block from `state.md` gets prepended here before `state.md` is overwritten with the new one. Append-only — never rewrite past entries.)*
 
+## 2026-08-02 (later) — Unique Paths solved, closing 2-D DP; Roadmap converted to real nested routes
+
+**Unique Paths (2-D DP) — solved.** Third assignment was the charm after two untouched sessions. Brute force stated first (recursion, branching factor 2, O(2^(m+n)) time / O(m+n) space), then bottom-up DP (fill from bottom-right, base case = last row/column = 1, `dp[r][c] = dp[r+1][c] + dp[r][c+1]`), correct complexity (O(m·n) time/space, noted the O(n) reduction without implementing it), 7 test cases including all edge shapes (1×1, 1×N, N×1) verified correct by direct execution. Closes 2-D Dynamic Programming (1/1) in the roadmap.
+
+**Roadmap view rebuilt as real nested routes**, at Lawrence's direct request (not roadmap-driven): every phase (`/roadmap/phase-0`, `/phase-0.5`, `/phase-1`, etc.), every Phase 0/0.5 section, and every Phase 1 category/problem got its own URL, replacing the old single-`/roadmap` + `localStorage`-position design entirely (5 localStorage keys removed; URL is now the only source of truth for position). Phase 1 gained a new `Overview` nav item; each category's Pattern Primer moved off every problem page onto its own dedicated `Guide` nav item/page. Implementation: `app/roadmap/page.jsx` now does a server-side redirect for bare `/roadmap`; a new `app/roadmap/[...slug]/page.jsx` catch-all client route reads the URL and drives `lib/legacyApp.js`'s new `renderRoadmapRoute()` dispatcher (replacing `showPhase()`/`goToP1Category()`/`goToP1Problem()`/`goToP0Section()`). Verified with an ad hoc headless-Playwright pass (browser installed in scratchpad only, not added to the project) — every route, all sidebar navigation, footer buttons, back button, and hard refresh on deep URLs confirmed working with zero console errors; no regression on Dashboard/LiveCoding/Bookmarks. `CLAUDE.md` updated in full to document the new architecture (genuine structural change).
+
+Also: Lawrence set two new standing behavioral rules — always start/report the dev server port+PID at session start and never touch a port/process not started this session; and once execution of a task begins, work silently with no chat narration until finished, then report as a bullet-point summary. Both saved to auto-memory.
+
+**Win:** first DSA problem solved in three sessions, and a large, cleanly-verified infra change shipped in the same sitting without breaking any other view.
+
 ## 2026-08-02 — Phase 0.5 "OOP Fundamentals" added (curriculum + interactive module + 6 runnable teaching files); no DSA problem attempted
 
 Session opened normally (recap, Unique Paths re-assigned with the full chat explanation per mentor rules), but Lawrence redirected mid-session to add a new curriculum topic: object-oriented programming, framed explicitly for interview readiness. Deferred to him per the standing rule that he drives the curriculum.
